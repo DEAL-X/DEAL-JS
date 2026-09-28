@@ -43,19 +43,16 @@ namespace MiMFa.Compiler.Resource
 
             try
             {
+                foreach (var file in Directory.EnumerateFiles(root))
+                    results.Add(new ResourceEntry(Path.GetFileName(file), file, isFile: true, isFolder: false));
+                
                 foreach (var dir in Directory.EnumerateDirectories(root))
                 {
                     results.Add(new ResourceEntry(Path.GetFileName(dir), dir, isFile: false, isFolder: true));
                     if (recursive)
-                    {
                         results.AddRange(GetFolderContents(dir, true));
-                    }
                 }
 
-                foreach (var file in Directory.EnumerateFiles(root))
-                {
-                    results.Add(new ResourceEntry(Path.GetFileName(file), file, isFile: true, isFolder: false));
-                }
             }
             catch (UnauthorizedAccessException)
             {

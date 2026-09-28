@@ -35,14 +35,7 @@ namespace MiMFa.Compiler.Model
             BlockStructure = 1 << 11 | Structure,
             DefineStructure = 1 << 12 | Structure,
             CallStructure = 1 << 13 | Structure,
-            SelectorStructure = (1 << 14) | Structure,
-                NormalSelectorStructure = (1 << 15) | SelectorStructure,
-                ShortSelectorStructure = (1 << 16) | SelectorStructure,
-                LongSelectorStructure = (1 << 17) | SelectorStructure,
-            IteratorStructure = (1 << 18) | Structure,
-                ComputationIteratorStructure = (1 << 19) | IteratorStructure,
-                CollectionIteratorStructure = (1 << 20) | IteratorStructure,
-                ConditionIteratorStructure = (1 << 21) | IteratorStructure,
-                    PostConditionIteratorStructure = (1 << 22) | ConditionIteratorStructure,
+            ConditionStructure = (1 << 14) | Structure,
+            IterationStructure = (1 << 15) | Structure,
     }
 }

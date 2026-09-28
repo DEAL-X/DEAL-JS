@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "BlMBIJtE/QsAU07FYUIc1isnRB5xCv2Hry6oukO4IbKYybqVCK8qwdwFx+3sjlsd3zuVKys8Loun9YRS+7PnAA==",
+  "dgSpecHash": "q66PvKIDpZNCEcOo5dGwzfyDm2h//ABXP/Qjk69azjm/Pa8KBI8uXBDJfHj34AMUcDcGHZBMGj3CeZbwX3AeYg==",
   "success": true,
-  "projectFilePath": "D:\\Product\\Technology\\MiMFa DaRQ\\MiMFa DaRQ.csproj",
+  "projectFilePath": "D:\\Product\\Technology\\MiMFa DaRQ - Compiler\\MiMFa DaRQ - Compiler.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\MiMFa\\.nuget\\packages\\microsoft.csharp\\4.7.0\\microsoft.csharp.4.7.0.nupkg.sha512",
     "C:\\Users\\MiMFa\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",

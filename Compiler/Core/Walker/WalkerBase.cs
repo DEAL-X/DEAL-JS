@@ -89,6 +89,11 @@ namespace MiMFa.Compiler.Walker
             return this;
         }
 
+        public virtual IWalker<T> Add(params T[] items)
+        {
+            Content = Content.Concat(items).ToArray();
+            return this;
+        }
         public virtual IWalker<T> Remove(Position position, int count = 1)
         {
             return Remove(position.Index, count);
@@ -102,12 +107,15 @@ namespace MiMFa.Compiler.Walker
             for (int i = Position; i < Content.Length; i++)
                 if (Content[i] == item)
                 {
-                    var list = new List<T>();
-                    list.AddRange(Content.Take(i));
-                    list.AddRange(Content.Skip(i + 1));
-                    Content = list.ToArray();
+                    Content = Content.Take(i).Concat(Content.Skip(i + 1)).ToArray();
                     return this;
                 }
+            return this;
+        }
+
+        public virtual IWalker<T> Insert(int index, params T[] values)
+        {
+            Content = Content.Take(index).Concat(values).Concat(Content.Skip(index)).ToArray();
             return this;
         }
 
@@ -117,20 +125,12 @@ namespace MiMFa.Compiler.Walker
         }
         public virtual IWalker<T> Replace(int index, int count, params T[] replacement)
         {
-            var list = new List<T>();
-            list.AddRange(Content.Take(index));
-            list.AddRange(replacement);
-            list.AddRange(Content.Skip(index + count));
-            Content = list.ToArray();
+            Content = Content.Take(index).Concat(replacement).Concat(Content.Skip(index + count)).ToArray();
             return this;
         }
         public virtual IWalker<T> Replace(params T[] replacement)
         {
-            var list = new List<T>();
-            list.AddRange(Content.Take(Position));
-            list.AddRange(replacement);
-            list.AddRange(Content.Skip(Position + replacement.Length));
-            Content = list.ToArray();
+            Content = Content.Take(Position).Concat(replacement).Concat(Content.Skip(Position + replacement.Length)).ToArray();
             return this;
         }
 

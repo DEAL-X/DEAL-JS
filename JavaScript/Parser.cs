@@ -13,12 +13,12 @@ namespace MiMFa.Compiler.JavaScript
                 case "get":
                 case "set":
                 case "function":
-                    yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Line);
                     break;
 
                 case "implements":
                 case "extends":
-                    yield return new Node(token, NodeType.CallStructure | NodeType.Depend);
+                    yield return new Node(token, NodeType.CallStructure | NodeType.Depend | NodeType.Line);
                     break;
 
                 case "interface":
@@ -30,47 +30,37 @@ namespace MiMFa.Compiler.JavaScript
                     break;
 
                 case "if":
-                    yield return new Node(token, NodeType.NormalSelectorStructure | NodeType.Prepend | NodeType.Line);
+                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Prepend | NodeType.Region);
                     break;
                 case "else":
-                    yield return new Node(token, NodeType.NormalSelectorStructure | NodeType.Depend | NodeType.Line);
+                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Depend | NodeType.Region);
                     break;
 
                 case "switch":
-                    yield return new Node(token, NodeType.LongSelectorStructure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Prepend | NodeType.Region);
                     break;
                 case "case":
-                    yield return new Node(token, NodeType.LongSelectorStructure | NodeType.Depend | NodeType.Line);
+                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Line);
                     break;
                 case "default":
-                    yield return new Node(token, NodeType.LongSelectorStructure | NodeType.Depend | NodeType.Line);
+                    yield return new Node(token, NodeType.Structure | NodeType.Line);
                     break;
 
                 case "for":
-                    yield return new Node(token, NodeType.ComputationIteratorStructure | NodeType.CollectionIteratorStructure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.IterationStructure | NodeType.Prepend | NodeType.Region);
                     break;
 
                 case "while":
-                    yield return new Node(token, NodeType.ConditionIteratorStructure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.IterationStructure | NodeType.Prepend | NodeType.Region);
                     break;
 
                 case "do":
-                    yield return new Node(token, NodeType.PostConditionIteratorStructure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.IterationStructure | NodeType.Prepend | NodeType.Region);
                     break;
 
                 case "break":
                 case "continue":
-                    yield return new Node(token, NodeType.Independ | NodeType.Line);
-                    break;
-
-                case "try":
-                    yield return new Node(token, NodeType.Prepend | NodeType.Region);
-                    break;
-                case "catch":
-                    yield return new Node(token, NodeType.Prepend | NodeType.Region);
-                    break;
-                case "finally":
-                    yield return new Node(token, NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.Line);
                     break;
 
                 case "return":
@@ -81,9 +71,19 @@ namespace MiMFa.Compiler.JavaScript
                     yield return new Node(token, NodeType.Prepend | NodeType.Line);
                     break;
 
+                case "try":
+                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region);
+                    break;
+                case "catch":
+                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region);
+                    break;
+                case "finally":
+                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region);
+                    break;
+
                 case "import":
                 case "export":
-                    yield return new Node(token, NodeType.Prepend | NodeType.Line);
+                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region);
                     break;
 
                 case "void":
@@ -109,10 +109,10 @@ namespace MiMFa.Compiler.JavaScript
                     yield return new Node(token, NodeType.CallStructure | NodeType.Prepend | NodeType.Line);
                     break;
                 case "async":
-                    yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Line);
                     break;
                 case "new":
-                    yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Line);
+                    yield return new Node(token, NodeType.CallStructure | NodeType.Prepend | NodeType.Line);
                     break;
 
                 case "private":
@@ -127,11 +127,11 @@ namespace MiMFa.Compiler.JavaScript
         protected override IEnumerable<Node> ParseScopeToken(Token token, TokenWalker walker)
         {
             if (token.Is(TokenType.Start))
-                if (token.IsMatch("{")) yield return new Node(token, NodeType.BlockStructure | NodeType.Region | NodeType.Depend);
-                else yield return new Node(token, NodeType.BlockStructure | NodeType.Line | NodeType.Prepend);
+                if (token.IsMatch("{")) yield return new Node(token, NodeType.BlockStructure | NodeType.Region);
+                else yield return new Node(token, NodeType.BlockStructure | NodeType.Line);
             else if (token.Is(TokenType.End))
-                if (token.IsMatch("}")) yield return new Node(token, NodeType.BlockStructure | NodeType.Append);
-                else yield return new Node(token, NodeType.BlockStructure | NodeType.Append);
+                if (token.IsMatch("}")) yield return new Node(token, NodeType.BlockStructure);
+                else yield return new Node(token, NodeType.BlockStructure);
             else yield return new Node(token, NodeType.Chunk);
         }
         protected override IEnumerable<Node> ParseDataToken(Token token, TokenWalker walker)
@@ -151,7 +151,8 @@ namespace MiMFa.Compiler.JavaScript
             if (token.Is(TokenType.DelimiterSymbol)) yield return new Node(token, NodeType.Depend);
             else if (token.Is(TokenType.TerminatorSymbol, TokenType.Suffix)) yield return new Node(token, NodeType.Append);
             else if (token.Is(TokenType.ConcatenatorSymbol)) yield return new Node(token, NodeType.Depend);
-            else if (token.IsMatch(":")) yield return new Node(token, NodeType.Append);
+            else if (token.IsMatch(":")) yield return new Node(token, NodeType.Depend);
+            else if (token.IsMatch("!")) yield return new Node(token, NodeType.Prepend);
             else if (token.IsMatch("=>", "?", "??")) yield return new Node(token, NodeType.Depend);
             else if (token.IsMatch("="))
             {
@@ -174,16 +175,17 @@ namespace MiMFa.Compiler.JavaScript
                 else if (next.Is(TokenType.ConcatenatorSymbol))
                     yield return new Node(token.Clone(TokenType.NamespaceKeyword), NodeType.CallStructure | NodeType.Prepend);
                 else yield return new Node(token.Clone(TokenType.IdentifierKeyword), NodeType.CallStructure);
+            else yield return new Node(token, NodeType.CallStructure);
         }
         protected override IEnumerable<Node> ParseCommentToken(Token token, TokenWalker walker)
         {
-            yield return new Node(token, token.Value.StartsWith("//") ? NodeType.Append : token.Value.Contains("\n") ? NodeType.Region | NodeType.Prepend : NodeType.Chunk | NodeType.Prepend);
+            yield return new Node(token, token.Value.StartsWith("//") ? NodeType.Append : (token.Value.Contains("\n") ? NodeType.Region | NodeType.Prepend : NodeType.Prepend));
         }
         protected override IEnumerable<Node> ParseStartToken(Token token, TokenWalker walker)
         {
             if (token.Is(TokenType.Scope))
-                if (token.IsMatch("{")) yield return new Node(token, NodeType.BlockStructure | NodeType.Region | NodeType.Prepend);
-                else yield return new Node(token, NodeType.BlockStructure | NodeType.Line | NodeType.Prepend);
+                if (token.IsMatch("{")) yield return new Node(token, NodeType.BlockStructure | NodeType.Region);
+                else yield return new Node(token, NodeType.BlockStructure | NodeType.Line);
             else yield return new Node(token, NodeType.Chunk | NodeType.Prepend);
         }
         protected override IEnumerable<Node> ParsePrefixToken(Token token, TokenWalker walker)
@@ -201,8 +203,8 @@ namespace MiMFa.Compiler.JavaScript
         protected override IEnumerable<Node> ParseEndToken(Token token, TokenWalker walker)
         {
             if (token.Is(TokenType.Scope))
-                if (token.IsMatch("}")) yield return new Node(token, NodeType.BlockStructure | NodeType.Append);
-                else yield return new Node(token, NodeType.BlockStructure | NodeType.Append);
+                if (token.IsMatch("}")) yield return new Node(token, NodeType.BlockStructure);
+                else yield return new Node(token, NodeType.BlockStructure);
             else yield return new Node(token, NodeType.Chunk | NodeType.Append);
         }
         protected override IEnumerable<Node> ParseUnknownToken(Token token, TokenWalker walker)

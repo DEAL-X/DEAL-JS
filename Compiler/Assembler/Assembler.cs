@@ -17,55 +17,62 @@ namespace MiMFa.Compiler.Assembler
         public virtual object Transform(object input, MiMFa.Compiler.Compiler compiler)
         {
             var walker = new NodeWalker((Node[])input, compiler?.Input?.Source);
-            return new Program(compiler?.Input?.Source, Assemble(walker, compiler).ToArray());
+            return new MiMFa.Compiler.Model.Program(compiler?.Input?.Source, Assemble(walker, compiler).ToArray());
         }
 
         public virtual IEnumerable<Node> Assemble(NodeWalker walker, MiMFa.Compiler.Compiler compiler = null)
         {
             if (!Initialize(compiler)) yield break;
             while (!walker.IsEnded)
-                yield return AssembleNode(walker.Walk(), walker);
+                yield return AssembleNode(walker);
         }
 
+        protected virtual Node AssembleNode(NodeWalker walker)
+        {
+            return AssembleNode(walker.Walk(), walker);
+        }
         protected virtual Node AssembleNode(Node node, NodeWalker walker)
         {
             Node latest = null;
-            if (latest == null && node.Is(NodeType.Structure))
-                latest = AssembleStructureNode(node, walker);
-            if (latest == null && node.Is(NodeType.Program))
-                latest = AssembleProgramNode(node, walker);
-            if (latest == null && node.Is(NodeType.Region))
-                latest = AssembleRegionNode(node, walker);
-            if (latest == null && node.Is(NodeType.Line))
-                latest = AssembleLineNode(node, walker);
-            if (latest == null && node.Is(NodeType.Chunk))
-                latest = AssembleChunkNode(node, walker);
-
-            if (latest == null && node.Is(NodeType.Independ))
-                latest = AssembleIndependNode(node, walker);
-            if (latest == null && node.Is(NodeType.Depend))
-                latest = AssembleDependNode(node, walker);
-            if (latest == null && node.Is(NodeType.Append))
-                latest = AssembleAppendNode(node, walker);
-            if (latest == null && node.Is(NodeType.Prepend))
-                latest = AssemblePrependNode(node, walker);
-
-            if (latest == null && node.Is(NodeType.None))
-                latest = node.Update(type: NodeType.None);
-            return latest??AssembleUnknownNode(node, walker);
+            if (latest == null && node.Is(TokenType.Statement))
+                 latest = AssembleStatementNode(node, walker);
+            if (latest == null && node.Is(TokenType.Scope))
+                 latest = AssembleScopeNode(node, walker);
+            if (latest == null && node.Is(TokenType.Data))
+                 latest = AssembleDataNode(node, walker);
+            if (latest == null && node.Is(TokenType.Symbol))
+                 latest = AssembleSymbolNode(node, walker);
+            if (latest == null && node.Is(TokenType.Keyword))
+                 latest = AssembleKeywordNode(node, walker);
+            if (latest == null && node.Is(TokenType.Comment))
+                 latest = AssembleCommentNode(node, walker);
+            if (latest == null && node.Is(TokenType.Start))
+                 latest = AssembleStartNode(node, walker);
+            if (latest == null && node.Is(TokenType.Prefix))
+                 latest = AssemblePrefixNode(node, walker);
+            if (latest == null && node.Is(TokenType.Middle))
+                 latest = AssembleMiddleNode(node, walker);
+            if (latest == null && node.Is(TokenType.Suffix))
+                 latest = AssembleSuffixNode(node, walker);
+            if (latest == null && node.Is(TokenType.End))
+                 latest = AssembleEndNode(node, walker);
+            if (latest == null && node.Is(TokenType.None))
+                 latest = node.Update(NodeType.None);
+            if (latest == null) latest = AssembleUnknownNode(node, walker);
+            return latest;
         }
 
-        protected abstract Node AssembleStructureNode(Node node, NodeWalker walker);
-        protected abstract Node AssembleProgramNode(Node node, NodeWalker walker);
-        protected abstract Node AssembleRegionNode(Node node, NodeWalker walker);
-        protected abstract Node AssembleLineNode(Node node, NodeWalker walker);
-        protected abstract Node AssembleChunkNode(Node node, NodeWalker walker);
-
-        protected abstract Node AssembleIndependNode(Node node, NodeWalker walker);
-        protected abstract Node AssembleDependNode(Node node, NodeWalker walker);
-        protected abstract Node AssembleAppendNode(Node node, NodeWalker walker);
-        protected abstract Node AssemblePrependNode(Node node, NodeWalker walker);
-
+        protected abstract Node AssembleStatementNode(Node node, NodeWalker walker);
+        protected abstract Node AssembleScopeNode(Node node, NodeWalker walker);
+        protected abstract Node AssembleDataNode(Node node, NodeWalker walker);
+        protected abstract Node AssembleSymbolNode(Node node, NodeWalker walker);
+        protected abstract Node AssembleKeywordNode(Node node, NodeWalker walker);
+        protected abstract Node AssembleCommentNode(Node node, NodeWalker walker);
+        protected abstract Node AssembleStartNode(Node node, NodeWalker walker);
+        protected abstract Node AssemblePrefixNode(Node node, NodeWalker walker);
+        protected abstract Node AssembleMiddleNode(Node node, NodeWalker walker);
+        protected abstract Node AssembleSuffixNode(Node node, NodeWalker walker);
+        protected abstract Node AssembleEndNode(Node node, NodeWalker walker);
         protected abstract Node AssembleUnknownNode(Node node, NodeWalker walker);
     }
 }

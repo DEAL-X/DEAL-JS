@@ -38,6 +38,7 @@ namespace MiMFa.Compiler.Model
             return false;
         }
 
+        public bool IsEmpty() => string.IsNullOrEmpty(Value);
         public bool IsProcedure() => !string.IsNullOrWhiteSpace(Value) && !Is(TokenType.None, TokenType.Comment);
         
         public bool IsMatch(params string[] values)

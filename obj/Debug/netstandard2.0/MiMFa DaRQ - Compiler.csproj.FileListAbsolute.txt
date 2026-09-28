@@ -1,0 +1,24 @@
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\DaRQ\Library\darq\convert\types.darq
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\DaRQ\Library\darq\core\functions.darq
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\DaRQ\Library\darq\core\identifiers.darq
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\DaRQ\Library\darq\core\noises.darq
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\DaRQ\Library\darq\core\operators.darq
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\DaRQ\Library\darq\core\statements.darq
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\DaRQ\Library\darq\data\local.darq
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\DaRQ\Library\darq\data\read.darq
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\DaRQ\Library\darq\data\resource.darq
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\DaRQ\Library\darq\handler\identifiers.darq
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\DaRQ\Library\darq\selector\all.darq
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\DaRQ\Library\darq\selector\any.darq
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\DaRQ\Library\darq\selector\one.darq
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\DaRQ\Library\darq\web\transfer.darq
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\MiMFa DaRQ - Compiler.deps.json
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\MiMFa DaRQ - Compiler.dll
+D:\Product\Technology\MiMFa DaRQ - Compiler\bin\Debug\netstandard2.0\MiMFa DaRQ - Compiler.pdb
+D:\Product\Technology\MiMFa DaRQ - Compiler\obj\Debug\netstandard2.0\MiMFa DaRQ - Compiler.csproj.AssemblyReference.cache
+D:\Product\Technology\MiMFa DaRQ - Compiler\obj\Debug\netstandard2.0\MiMFa DaRQ - Compiler.GeneratedMSBuildEditorConfig.editorconfig
+D:\Product\Technology\MiMFa DaRQ - Compiler\obj\Debug\netstandard2.0\MiMFa DaRQ - Compiler.AssemblyInfoInputs.cache
+D:\Product\Technology\MiMFa DaRQ - Compiler\obj\Debug\netstandard2.0\MiMFa DaRQ - Compiler.AssemblyInfo.cs
+D:\Product\Technology\MiMFa DaRQ - Compiler\obj\Debug\netstandard2.0\MiMFa DaRQ - Compiler.csproj.CoreCompileInputs.cache
+D:\Product\Technology\MiMFa DaRQ - Compiler\obj\Debug\netstandard2.0\MiMFa DaRQ - Compiler.dll
+D:\Product\Technology\MiMFa DaRQ - Compiler\obj\Debug\netstandard2.0\MiMFa DaRQ - Compiler.pdb

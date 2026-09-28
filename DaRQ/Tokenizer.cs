@@ -24,7 +24,7 @@ namespace MiMFa.Compiler.DaRQ
 
         public override bool Initialize(MiMFa.Compiler.Compiler compiler)
         {
-            if (compiler != null) base.Initialize(Compiler = compiler == null ? Compiler : compiler as Compiler);
+            if (compiler != null) base.Initialize(Compiler = compiler as Compiler);
             return true;
         }
 
@@ -121,7 +121,7 @@ namespace MiMFa.Compiler.DaRQ
                                         try { Compiler?.Reserves.Add(key, val); } catch { }
                                         walker.MoveToProcedure();
                                         if (walker.Walk() != ";") walker.Move(-1);
-                                        return GetAcceptedToken(TokenType.Comment, $"/* Reserved {Newtonsoft.Json.JsonConvert.ToString(key)} as the {Newtonsoft.Json.JsonConvert.ToString(val.Replace("*/", "*\\/"))} */{Environment.NewLine}", location);
+                                        return GetAcceptedToken(TokenType.Comment, $"/* Reserved {Newtonsoft.Json.JsonConvert.ToString(key)} as the {Newtonsoft.Json.JsonConvert.ToString(val.Replace("*/", "*\\/"))} */", location);
                                     default:
                                         walker.Reset(position);
                                         break;
@@ -271,7 +271,7 @@ namespace MiMFa.Compiler.DaRQ
             int results = 0;
             try
             {
-                var rp = (this.Compiler as MiMFa.Compiler.Compiler)?.ResourceProvider;
+                var rp = Compiler.ResourceProvider;
                 if (rp != null && rp.Exists(folder))
                 {
                     var res = UseFile(folder + "\\index");

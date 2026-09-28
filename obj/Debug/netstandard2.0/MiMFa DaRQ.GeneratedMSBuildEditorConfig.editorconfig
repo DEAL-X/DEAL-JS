@@ -1,8 +1,3 @@
 is_global = true
 build_property.RootNamespace = MiMFa
-build_property.ProjectDir = d:\Product\Technology\MiMFa DaRQ\
-build_property.EnableComHosting = 
-build_property.EnableGeneratedComInterfaceComImportInterop = 
-build_property.CsWinRTUseWindowsUIXamlProjections = false
-build_property.EffectiveAnalysisLevelStyle = 
-build_property.EnableCodeStyleSeverity = 
+build_property.ProjectDir = D:\Product\Technology\MiMFa DaRQ\

@@ -7,7 +7,7 @@ namespace MiMFa.Compiler.Walker
 {
     public class NodeWalker : WalkerBase<Node>
     {
-        public NodeWalker(Node[] nodes, string source = null) : base(nodes, source) { }
+        public NodeWalker(Node[] nodes = null, string source = null) : base(nodes?? new Node[0], source) { }
 
         public bool Is(params NodeType[] nodeTypes)
         {
@@ -105,7 +105,7 @@ namespace MiMFa.Compiler.Walker
             return new Node();
         }
 
-        public Node WalkToProcedure()
+        public Node WalkProcedure()
         {
             return WalkTo(t => t.IsProcedure());
         }

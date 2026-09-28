@@ -32,16 +32,8 @@ namespace MiMFa.Compiler.Parser
         {
             if (!Initialize(compiler)) yield break;
             while (!walker.IsEnded)
-                yield return ParseToken(walker.Walk(), walker);
-        }
-
-        protected virtual Node ParseToken(Token token, TokenWalker walker)
-        {
-            var nodes = ParseTokens(token, walker);
-            var list = new List<Node>(nodes);
-            if (list.Count > 1) return new Node(null, NodeType.Chunk, list.ToArray());
-            if (list.Count == 1) return list[0];
-            return new Node();
+                foreach (var item in ParseTokens(walker.Walk(), walker))
+                    yield return item;
         }
 
         protected virtual IEnumerable<Node> ParseTokens(Token token, TokenWalker walker)

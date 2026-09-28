@@ -41,7 +41,13 @@ namespace MiMFa.Compiler.JavaScript
                     return new Token(TokenType.UndefinedData, word, location);
 
                 case "if":
+                    walker.Move(word.Length);
+                    walker.MoveToProcedure();
+                    return new Token(TokenType.Statement, word, location);
                 case "else":
+                    walker.Move(word.Length);
+                    walker.MoveToProcedure();
+                    return new Token(TokenType.Statement | TokenType.Suffix, word, location);
                 case "switch":
                 case "case":
                 case "default":

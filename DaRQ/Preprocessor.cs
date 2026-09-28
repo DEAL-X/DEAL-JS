@@ -10,7 +10,7 @@ namespace MiMFa.Compiler.DaRQ
 
         public override bool Initialize(MiMFa.Compiler.Compiler compiler)
         {
-            if (compiler != null) base.Initialize(Compiler = compiler == null ? Compiler : compiler as Compiler);
+            if (compiler != null) base.Initialize(Compiler = compiler as Compiler);
             return true;
         }
     }

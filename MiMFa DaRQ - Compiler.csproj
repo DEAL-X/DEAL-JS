@@ -8,11 +8,18 @@
     <Company>MiMFa</Company>
     <Product>DaRQ</Product>
     <Authors>Mohammad Fathi (MiMFa)</Authors>
+    <ApplicationIcon />
+    <OutputType>Library</OutputType>
+    <StartupObject></StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="DaRQ\Parser.Legacy.cs" />
     <Compile Remove="JavaScript\Parser.Legacy.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Newtonsoft.Json.dll" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +34,13 @@
     <None Include="SAMPLE.md" />
     <None Include="Samples\DaRQ Tutorial-Example.darq" />
     <None Include="Samples\DaRQ Tutorial-Example.js" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Resource Include="Newtonsoft.Json.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 
