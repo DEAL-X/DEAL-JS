@@ -13,7 +13,7 @@ Also you can find more examples and their parsed JS versions [here](Samples/).
 DEAL has **five** main principles:
 1. Every syntax will be the same as english grammar.
     * For example:
-    ```sql
+    ```ts
     For each url of the list, load the url, then append all h3#title, to the destination;
     otherwise log the error `Could not load the ${url}!`;
     ```
@@ -33,7 +33,7 @@ DEAL has **five** main principles:
     * Never runtime guessing.
 3. Ability to write pure JavaScript code between DEAL instructions freely.
     * For example:
-    ```sql
+    ```ts
     for(url of list) load(url).then(() => {
         append(all("h3#title"), destination);
     }) otherwise log the error `Could not load the ${url}!`;
@@ -41,14 +41,14 @@ DEAL has **five** main principles:
     * Without any conflict.
 4. Everything is extensible except the grammar.
     * Can even change the language of the written code to other local languages (Spanish, Persian, ...), using attach its special libraries, for example:
-    ```sql
+    ```ts
     use Spanish; // Contains all Spanish alternative reserved words.
     // ...
     Para cada url de la lista, carga la url, luego añade todos h3#title, al destino; 
     de lo contrario, registra el error `¡No se pudo cargar ${url}!`;
     ```
     * Then it will be exactly equal to the below DEAL instructions:
-    ```dig
+    ```ts
     use Spanish; // Contains all Spanish alternative reserved words.
     // ...
     For each url of the lista, load the url, then append all h3#title, to the destino;
@@ -93,7 +93,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 
 #### Conditions
 * To work in a special conditions
-    ```js
+    ```ts
     IF condition, procedure; ELSE procedure;
     ```
     It will compile to:
@@ -107,13 +107,10 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 
 #### Iterations
 * Working with a collection based iterations
-    ```js
+    ```ts
     FOR item OF/IN collection/object, procedure;
     ```
-    ```js
-    EACH item OF/IN collection/object, procedure;
-    ```
-    ```js
+    ```ts
     FOR EACH item OF/IN collection/object, procedure;
     ```
     All of them will compile to:
@@ -127,7 +124,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
         js-procedure;
     ```
 * Using a conditional iterations
-    ```js
+    ```ts
     WHILE condition, procedure;
     ```
     It will compile to:
@@ -136,7 +133,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
         js-procedure;
     ```
 * Using a post conditional iterations
-    ```js
+    ```ts
     DO { procedures } WHILE condition;
     ```
     It will compile to:
@@ -146,7 +143,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     } while(js-condition);
     ```
     Also you can use a modern approach:
-    ```js
+    ```ts
     #doingTask procedure; WHILE condition, doingTask;
     ```
     It will compile to:
@@ -157,10 +154,10 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 
 #### Blockings
 * To make a DEAL procedures-block
-    ```js
+    ```ts
     BEGIN procedures END;
     ```
-    ```js
+    ```ts
     DO procedures END;
     ```
     They will compile to:
@@ -170,7 +167,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     }
     ```
 * To make a DEAL callable procedures-block
-    ```js
+    ```ts
     DOING procedures END;
     ```
     It will compile to:
@@ -180,7 +177,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     };
     ```
 * To make a tryable block
-    ```js
+    ```ts
     TRY procedures; CATCH problem, procedure; FINALLY procedure;
     ```
     It will compile to:
@@ -196,7 +193,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 
 #### Threadings
 * To have a multi-thread program, you can make and manage promises
-    ```js
+    ```ts
     WILL procedure THEN procedure; OTHERWISE procedure; ANYWAY procedure;
     ```
     It will compile to:
@@ -209,7 +206,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 
 #### Collections
 * To filter collections
-    ```js
+    ```ts
     array WHERE condition
     ```
     It will compile to:
@@ -217,7 +214,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     js-array.filter(data=>js-condition)
     ```
 * To sort collections
-    ```js
+    ```ts
     array ORDER BY key1, key2
     ```
     It will compile to:
@@ -227,7 +224,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
         .sort((a, b)=>(a,b)=>a.js-key2>b.js-key2?1:a.js-key2==b.js-key2?0:-1)
     ```
 * To slice collections
-    ```js
+    ```ts
     array LIMIT number, count
     ```
     It will compile to:
@@ -261,11 +258,11 @@ All commands represent executable operations.
     * They will call immediately after definition once.
     * Will be able to call again, just using the name without any parentesis.
 * The main syntax to define a special action commands:
-    ```js
+    ```ts
     #commandName procedure;
     ```
     or
-    ```js
+    ```ts
     #commandName: procedure;
     ```
     They will compile to:
@@ -273,7 +270,7 @@ All commands represent executable operations.
     (commandName = (() => js-procedure))();
     ```
 * Then to call:
-    ```js
+    ```ts
     commandname
     ```
     It will compile to:
@@ -288,7 +285,7 @@ All commands represent executable operations.
     * All inputs of each command should be optional. So ensure every parameter has a default value.
     * If the command has no returned output, it should return itself (specially when there is not inputted arguments). 
 * The main syntax to define a special function commands:
-    ```js
+    ```ts
         COMMAND commandName(input1=value1, ...) {	// All inputs of each command must have a default value
             procedures
             /*
@@ -307,19 +304,19 @@ All commands represent executable operations.
     ```
 * Four ways to call a command:
     * Grammatical:			
-        ```js
+        ```ts
         commandname                            		    // To call without any inputted arguments
         ```
     * Functional:			
-        ```js
+        ```ts
         commandname(val1_1, CMD2(val2_1, val2_2))		// Exact calling a function
         ```
     * Procedural:			
-        ```js
+        ```ts
         commandname val1_1, CMD2 val2_1, val2_2	        // Separated by comma.
         ```
     * Optional:			
-        ```js
+        ```ts
         commandname1 ...{								// Sending an object of named values
             inp1_1: val1_1,
             inp1_2: commandname2 { inp2_1: val2_1, inp2_2: val2_2 } 
@@ -333,7 +330,7 @@ All commands represent executable operations.
     * All definition commands must be defined globally.
     * They will have a special case-insensitive commandName.
 * The main syntax to define a special definition commands:
-    ```js
+    ```ts
         COMMAND commandName = {
             propertykey1 : propertyValue1,
             propertykey2 : propertyValue2,
@@ -349,7 +346,7 @@ All commands represent executable operations.
         };
     ```
 * Then to use:
-    ```js
+    ```ts
     commandname propertykey1
     ```
     It will compile to:
@@ -366,7 +363,7 @@ All commands represent executable operations.
     * They can convert everything (constant, variable, function, class, etc.), even after their definition.
     * They will not change the behavior of the converted thing. 
  * The main syntax to make then call a special delegation commands is:
-    ```js
+    ```ts
         var test1Var = "The test value #1";
         console.log(test1Var); // You should use case-sensitively
         console.log(@test1Var); // You should use case-sensitively (But made it case-insensitive after a sticked acceptor sign `@`)
@@ -395,11 +392,11 @@ DEAL allows optional readability words that improve the natural flow of the lang
     * The reserved name will be completely case-insensitive.
     * It can improve the readability of the code with a predefined replacement for them.
     * You can add a reserved-word to the parser using the following syntax:
-        ```js
+        ```ts
         RESERVE reservedWordName AS "replacement";       // This line affects only the parser, and will replace the used reservedWordName by replacement everywhere it used.
         ```
     * For example, you can write any one of the bellow codes, without any effects in meaning:
-        ```js
+        ```ts
         RESERVE into AS ",";
         // Other procedures
         SAVE "hello world!" INTO "index.html";
@@ -407,7 +404,7 @@ DEAL allows optional readability words that improve the natural flow of the lang
         SAVE "hello world!" , "index.html";
         ```
         Or:
-        ```js
+        ```ts
         RESERVE restart AS "LOAD \"http://mimfa.net\";";
         // Other procedures
         RESTART
@@ -420,11 +417,11 @@ DEAL allows optional readability words that improve the natural flow of the lang
     * The reserved name will be completely case-insensitive.
     * It can improve the readability of the code without carrying any semantic meaning on them.
     * You can add a noise word to the parser using the following syntax:
-        ```js
+        ```ts
         RESERVE noiseWordName;       // This line affects only the parser, not JavaScript.
         ```
     * For example, you can write any one of the bellow codes, without any effects in meaning:
-        ```js
+        ```ts
         RESERVE the;
         // Other procedures
         CLICK ALL THE #nextbutton
@@ -432,7 +429,7 @@ DEAL allows optional readability words that improve the natural flow of the lang
         CLICK ALL #nextbutton
         ```
         Or:
-        ```js
+        ```ts
         RESERVE a;
         // Other procedures
         LOAD A "www.example.com"
@@ -448,52 +445,52 @@ Selectors describe what should be selected, but not only DOM elements, potential
 * Built into the compiler.
 * They define how resources are identified (CSS, XPath, RegEx, Id, Class, Index, Location, ...)
 * You have multiple special predefined DEAL commands in core, to extract elements from the resource too:
-    ```js
+    ```ts
     ALL selector						// To select all elements using the specified selector from the DOCUMENT
     ```
-    ```js
+    ```ts
     ONE selector						// To select one element using the specified selector from the DOCUMENT
     ```
-    ```js
+    ```ts
     ANY selector				    	// To select all/one elements using the specified selector from the DOCUMENT
     ```
-    ```js
+    ```ts
     ALL/ONE/ANY selector FROM parent 	// To select all/one from the parent element/object/array
     ```
-    ```js
+    ```ts
     resource[selector]				    // To select one item using the specified selector on the resource, the resource can be an element/object/array
     ```
 * Selectors effectively makes DEAL a universal extraction language, not just a scripting language, Because you can use one of the DEAL Selectors with the syntax below, everywhere you need:
     * CSS:
-        ```js
+        ```ts
         table>tbody>tr			    // Write CSS selector directly, But if it has spaces or {} should wrapped by single/double quotes
         ```
     * XPath:
-        ```js
+        ```ts
         \table\tbody\tr\	        // Using backslash wrapped path to use a XPath route
         ```
     * RegEx:
-        ```js
+        ```ts
         /(?<=<tr>)(?=<\/tr>)/gi		// You can use a Regular Expression Pattern to filter elements based on their outerHTML
         ```
     * Tag:
-        ```js
+        ```ts
         tagName					    // Select element/s using type directly the elementName
         ```
     * Id:
-        ```js
+        ```ts
         #tagId				    // Select an element using type element Id after a #
         ```
     * Class:
-        ```js
+        ```ts
         .tagClass					// Select element/s using type element class after a dot('.')
         ```
     * Location:
-        ```js
+        ```ts
         500, 700, 999				// The location of element on the screen(x,y,z) or a dimensional array or object
         ```
     * Index:
-        ```js
+        ```ts
         12							// The index of the child
         ```
 
@@ -503,67 +500,67 @@ Selectors describe what should be selected, but not only DOM elements, potential
 There are multiple defined variables accessible globally, which users can interact with.
 * A very small set of them defined bult-in (APPLICATION, BROWSER, WINDOW, TAB, DOCUMENT, RESPONSE, ITS, ...)
 * Some of the global variables that will update based on the current status are named Handler Identifiers, including:
-    ```js
+    ```ts
     BROWSER 			    // The current browser used in this thread
     ```
-    ```js
+    ```ts
     APPLICATION 		    // The current application (MiMFa Scraper) used in this thread
     ```
-    ```js
+    ```ts
     WINDOW/TAB 		        // The current window/tab used in this thread
     ```
-    ```js
+    ```ts
     DOCUMENT 		        // The current loaded document in the window used in this thread
     ```
-    ```js
+    ```ts
     RESPONSE			    // The latest response received in this thread
     ```
-    ```js
+    ```ts
     LOADED				    // The current document used in this thread was loaded successfully or not
     ```
-    ```js
+    ```ts
     FETCHED			        // The current response used in this thread was received successfully or not
     ```
-    ```js
+    ```ts
     DATA				    // The root of iterated objects
     ```
-    ```js
+    ```ts
     ITS				        // The current object or class will accessible through this one
     ```
 * Multiple structures will update in the current thread, based on the two commands FETCH/LOAD status.
     * FETCH: To send a request to a server and receive its response, and update the handler identifiers based on that, using the syntax below:
-        ```js
+        ```ts
         FETCH url, data, method		// To fetch data from a specified URL, then update the handler identifiers
         ```
     * LOAD: To open a website in the current window, and update the handler identifiers based on that, using the syntax below:
-        ```js
+        ```ts
         LOAD url		// To load a website from a specified URL in the current window/tab, and then update the handler
         ```
-        ```js
+        ```ts
         LOAD NEXT		// To load a website from a specified URL in the current window/tab, and then update the handler
         ```
-        ```js
+        ```ts
         LOAD BACK		// To load a website from a specified URL in the current window/tab, and then update the handler
         ```
-        ```js
+        ```ts
         LOAD			// To update the Workspace handlers based on the current window/tab statements
         ```
 * If you want to work in your browser, window, or so on, without changing the current handler structures, use the following commands:
     * GET: To send a GET request to a server and receive its response, using the syntax below:
-        ```js
+        ```ts
         GET url, data		// To fetch data from a specified URL
         ```
     * POST: To send a POST request to a server and receive its response, using the syntax below:
-        ```js
+        ```ts
         POST url, data		// To fetch data from a specified URL
         ```
     * GO: To send a request to a server and receive its response, without changing the current handler identifiers, using the syntax below:
-        ```js
+        ```ts
         GO url			// To load a website from a specified URL in a new window/tab
         ```
-        ```js
+        ```ts
         GO NEXT		    // To open the next window/tab, if it exists
         ```
-        ```js
+        ```ts
         GO BACK		    // To open the previous window/tab, if it exists 
         ```
