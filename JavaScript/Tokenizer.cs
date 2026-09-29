@@ -1,12 +1,12 @@
 using System.Linq;
 using System.Text.RegularExpressions;
-using MiMFa.Compiler.Core;
-using MiMFa.Compiler.Model;
-using MiMFa.Compiler.Walker;
+using MiMFa.Engine.Core;
+using MiMFa.Engine.Model;
+using MiMFa.Engine.Walker;
 
-namespace MiMFa.Compiler.JavaScript
+namespace MiMFa.Engine.JavaScript
 {
-    public class Tokenizer : MiMFa.Compiler.Tokenizer.Tokenizer
+    public class Tokenizer : MiMFa.Engine.Tokenizer.Tokenizer
     {
         public TokenType? SpaceSwitch = null;
         protected override Token TokenizeCode(CodeWalker walker)
@@ -41,13 +41,10 @@ namespace MiMFa.Compiler.JavaScript
                     return new Token(TokenType.UndefinedData, word, location);
 
                 case "if":
-                    walker.Move(word.Length);
-                    walker.MoveToProcedure();
-                    return new Token(TokenType.Statement, word, location);
                 case "else":
                     walker.Move(word.Length);
                     walker.MoveToProcedure();
-                    return new Token(TokenType.Statement | TokenType.Suffix, word, location);
+                    return new Token(TokenType.Statement, word, location);
                 case "switch":
                 case "case":
                 case "default":
@@ -125,7 +122,7 @@ namespace MiMFa.Compiler.JavaScript
             if (Regex.IsMatch(current.ToString(), "[A-Z_$]", RegexOptions.IgnoreCase))
                 return TokenizeKeyword(walker, location);
 
-            if (Regex.IsMatch(current.ToString(), "[0-9]"))
+            if (Regex.IsMatch(current.ToString(), @"[0-9]") || (Regex.IsMatch(current.ToString(), @"[\-\+]") && Regex.IsMatch(next.ToString(), @"[0-9\.]")))
                 return TokenizeNumber(walker, location);
 
             if (current == "\"" || current == "'" || current == "`")
@@ -155,7 +152,8 @@ namespace MiMFa.Compiler.JavaScript
 
         protected virtual Token TokenizeNumber(CodeWalker walker, Position location)
         {
-            var value = string.Concat(walker.WalkWhile(ch => Regex.IsMatch(ch.ToString(), "[0-9._]")).ToArray());
+            var value = string.Concat(walker.WalkWhile(ch => Regex.IsMatch(ch.ToString(), @"[\-\+_0-9.ebxo]", RegexOptions.IgnoreCase)).ToArray());
+            value += string.Concat(walker.WalkWhile(ch => Regex.IsMatch(ch.ToString(), "[0-9.a-f]", RegexOptions.IgnoreCase)).ToArray());
             return new Token(TokenType.NumberData, value, location);
         }
 

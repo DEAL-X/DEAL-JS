@@ -1,6 +1,6 @@
 is_global = true
-build_property.RootNamespace = MiMFa.DaRQ
-build_property.ProjectDir = D:\Product\Software\Extension\MiMFa Scraper\src\engine\DaRQ-CS\
+build_property.RootNamespace = MiMFa.DEAL.JS
+build_property.ProjectDir = D:\Product\Software\Extension\MiMFa Scraper\src\engine\DEAL.JS-CS\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.CsWinRTUseWindowsUIXamlProjections = false

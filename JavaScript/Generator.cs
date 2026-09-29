@@ -1,18 +1,33 @@
-// Converted from src/engine/DaRQ/JavaScript-Compiler/Generator.ts
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MiMFa.Compiler;
-using MiMFa.Compiler.Core;
-using MiMFa.Compiler.Generator;
-using MiMFa.Compiler.Assembler;
-using MiMFa.Compiler.Model;
-using MiMFa.Compiler.Walker;
+using MiMFa.Engine;
+using MiMFa.Engine.Core;
+using MiMFa.Engine.Generator;
+using MiMFa.Engine.Assembler;
+using MiMFa.Engine.Model;
+using MiMFa.Engine.Walker;
 
-namespace MiMFa.Compiler.JavaScript
+namespace MiMFa.Engine.JavaScript
 {
-    public class Generator : MiMFa.Compiler.Generator.Generator
+    public class Generator : MiMFa.Engine.Generator.Generator
     {
+        //protected override string GenerateCode(Node node, NodeWalker walker)
+        //{
+        //    var value = node.Token?.Value ?? string.Empty;
+        //    if (
+        //        value == "do" || value == "try" || value == "catch" || value == "finally" ||
+        //        value == "class" || value == "interface" || value == "enum" || value == "package" ||
+        //        //value == "if" || value == "else" || value == "switch" || value == "case" || value == "default" ||
+        //        //value == "for" || value == "while"
+        //        node.Is(TokenType.Comment, TokenType.End, TokenType.Keyword, TokenType.Data, TokenType.Unknown) ||
+        //        (node.Is(NodeType.BlockStructure) && value == "(")
+        //        )
+        //        return base.GenerateCode(node, walker) ?? "";
+        //    var code = base.GenerateCode(node, walker) ?? "";
+        //    return string.IsNullOrEmpty(code) ? "" : System.Text.RegularExpressions.Regex.IsMatch(code, "[;\\}]\\s*$") ? code : $"{code};";
+        //}
+
         protected virtual IList<string> GenerateArray(params Node[] nodes)
         {
             var walker = new NodeWalker(nodes.ToArray());
@@ -22,12 +37,6 @@ namespace MiMFa.Compiler.JavaScript
         protected virtual string GenerateArrayCode(IEnumerable<Node> nodes, string separator = null)
         {
             return string.Join(separator ?? "", GenerateArray(nodes.ToArray())).Trim();
-        }
-        protected virtual string GenerateCodeLine(Node node, NodeWalker walker)
-        {
-            if (node.Is(NodeType.BlockStructure) && node.Token.IsMatch("{")) return GenerateCode(node, walker) ?? "";
-            var code = GenerateCode(node, walker) ?? "";
-            return string.IsNullOrEmpty(code) ? "" : System.Text.RegularExpressions.Regex.IsMatch(code, "[;\\}]\\s*$") ? code : $"{code};";
         }
 
         protected override string GenerateProgramCode(Node node, NodeWalker walker)
@@ -144,8 +153,8 @@ namespace MiMFa.Compiler.JavaScript
         protected override string GenerateRegionCode(Node node, NodeWalker walker)
         {
             if (node.Count <= 0)
-                return $"{Compiler.Options.MakeNewLine(Indention)}{node.Token.Value}{Compiler.Options.MakeNewLine(Indention)}";
-            else return $"{Compiler.Options.MakeNewLine(Indention)}{(node.Token.Value + " " + GenerateArrayCode(node.Children)).Trim()}{Compiler.Options.MakeNewLine(Indention)}";
+                return $"{(walker.PeekProcedure(-2)?.Is(NodeType.Line) != true?Compiler.Options.MakeNewLine(Indention) : "")}{node.Token.Value}{(node.Is(NodeType.Line) ? Compiler.Options.MakeNewLine(Indention) : "")}";
+            else return $"{(walker.PeekProcedure(-2)?.Is(NodeType.Line) != true ? Compiler.Options.MakeNewLine(Indention) : "")}{(node.Token.Value + " " + GenerateArrayCode(node.Children)).Trim()}{(node.Is(NodeType.Line) ? Compiler.Options.MakeNewLine(Indention) : "")}";
         }
         protected override string GenerateLineCode(Node node, NodeWalker walker)
         {

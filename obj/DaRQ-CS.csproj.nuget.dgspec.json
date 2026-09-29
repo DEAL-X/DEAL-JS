@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Product\\Software\\Extension\\MiMFa Scraper\\src\\engine\\DaRQ-CS\\DaRQ-CS.csproj": {}
+    "D:\\Product\\Software\\Extension\\MiMFa Scraper\\src\\engine\\DEAL.JS-CS\\DEAL.JS-CS.csproj": {}
   },
   "projects": {
-    "D:\\Product\\Software\\Extension\\MiMFa Scraper\\src\\engine\\DaRQ-CS\\DaRQ-CS.csproj": {
+    "D:\\Product\\Software\\Extension\\MiMFa Scraper\\src\\engine\\DEAL.JS-CS\\DEAL.JS-CS.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Product\\Software\\Extension\\MiMFa Scraper\\src\\engine\\DaRQ-CS\\DaRQ-CS.csproj",
-        "projectName": "DaRQ-CS",
-        "projectPath": "D:\\Product\\Software\\Extension\\MiMFa Scraper\\src\\engine\\DaRQ-CS\\DaRQ-CS.csproj",
+        "projectUniqueName": "D:\\Product\\Software\\Extension\\MiMFa Scraper\\src\\engine\\DEAL.JS-CS\\DEAL.JS-CS.csproj",
+        "projectName": "DEAL.JS-CS",
+        "projectPath": "D:\\Product\\Software\\Extension\\MiMFa Scraper\\src\\engine\\DEAL.JS-CS\\DEAL.JS-CS.csproj",
         "packagesPath": "C:\\Users\\MiMFa\\.nuget\\packages\\",
-        "outputPath": "D:\\Product\\Software\\Extension\\MiMFa Scraper\\src\\engine\\DaRQ-CS\\obj\\",
+        "outputPath": "D:\\Product\\Software\\Extension\\MiMFa Scraper\\src\\engine\\DEAL.JS-CS\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",

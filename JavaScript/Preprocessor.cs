@@ -1,6 +1,6 @@
-namespace MiMFa.Compiler.JavaScript
+namespace MiMFa.Engine.JavaScript
 {
-    public class Preprocessor : MiMFa.Compiler.Preprocessor.Preprocessor
+    public class Preprocessor : MiMFa.Engine.Preprocessor.Preprocessor
     {
     }
 }

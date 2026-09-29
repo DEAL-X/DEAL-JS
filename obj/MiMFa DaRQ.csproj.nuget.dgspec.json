@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Product\\Technology\\MiMFa DaRQ\\MiMFa DaRQ.csproj": {}
+    "D:\\Product\\Technology\\MiMFa DEAL.JS\\MiMFa DEAL.JS.csproj": {}
   },
   "projects": {
-    "D:\\Product\\Technology\\MiMFa DaRQ\\MiMFa DaRQ.csproj": {
+    "D:\\Product\\Technology\\MiMFa DEAL.JS\\MiMFa DEAL.JS.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Product\\Technology\\MiMFa DaRQ\\MiMFa DaRQ.csproj",
-        "projectName": "MiMFa DaRQ",
-        "projectPath": "D:\\Product\\Technology\\MiMFa DaRQ\\MiMFa DaRQ.csproj",
+        "projectUniqueName": "D:\\Product\\Technology\\MiMFa DEAL.JS\\MiMFa DEAL.JS.csproj",
+        "projectName": "MiMFa DEAL.JS",
+        "projectPath": "D:\\Product\\Technology\\MiMFa DEAL.JS\\MiMFa DEAL.JS.csproj",
         "packagesPath": "C:\\Users\\MiMFa\\.nuget\\packages\\",
-        "outputPath": "D:\\Product\\Technology\\MiMFa DaRQ\\obj\\",
+        "outputPath": "D:\\Product\\Technology\\MiMFa DEAL.JS\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",

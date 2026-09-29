@@ -1,22 +1,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using MiMFa.Compiler.Model;
-using MiMFa.Compiler.Walker;
+using MiMFa.Engine.Model;
+using MiMFa.Engine.Walker;
 
-namespace MiMFa.Compiler.JavaScript
+namespace MiMFa.Engine.JavaScript
 {
     /// <summary>
     /// Hierarchical assembler. It receives independent token nodes and packs
     /// them through the language semantic assembler.
     /// </summary>
-    public class Assembler : MiMFa.Compiler.Assembler.Assembler
+    public class Assembler : MiMFa.Engine.Assembler.Assembler
     {
         public int Location { get; set; } = 0;
         public Node LastNode { get; set; } = null;
         public NodeWalker Assembled { get; set; } = null;
 
-        public override IEnumerable<Node> Assemble(NodeWalker walker, MiMFa.Compiler.Compiler compiler = null)
+        public override IEnumerable<Node> Assemble(NodeWalker walker, MiMFa.Engine.Engine compiler = null)
         {
             if (!Initialize(compiler)) return new Node[0];
             Assembled = new NodeWalker();
@@ -41,7 +41,7 @@ namespace MiMFa.Compiler.JavaScript
         {
             foreach (var node in SequenceAssembleNodes(walker)) yield return node;
             var next = walker.PeekProcedure();
-            if (next != null && !(Compiler as Compiler).IsFlag(next))
+            if (next != null && !(Compiler as Engine).IsFlag(next))
                 if (next.Is(TokenType.Symbol))
                     foreach (var node in SectionAssembleNodes(walker))
                         yield return node;
@@ -60,7 +60,7 @@ namespace MiMFa.Compiler.JavaScript
         {
             foreach (var node in CompactAssembleNodes(walker)) yield return node;
             var next = walker.PeekProcedure();
-            if (next != null && !(Compiler as Compiler).IsFlag(next))
+            if (next != null && !(Compiler as Engine).IsFlag(next))
                 if (next.Is(TokenType.DelimiterSymbol))
                     foreach (var node in SequenceAssembleNodes(walker))
                         yield return node;
@@ -77,8 +77,9 @@ namespace MiMFa.Compiler.JavaScript
         {
             yield return AssembleNode(walker);
             var next = walker.PeekProcedure();
-            if (next != null && !(Compiler as Compiler).IsFlag(next))
-                if (next.Is(
+            if (next != null && !(Compiler as Engine).IsFlag(next))
+                if (
+                    next.Is(
                         TokenType.ConcatenatorSymbol,
                         TokenType.Suffix,
                         TokenType.Middle,
@@ -92,6 +93,7 @@ namespace MiMFa.Compiler.JavaScript
 
         protected override Node AssembleNode(NodeWalker walker)
         {
+            if ((Compiler as Engine).IsFlag(walker.Current)) return new Node();
             return base.AssembleNode(walker.Walk(), walker).Update(location: Location);
         }
 
@@ -106,7 +108,7 @@ namespace MiMFa.Compiler.JavaScript
                     var fname = walker.PeekProcedure();
                     if (fname != null && fname.Is(TokenType.Keyword))
                     {
-                        (Compiler as Compiler).SetKeyword(fname.Token.Update(TokenType.FunctionKeyword));
+                        (Compiler as Engine).SetKeyword(fname.Token.Update(TokenType.FunctionKeyword));
                         walker.Replace(fname);
                     }
                     //else node.Update(type: (NodeType)(node.Type - NodeType.Region) | NodeType.Line);
@@ -224,7 +226,7 @@ namespace MiMFa.Compiler.JavaScript
                     var cname = walker.PeekProcedure();
                     if (cname != null && cname.Is(TokenType.Keyword))
                     {
-                        (Compiler as Compiler).SetKeyword(cname.Token.Update(TokenType.IdentifierKeyword));
+                        (Compiler as Engine).SetKeyword(cname.Token.Update(TokenType.IdentifierKeyword));
                         walker.Replace(cname);
                     }
                     return node.AddRange(AssembleNode(walker), AssembleNode(walker));
@@ -281,7 +283,7 @@ namespace MiMFa.Compiler.JavaScript
             if (node.Is(TokenType.DelimiterSymbol))
                 return node.Add(CompactAssembleNode(walker));
             if (node.Is(TokenType.TerminatorSymbol) || node.Is(NodeType.Chunk, NodeType.Independ))
-                if ((Compiler as Compiler).IsComplementors(next))
+                if ((Compiler as Engine).IsComplementors(next))
                     return node.Add(CompactAssembleNode(walker));
                 else return node;
             return node.Add(AssembleNode(walker));
@@ -296,7 +298,7 @@ namespace MiMFa.Compiler.JavaScript
         }
         protected override Node AssembleCommentNode(Node node, NodeWalker walker)
         {
-            return Regex.IsMatch(node.Token.Value, @"^\s*\/{2}") ? node : AssemblePrefixNode(node.Update(node.Type | NodeType.Prepend), walker);
+            return Regex.IsMatch(node.Token.Value, @"^\s*\/{2}") ? node : AssemblePrefixNode(node, walker);
         }
         protected override Node AssembleStartNode(Node node, NodeWalker walker)
         {
@@ -313,14 +315,14 @@ namespace MiMFa.Compiler.JavaScript
         protected override Node AssemblePrefixNode(Node node, NodeWalker walker)
         {
             var child = CompactAssembleNode(walker);
-            if ((Compiler as Compiler).IsPrependent(node) && (Compiler as Compiler).IsAppendent(child))
+            if ((Compiler as Engine).IsPrependent(node) && (Compiler as Engine).IsAppendent(child))
                 return node.Add(child);
             else return new Node(new Token(), NodeType.Region, node, child);
         }
         protected override Node AssembleMiddleNode(Node node, NodeWalker walker)
         {
             var child = CompactAssembleNode(walker);
-            if ((Compiler as Compiler).IsPrependent(node) && (Compiler as Compiler).IsAppendent(child))
+            if ((Compiler as Engine).IsPrependent(node) && (Compiler as Engine).IsAppendent(child))
                 return node.Add(child);
             else return new Node(new Token(), NodeType.Region, node, child);
         }

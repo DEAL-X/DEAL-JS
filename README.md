@@ -1,65 +1,95 @@
-# DaRQ (Declarative Automation Rules Query Language)
+# DEAL.JS (Declarative and Extensible Abstract Language for JavaScript) Compiler
 
-DaRQ is a deterministic, reusable, human-readable, extensible command language for acquiring, transforming, analyzing, and automating data workflows. A structured intermediate representation (IR) between natural language and executable JavaScript scraping logic. In other words, DaRQ is a procedural, English-like domain-specific language that compiles deterministically into JavaScript browser automation code.
-* DaRQ queries will parse directly into complex and optimized pure JavaScript code to use everywhere.
-* You can write pure JavaScript between your queries freely.
+DEAL.JS is a deterministic, reusable, human-readable, extensible command language for acquiring, transforming, analyzing, and automating data workflows. A structured intermediate representation (IR) between natural language and executable JavaScript scraping logic. In other words, DEAL is a procedural, English-like domain-specific language that compiles deterministically into JavaScript browser automation code.
+* DEAL instructions will parse directly into complex and optimized pure JavaScript code to use everywhere.
+* You can write pure JavaScript between your instructions freely.
 
-Start DaRQ directly using the tutorial sample [here](SAMPLE.md) quickly...
+Start DEAL directly using the tutorial sample [here](SAMPLE.md) quickly...
 
 Also you can find more examples and their parsed JS versions [here](Samples/).
 
 
 ## Main Principles
-DaRQ has **five** main principles:
-1. Every Statement will be the same as English grammar.
-    ```js
-    For each url of list, load the url, then append all h3#title, to destination;
+DEAL has **five** main principles:
+1. Every syntax will be the same as english grammar.
+    * For example:
+    ```sql
+    For each url of the list, load the url, then append all h3#title, to the destination;
+    otherwise log the error `Could not load the ${url}!`;
     ```
-2. Every Command will be compiled deterministically into JavaScript.
-    * The previous query will converts to the bellow pure js code directly:
+    * The written DEAL code can be read as a simple document.
+2. Every instruction will be compiled deterministically into JavaScript.
+    * The previous instructions will convert to the below pure JavaScript code directly:
     ```js
-    for(url of list) load(url).then(((data) => {
-        handlers(data);
+    for(const url of list) load(url).then((data) => {
+        handle(data);
         append(all("h3#title"), destination);
+    }).catch((data) => {
+        handle(data);
+        log.error(`Could not load the ${url}!`);
     });
     ```
     * There is no hidden behavior.
     * Never runtime guessing.
-3. The current execution Variables are always available.
+3. Ability to write pure JavaScript code between DEAL instructions freely.
+    * For example:
+    ```sql
+    for(url of list) load(url).then(() => {
+        append(all("h3#title"), destination);
+    }) otherwise log the error `Could not load the ${url}!`;
+    ```
+    * Without any conflict.
 4. Everything is extensible except the grammar.
+    * Can even change the language of the written code to other local languages (Spanish, Persian, ...), using attach its special libraries, for example:
+    ```sql
+    use Spanish; // Contains all Spanish alternative reserved words.
+    // ...
+    Para cada url de la lista, carga la url, luego añade todos h3#title, al destino; 
+    de lo contrario, registra el error `¡No se pudo cargar ${url}!`;
+    ```
+    * Then it will be exactly equal to the below DEAL instructions:
+    ```dig
+    use Spanish; // Contains all Spanish alternative reserved words.
+    // ...
+    For each url of the lista, load the url, then append all h3#title, to the destino;
+    otherwise log the error `¡No se pudo cargar ${url}!`;
+    ```
 5. The generated JavaScript is the executable truth.
 
 
 ## Main Syntax
-In the DaRQ:
-* Everything is is built upon five fundamental concepts: DaRQ **Structures**, **Commands**, **Reserves**, **Selectors**, and **Handlers**.
-    * **Structures** define the grammar.
-    * **Commands** perform actions.
-    * **Reserves** represent all reserved-words or noise-words defined for DaRQ.
-    * **Selectors** locate and identify resources.
-    * **Variables** of the Workspace represent the current execution context.
+In the DEAL:
+* Everything is is built upon five fundamental concepts: DEAL **Structures**, **Commands**, **Reserves**, **Selectors**, and **Handlers**.
+    1. **Structures** define the grammar.
+    2. **Commands** perform actions.
+    3. **Reserves** represent all reserved-words or noise-words defined for DEAL.
+    4. **Selectors** locate and identify resources.
+    5. **Handlers** of the workspace represent the current execution context.
 * Using predefined structures and commands, you will be able to write your procedure more clearly, more human-readable, and more flexibly.
-* Case statements of DaRQ are very flexible (case-relieve), instead of being somewhere:
+* Case statements of DEAL are very flexible (case-relieve), instead of being somewhere:
     * Case-insensitive:
         * All JS structures, such as IF, FUNCTION, LET, etc.
-        * All DaRQ or third-party structures, such as BEGIN, USE, RESERVE, etc.
-        * All DaRQ or third-party commands, such as APPEND, COLLECT, POST, etc.
-        * All DaRQ or third-party reserveds, such as FROM, AND, WITH etc.
-        * All DaRQ or third-party selectors, such as ALL, ONE, ANY, etc.
-        * All DaRQ or third-party handlers, such as BROWSER, WINDOW, LOAD, etc.
+        * All DEAL or third-party structures, such as BEGIN, USE, RESERVE, etc.
+        * All DEAL or third-party commands, such as APPEND, COLLECT, POST, etc.
+        * All DEAL or third-party reserveds, such as FROM, AND, WITH etc.
+        * All DEAL or third-party selectors, such as ALL, ONE, ANY, etc.
+        * All DEAL or third-party handlers, such as BROWSER, WINDOW, LOAD, etc.
             * Multiple of the most important interface variables, such as DOCUMENT, CONSOLE, SCREEN, etc.
             * Multiple of the most important interface functions, such as ALERT, CONFIRM, PROMPT, etc.
     * Case-sensitive:
         * All user-defined functions/variables/constants.
         * All objects' functions/variables/constants (almost everything is written after a dot('.')).
 
+*Noice*: To keep your code more readable and avoid conflicts with DEAL, you should not use `"use strict";` phrase anywhere.
+* Because in the strict mode, using a variable without declaring it will not be allowed, then it makes it difficult for the DEAL code writer to use some instructions.
+
 ---
 
 ### Structures:
-Instead of supporting all JS structures, DaRQ engine contains some special structures.
+Instead of supporting all JS structures, DEAL engine contains some special structures.
 * Built into the compiler.
 * They define the grammar and cannot be overridden (IF, FOR, COMMAND, USE, RESERVE, WILL, BEGIN, DOING, etc.)
-* Multiple of the most important DaRQ Structures are:
+* Multiple of the most important DEAL Structures are:
 
 #### Conditions
 * To work in a special conditions
@@ -126,7 +156,7 @@ Instead of supporting all JS structures, DaRQ engine contains some special struc
     ```
 
 #### Blockings
-* To make a DaRQ procedures-block
+* To make a DEAL procedures-block
     ```js
     BEGIN procedures END;
     ```
@@ -139,7 +169,7 @@ Instead of supporting all JS structures, DaRQ engine contains some special struc
         js-procedures
     }
     ```
-* To make a DaRQ callable procedures-block
+* To make a DEAL callable procedures-block
     ```js
     DOING procedures END;
     ```
@@ -214,8 +244,8 @@ All commands represent executable operations.
 * Can be overridden in code.
 * A very small set that the compiler itself needs for parsing or semantic analysis defined built in.
 * They will include the following cases:
-    * All simple DaRQ built-in commands.
-    * All third-party commands (you add them to your queries using the USE statement).
+    * All simple DEAL built-in commands.
+    * All third-party commands (you add them to your instructions using the USE statement).
     * All user-defined commands (You defined using the COMMAND statement).
 * The user-defined command will be accessible exactly like other global commands, too.
 * You can define commands in four ways:
@@ -359,7 +389,7 @@ All commands represent executable operations.
 ---
 
 ### Reserves:
-DaRQ allows optional readability words that improve the natural flow of the language. They will affect only the parser and contain no JavaScript code. These can be one of two groups below:
+DEAL allows optional readability words that improve the natural flow of the language. They will affect only the parser and contain no JavaScript code. These can be one of two groups below:
 * Reserved words: All words will be replaced directly in the script while being preserved in the source code.
     * The user can call any one of the codes below freely.
     * The reserved name will be completely case-insensitive.
@@ -417,7 +447,7 @@ DaRQ allows optional readability words that improve the natural flow of the lang
 Selectors describe what should be selected, but not only DOM elements, potentially anything.
 * Built into the compiler.
 * They define how resources are identified (CSS, XPath, RegEx, Id, Class, Index, Location, ...)
-* You have multiple special predefined DaRQ commands in core, to extract elements from the resource too:
+* You have multiple special predefined DEAL commands in core, to extract elements from the resource too:
     ```js
     ALL selector						// To select all elements using the specified selector from the DOCUMENT
     ```
@@ -433,7 +463,7 @@ Selectors describe what should be selected, but not only DOM elements, potential
     ```js
     resource[selector]				    // To select one item using the specified selector on the resource, the resource can be an element/object/array
     ```
-* Selectors effectively makes DaRQ a universal extraction language, not just a scripting language, Because you can use one of the DaRQ Selectors with the syntax below, everywhere you need:
+* Selectors effectively makes DEAL a universal extraction language, not just a scripting language, Because you can use one of the DEAL Selectors with the syntax below, everywhere you need:
     * CSS:
         ```js
         table>tbody>tr			    // Write CSS selector directly, But if it has spaces or {} should wrapped by single/double quotes
@@ -516,7 +546,7 @@ There are multiple defined variables accessible globally, which users can intera
         LOAD BACK		// To load a website from a specified URL in the current window/tab, and then update the handler
         ```
         ```js
-        LOAD			// To update the Workspace identifiers based on the current window/tab statements
+        LOAD			// To update the Workspace handlers based on the current window/tab statements
         ```
 * If you want to work in your browser, window, or so on, without changing the current handler structures, use the following commands:
     * GET: To send a GET request to a server and receive its response, using the syntax below:

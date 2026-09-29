@@ -7,14 +7,14 @@
   "targets": {
     ".NETStandard,Version=v2.0": {},
     ".NETStandard,Version=v2.0/": {
-      "MiMFa DaRQ/1.0.0": {
+      "MiMFa DEAL.JS/1.0.0": {
         "dependencies": {
           "Microsoft.CSharp": "4.7.0",
           "NETStandard.Library": "2.0.3",
           "Newtonsoft.Json": "13.0.4"
         },
         "runtime": {
-          "MiMFa DaRQ.dll": {}
+          "MiMFa DEAL.JS.dll": {}
         }
       },
       "Microsoft.CSharp/4.7.0": {
@@ -42,7 +42,7 @@
     }
   },
   "libraries": {
-    "MiMFa DaRQ/1.0.0": {
+    "MiMFa DEAL.JS/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

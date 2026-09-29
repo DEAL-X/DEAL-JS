@@ -1,6 +1,6 @@
-D:\Product\Software\Extension\MiMFa Scraper\src\engine\DaRQ-CS\obj\Debug\netstandard2.1\DaRQ-CS.GeneratedMSBuildEditorConfig.editorconfig
-D:\Product\Software\Extension\MiMFa Scraper\src\engine\DaRQ-CS\obj\Debug\netstandard2.1\DaRQ-CS.AssemblyInfoInputs.cache
-D:\Product\Software\Extension\MiMFa Scraper\src\engine\DaRQ-CS\obj\Debug\netstandard2.1\DaRQ-CS.AssemblyInfo.cs
-D:\Product\Software\Extension\MiMFa Scraper\src\engine\DaRQ-CS\obj\Debug\netstandard2.1\DaRQ-CS.csproj.CoreCompileInputs.cache
-D:\Product\Software\Extension\MiMFa Scraper\src\engine\DaRQ-CS\obj\Debug\netstandard2.1\DaRQ-CS.sourcelink.json
-D:\Product\Software\Extension\MiMFa Scraper\src\engine\DaRQ-CS\obj\Debug\netstandard2.1\DaRQ-CS.csproj.AssemblyReference.cache
+D:\Product\Software\Extension\MiMFa Scraper\src\engine\DEAL.JS-CS\obj\Debug\netstandard2.1\DEAL.JS-CS.GeneratedMSBuildEditorConfig.editorconfig
+D:\Product\Software\Extension\MiMFa Scraper\src\engine\DEAL.JS-CS\obj\Debug\netstandard2.1\DEAL.JS-CS.AssemblyInfoInputs.cache
+D:\Product\Software\Extension\MiMFa Scraper\src\engine\DEAL.JS-CS\obj\Debug\netstandard2.1\DEAL.JS-CS.AssemblyInfo.cs
+D:\Product\Software\Extension\MiMFa Scraper\src\engine\DEAL.JS-CS\obj\Debug\netstandard2.1\DEAL.JS-CS.csproj.CoreCompileInputs.cache
+D:\Product\Software\Extension\MiMFa Scraper\src\engine\DEAL.JS-CS\obj\Debug\netstandard2.1\DEAL.JS-CS.sourcelink.json
+D:\Product\Software\Extension\MiMFa Scraper\src\engine\DEAL.JS-CS\obj\Debug\netstandard2.1\DEAL.JS-CS.csproj.AssemblyReference.cache

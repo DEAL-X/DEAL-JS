@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "q66PvKIDpZNCEcOo5dGwzfyDm2h//ABXP/Qjk69azjm/Pa8KBI8uXBDJfHj34AMUcDcGHZBMGj3CeZbwX3AeYg==",
+  "dgSpecHash": "PuO2PGjS2DDKkVcuc0ZjNQncEJoieHfz5pvPiuMBSp6ZnWywHRXqcIUJnM4EUIEJ9w/GjVWQ+I3xwH40eqxy9A==",
   "success": true,
-  "projectFilePath": "D:\\Product\\Technology\\MiMFa DaRQ - Compiler\\MiMFa DaRQ - Compiler.csproj",
+  "projectFilePath": "D:\\Product\\Technology\\MiMFa DEAL.JS - Compiler\\MiMFa DEAL.JS - Compiler.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\MiMFa\\.nuget\\packages\\microsoft.csharp\\4.7.0\\microsoft.csharp.4.7.0.nupkg.sha512",
     "C:\\Users\\MiMFa\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",

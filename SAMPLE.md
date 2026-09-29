@@ -9,21 +9,21 @@
 	*/
 
 	USE scraper;			// Will attach whole of a core library to the JS engine
-	USE darq\data\resource;	// Will attach a special part of a core library to the JS engine
+	USE deal\data\resource;	// Will attach a special part of a core library to the JS engine
 	/*
 		* You can add a core or third-party library to the JS engine using the USE command.
 		* If there is no spaces between the address, you can write that without any quotes.
 		* This library will be parsed and attached to the JS engine before execution.
 		* The finding package procedure in this command will check one of the three steps:
-			1. If the `darq\data\resource.darq` file exists, it will be parsed and attached to the JS engine.
-			2. If the `darq\data\resource.js` file exists, it will be attached directly to the JS engine.
-			3. If the `darq\data\resource` directory exists, it will USE all files or directories in that.
+			1. If the `deal\data\resource.djs` file exists, it will be parsed and attached to the JS engine.
+			2. If the `deal\data\resource.js` file exists, it will be attached directly to the JS engine.
+			3. If the `deal\data\resource` directory exists, it will USE all files or directories in that.
 	*/
 	USE "D:\My Libs\Text\Normalization";	// Will attach a third-party library using an absolute addressto the JS engine
 	USE .\MyLib;						// Will attach a third-party library using a relative address to the JS engine
 
-	CONST Source = OPENFILE();																	// Using a command of the `darq\io\resource` library, which will show an open file dialog
-	CONST @Destination = SAVEFILE("results", "Comma Separated Values Files (*.csv)|*.csv");		// Using a command of the `darq\io\resource` library, which will show a save file dialog
+	CONST Source = OPENFILE();																	// Using a command of the `deal\io\resource` library, which will show an open file dialog
+	CONST @Destination = SAVEFILE("results", "Comma Separated Values Files (*.csv)|*.csv");		// Using a command of the `deal\io\resource` library, which will show a save file dialog
 	/*
 		* All of the JS statements are accessible in a case-insensitive mode.
 		* All of your defined names are case-sensitive.
@@ -63,8 +63,8 @@
 			DO
 				LET trying BE 0;
 				TRY	TO // Start a try block, you can write TRY instead.
-					FETCH "api.market.com/search", { // To make a pure JS object, here you can not write DaRQ
-						merchandise:row[5],	// The column index 5, you can use DaRQ Selectors in the brackets too
+					FETCH "api.market.com/search", { // To make a pure JS object, here you can not write DEAL
+						merchandise:row[5],	// The column index 5, you can use DEAL Selectors in the brackets too
 						type: "json"
 					}
 					THEN // If the fetching promise finished
@@ -85,7 +85,7 @@
 										APPEND 	// Store new row or line on the database
 											COLLECT	// Collect all the cells in an object, exactly like { name:value, ... }
 												"www.market.com" AS Reference,
-												NORMALIZE(CONCAT(item[".company-title>*"], " ")) AS Company_Name,	// To normalize, all elements innerTexts of selected children of item using DaRQ Selector (in the brackets)
+												NORMALIZE(CONCAT(item[".company-title>*"], " ")) AS Company_Name,	// To normalize, all elements innerTexts of selected children of item using DEAL Selector (in the brackets)
 												(NORMALIZE FIRST SPLIT CONCAT(item[".product-title>*"], " "), /\s+co\s*$/gi) AS Product_Name,		// You can use multiple commands sequentially
 												URLDECODE item["img.product-image"].src AS Image,
 												NUMBER item[7] AS Main_Price,

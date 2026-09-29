@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using MiMFa.Compiler.Model;
-using MiMFa.Compiler.Walker;
+using MiMFa.Engine.Model;
+using MiMFa.Engine.Walker;
 
-namespace MiMFa.Compiler.JavaScript
+namespace MiMFa.Engine.JavaScript
 {
-    public class Parser : MiMFa.Compiler.Parser.Parser
+    public class Parser : MiMFa.Engine.Parser.Parser
     {
         protected override IEnumerable<Node> ParseStatementToken(Token token, TokenWalker walker)
         {
@@ -26,18 +26,18 @@ namespace MiMFa.Compiler.JavaScript
                 case "enum":
                 case "package":
                 default:
-                    yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
                     break;
 
                 case "if":
-                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
                     break;
                 case "else":
-                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Depend | NodeType.Region);
+                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Depend | NodeType.Region | NodeType.Line);
                     break;
 
                 case "switch":
-                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
                     break;
                 case "case":
                     yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Line);
@@ -47,15 +47,15 @@ namespace MiMFa.Compiler.JavaScript
                     break;
 
                 case "for":
-                    yield return new Node(token, NodeType.IterationStructure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.IterationStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
                     break;
 
                 case "while":
-                    yield return new Node(token, NodeType.IterationStructure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.IterationStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
                     break;
 
                 case "do":
-                    yield return new Node(token, NodeType.IterationStructure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.IterationStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
                     break;
 
                 case "break":
@@ -72,18 +72,18 @@ namespace MiMFa.Compiler.JavaScript
                     break;
 
                 case "try":
-                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region | NodeType.Line);
                     break;
                 case "catch":
-                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region | NodeType.Line);
                     break;
                 case "finally":
-                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region | NodeType.Line);
                     break;
 
                 case "import":
                 case "export":
-                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region | NodeType.Line);
                     break;
 
                 case "void":
@@ -120,17 +120,17 @@ namespace MiMFa.Compiler.JavaScript
                 case "internal":
                 case "public":
                 case "static":
-                    yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Region);
+                    yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
                     break;
             }
         }
         protected override IEnumerable<Node> ParseScopeToken(Token token, TokenWalker walker)
         {
             if (token.Is(TokenType.Start))
-                if (token.IsMatch("{")) yield return new Node(token, NodeType.BlockStructure | NodeType.Region);
+                if (token.IsMatch("{")) yield return new Node(token, NodeType.BlockStructure | NodeType.Region | NodeType.Line);
                 else yield return new Node(token, NodeType.BlockStructure | NodeType.Line);
             else if (token.Is(TokenType.End))
-                if (token.IsMatch("}")) yield return new Node(token, NodeType.BlockStructure);
+                if (token.IsMatch("}")) yield return new Node(token, NodeType.BlockStructure | NodeType.Line);
                 else yield return new Node(token, NodeType.BlockStructure);
             else yield return new Node(token, NodeType.Chunk);
         }
@@ -156,7 +156,7 @@ namespace MiMFa.Compiler.JavaScript
             else if (token.IsMatch("=>", "?", "??")) yield return new Node(token, NodeType.Depend);
             else if (token.IsMatch("="))
             {
-                (Compiler as Compiler).SetKeyword(walker.PeekProcedure(-2));
+                (Compiler as Engine).SetKeyword(walker.PeekProcedure(-2));
                 yield return new Node(token, NodeType.Depend);
             }
             else if (token.Is(TokenType.Start)) yield return new Node(token, NodeType.Prepend);
@@ -179,12 +179,12 @@ namespace MiMFa.Compiler.JavaScript
         }
         protected override IEnumerable<Node> ParseCommentToken(Token token, TokenWalker walker)
         {
-            yield return new Node(token, token.Value.StartsWith("//") ? NodeType.Append : (token.Value.Contains("\n") ? NodeType.Region | NodeType.Prepend : NodeType.Prepend));
+            yield return new Node(token, token.Value.StartsWith("//") ? NodeType.Append | NodeType.Line : (token.Value.Contains("\n") ? NodeType.Region | NodeType.Prepend : NodeType.Prepend));
         }
         protected override IEnumerable<Node> ParseStartToken(Token token, TokenWalker walker)
         {
             if (token.Is(TokenType.Scope))
-                if (token.IsMatch("{")) yield return new Node(token, NodeType.BlockStructure | NodeType.Region);
+                if (token.IsMatch("{")) yield return new Node(token, NodeType.BlockStructure | NodeType.Region | NodeType.Line);
                 else yield return new Node(token, NodeType.BlockStructure | NodeType.Line);
             else yield return new Node(token, NodeType.Chunk | NodeType.Prepend);
         }
@@ -203,7 +203,7 @@ namespace MiMFa.Compiler.JavaScript
         protected override IEnumerable<Node> ParseEndToken(Token token, TokenWalker walker)
         {
             if (token.Is(TokenType.Scope))
-                if (token.IsMatch("}")) yield return new Node(token, NodeType.BlockStructure);
+                if (token.IsMatch("}")) yield return new Node(token, NodeType.BlockStructure | NodeType.Line);
                 else yield return new Node(token, NodeType.BlockStructure);
             else yield return new Node(token, NodeType.Chunk | NodeType.Append);
         }

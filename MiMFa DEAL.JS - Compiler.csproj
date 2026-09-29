@@ -1,0 +1,92 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>MiMFa</RootNamespace>
+    <!-- Use SDK default inclusion of source files to avoid duplicate Compile entries -->
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <Company>MiMFa</Company>
+    <Product>DEAL.JS</Product>
+    <Authors>Mohammad Fathi (MiMFa)</Authors>
+    <ApplicationIcon />
+    <OutputType>Library</OutputType>
+    <StartupObject></StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="DEAL.JS\Parser.Legacy.cs" />
+    <Compile Remove="JavaScript\Parser.Legacy.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Newtonsoft.Json.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <None Include="LICENSE" />
+    <None Include="README.md" />
+    <None Include="SAMPLE.md" />
+    <None Include="Samples\DEAL.JS Tutorial-Example.djs" />
+    <None Include="Samples\DEAL.JS Tutorial-Example.js" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Resource Include="Newtonsoft.Json.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <None Update="DEAL.JS\Library\deal\data\local.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="DEAL.JS\Library\deal\data\read.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="DEAL.JS\Library\deal\core\statements.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="DEAL.JS\Library\deal\handler\identifiers.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="DEAL.JS\Library\deal\selector\any.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="DEAL.JS\Library\deal\selector\one.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="DEAL.JS\Library\deal\core\operators.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="DEAL.JS\Library\deal\core\noises.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="DEAL.JS\Library\deal\core\functions.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="DEAL.JS\Library\deal\core\identifiers.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="DEAL.JS\Library\deal\selector\all.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="DEAL.JS\Library\deal\web\transfer.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="DEAL.JS\Library\deal\data\resource.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="DEAL.JS\Library\deal\convert\types.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

@@ -1,34 +1,34 @@
-D:\Product\Technology\MiMFa DaRQ\obj\Debug\netstandard2.0\MiMFa DaRQ.csproj.AssemblyReference.cache
-D:\Product\Technology\MiMFa DaRQ\obj\Debug\netstandard2.0\MiMFa DaRQ.GeneratedMSBuildEditorConfig.editorconfig
-D:\Product\Technology\MiMFa DaRQ\obj\Debug\netstandard2.0\MiMFa DaRQ.AssemblyInfoInputs.cache
-D:\Product\Technology\MiMFa DaRQ\obj\Debug\netstandard2.0\MiMFa DaRQ.AssemblyInfo.cs
-D:\Product\Technology\MiMFa DaRQ\obj\Debug\netstandard2.0\MiMFa DaRQ.csproj.CoreCompileInputs.cache
-D:\Product\Technology\MiMFa DaRQ Standard\obj\Debug\netstandard2.0\MiMFa DaRQ.csproj.AssemblyReference.cache
-D:\Product\Technology\MiMFa DaRQ Standard\obj\Debug\netstandard2.0\MiMFa DaRQ.GeneratedMSBuildEditorConfig.editorconfig
-D:\Product\Technology\MiMFa DaRQ Standard\obj\Debug\netstandard2.0\MiMFa DaRQ.AssemblyInfoInputs.cache
-D:\Product\Technology\MiMFa DaRQ Standard\obj\Debug\netstandard2.0\MiMFa DaRQ.AssemblyInfo.cs
-D:\Product\Technology\MiMFa DaRQ Standard\obj\Debug\netstandard2.0\MiMFa DaRQ.csproj.CoreCompileInputs.cache
-D:\Product\Technology\MiMFa DaRQ Standard\bin\Debug\netstandard2.0\MiMFa DaRQ.deps.json
-D:\Product\Technology\MiMFa DaRQ Standard\bin\Debug\netstandard2.0\MiMFa DaRQ.dll
-D:\Product\Technology\MiMFa DaRQ Standard\bin\Debug\netstandard2.0\MiMFa DaRQ.pdb
-D:\Product\Technology\MiMFa DaRQ Standard\obj\Debug\netstandard2.0\MiMFa DaRQ.dll
-D:\Product\Technology\MiMFa DaRQ Standard\obj\Debug\netstandard2.0\MiMFa DaRQ.pdb
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\MiMFa DaRQ.deps.json
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\MiMFa DaRQ.dll
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\MiMFa DaRQ.pdb
-D:\Product\Technology\MiMFa DaRQ\obj\Debug\netstandard2.0\MiMFa DaRQ.dll
-D:\Product\Technology\MiMFa DaRQ\obj\Debug\netstandard2.0\MiMFa DaRQ.pdb
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\DaRQ\Library\darq\data\resource.darq
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\DaRQ\Library\darq\web\transfer.darq
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\DaRQ\Library\darq\convert\types.darq
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\DaRQ\Library\darq\selector\all.darq
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\DaRQ\Library\darq\selector\one.darq
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\DaRQ\Library\darq\selector\any.darq
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\DaRQ\Library\darq\data\local.darq
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\DaRQ\Library\darq\data\read.darq
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\DaRQ\Library\darq\core\functions.darq
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\DaRQ\Library\darq\core\identifiers.darq
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\DaRQ\Library\darq\core\noises.darq
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\DaRQ\Library\darq\core\operators.darq
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\DaRQ\Library\darq\core\statements.darq
-D:\Product\Technology\MiMFa DaRQ\bin\Debug\netstandard2.0\DaRQ\Library\darq\handler\identifiers.darq
+D:\Product\Technology\MiMFa DEAL.JS\obj\Debug\netstandard2.0\MiMFa DEAL.JS.csproj.AssemblyReference.cache
+D:\Product\Technology\MiMFa DEAL.JS\obj\Debug\netstandard2.0\MiMFa DEAL.JS.GeneratedMSBuildEditorConfig.editorconfig
+D:\Product\Technology\MiMFa DEAL.JS\obj\Debug\netstandard2.0\MiMFa DEAL.JS.AssemblyInfoInputs.cache
+D:\Product\Technology\MiMFa DEAL.JS\obj\Debug\netstandard2.0\MiMFa DEAL.JS.AssemblyInfo.cs
+D:\Product\Technology\MiMFa DEAL.JS\obj\Debug\netstandard2.0\MiMFa DEAL.JS.csproj.CoreCompileInputs.cache
+D:\Product\Technology\MiMFa DEAL.JS Standard\obj\Debug\netstandard2.0\MiMFa DEAL.JS.csproj.AssemblyReference.cache
+D:\Product\Technology\MiMFa DEAL.JS Standard\obj\Debug\netstandard2.0\MiMFa DEAL.JS.GeneratedMSBuildEditorConfig.editorconfig
+D:\Product\Technology\MiMFa DEAL.JS Standard\obj\Debug\netstandard2.0\MiMFa DEAL.JS.AssemblyInfoInputs.cache
+D:\Product\Technology\MiMFa DEAL.JS Standard\obj\Debug\netstandard2.0\MiMFa DEAL.JS.AssemblyInfo.cs
+D:\Product\Technology\MiMFa DEAL.JS Standard\obj\Debug\netstandard2.0\MiMFa DEAL.JS.csproj.CoreCompileInputs.cache
+D:\Product\Technology\MiMFa DEAL.JS Standard\bin\Debug\netstandard2.0\MiMFa DEAL.JS.deps.json
+D:\Product\Technology\MiMFa DEAL.JS Standard\bin\Debug\netstandard2.0\MiMFa DEAL.JS.dll
+D:\Product\Technology\MiMFa DEAL.JS Standard\bin\Debug\netstandard2.0\MiMFa DEAL.JS.pdb
+D:\Product\Technology\MiMFa DEAL.JS Standard\obj\Debug\netstandard2.0\MiMFa DEAL.JS.dll
+D:\Product\Technology\MiMFa DEAL.JS Standard\obj\Debug\netstandard2.0\MiMFa DEAL.JS.pdb
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\MiMFa DEAL.JS.deps.json
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\MiMFa DEAL.JS.dll
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\MiMFa DEAL.JS.pdb
+D:\Product\Technology\MiMFa DEAL.JS\obj\Debug\netstandard2.0\MiMFa DEAL.JS.dll
+D:\Product\Technology\MiMFa DEAL.JS\obj\Debug\netstandard2.0\MiMFa DEAL.JS.pdb
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\DEAL.JS\Library\deal\data\resource.djs
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\DEAL.JS\Library\deal\web\transfer.djs
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\DEAL.JS\Library\deal\convert\types.djs
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\DEAL.JS\Library\deal\selector\all.djs
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\DEAL.JS\Library\deal\selector\one.djs
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\DEAL.JS\Library\deal\selector\any.djs
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\DEAL.JS\Library\deal\data\local.djs
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\DEAL.JS\Library\deal\data\read.djs
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\DEAL.JS\Library\deal\core\functions.djs
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\DEAL.JS\Library\deal\core\identifiers.djs
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\DEAL.JS\Library\deal\core\noises.djs
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\DEAL.JS\Library\deal\core\operators.djs
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\DEAL.JS\Library\deal\core\statements.djs
+D:\Product\Technology\MiMFa DEAL.JS\bin\Debug\netstandard2.0\DEAL.JS\Library\deal\handler\identifiers.djs
