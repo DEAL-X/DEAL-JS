@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MiMFa")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e59c13c513459acd73a5b3779ac15a498632dcf8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8f5800cfa368edc0d9bd7695782997e34c89c7d1")]
 [assembly: System.Reflection.AssemblyProductAttribute("DEAL.JS")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MiMFa DEAL.JS - Compiler")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

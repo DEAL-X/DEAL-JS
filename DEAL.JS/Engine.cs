@@ -124,9 +124,9 @@ namespace MiMFa.Engine.DEAL.JS
         {
             return new Node(new Token(tokenType, value), nodeType, children);
         }
-        public virtual Node CreateDotNode(NodeType? type = null)
+        public virtual Node CreateDotNode(params Node[] children)
         {
-            return CreateNode(".", TokenType.ConcatenatorSymbol, type ?? NodeType.Depend);
+            return CreateNode(".", TokenType.ConcatenatorSymbol, NodeType.Depend, children);
         }
         public virtual Node CreateOpenPackNode(NodeType? type = null)
         {

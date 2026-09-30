@@ -116,7 +116,7 @@ namespace MiMFa.Engine.JavaScript
             {
                 if (next == "*") return TokenizeCommentBlock(walker, location);
                 else if (next == "/") return TokenizeComment(walker, location);
-                else return TokenizeRegExPath(walker, location);
+                else if (!string.IsNullOrWhiteSpace(next)) return TokenizeRegExPath(walker, location);
             }
 
             if (Regex.IsMatch(current.ToString(), "[A-Z_$]", RegexOptions.IgnoreCase))

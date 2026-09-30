@@ -165,32 +165,13 @@ namespace MiMFa.Engine.DEAL.JS
                 case "then":
                 case "otherwise":
                 case "anyway":
-                    yield return new Node(token, NodeType.CallStructure | NodeType.Line);
-                    yield break;
-
                 case "where":
-                    yield return new Node(token, NodeType.CallStructure | NodeType.Line);
-                    yield break;
-
                 case "distinct":
-                    yield return new Node(token, NodeType.CallStructure | NodeType.Line);
-                    yield break;
-
                 case "limit":
-                    yield return new Node(token, NodeType.CallStructure | NodeType.Line);
-                    yield break;
-
                 case "order":
                 case "keys":
                 case "values":
-                    if (dot) yield return Compiler.CreateDotNode();
-                    yield return new Node(token.Update(TokenType.FunctionKeyword, token.Value), NodeType.CallStructure);
-                    yield return Compiler.CreateOpenPackNode();
-                    yield return Compiler.CreateClosePackNode();
-                    yield return Compiler.CreateDotNode();
-                    yield return Compiler.CreateNode("toArray", TokenType.FunctionKeyword, NodeType.CallStructure);
-                    yield return Compiler.CreateOpenPackNode();
-                    yield return Compiler.CreateClosePackNode();
+                    yield return new Node(token, NodeType.CallStructure | NodeType.Line);
                     yield break;
 
                 default:

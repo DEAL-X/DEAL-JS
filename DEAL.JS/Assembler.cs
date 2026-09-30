@@ -191,7 +191,7 @@ namespace MiMFa.Engine.DEAL.JS
                         Compiler?.SetFunctionCommand(cname.Token.Update(TokenType.FunctionKeyword));
                         return node.Update(NodeType.DefineStructure | NodeType.Region | NodeType.Line | NodeType.Prepend).AddRange(
                             cname.Add(AssembleNode(walker)),
-                            this.Compiler.CreateBlockNode(SectionAssembleNode(walker.PeekProcedure()?.IsMatch("=>") == true ? walker.MoveToProcedure() : walker))
+                            this.Compiler.CreateBlockNode(SectionAssembleNode(walker.PeekProcedure()?.IsMatch(EqualsSign) == true ? walker.MoveToProcedure() : walker))
                         );
                     }
                     else
@@ -519,74 +519,85 @@ namespace MiMFa.Engine.DEAL.JS
             var next = walker.PeekProcedure();
             var next2 = walker.PeekProcedure(1);
             string dot = before == null || before.Value != "." ? "." : null;
+            if (next == null || !next.Is(TokenType.Symbol) || next.Is(TokenType.ConcatenatorSymbol) || this.Compiler.IsDelimiters(next))
+                switch (node.Token.Value.ToLower())
+                {
+                    case "then":
+                    case "otherwise":
+                    case "anyway":
+                        node.Token.Update(TokenType.FunctionKeyword, node.Token.IsMatch("otherwise") ? $"{dot}catch" : node.Token.IsMatch("anyway") ? $"{dot}finally" : $"{dot}then");
+                        if (next == null) return new Node();
+                        else if (next.IsMatch("("))
+                            return node.Update(NodeType.CallStructure).Add(AssembleNode(walker));
+                        else if (next.Is(TokenType.Keyword) && (this.Compiler.IsSeparators(next2) || this.Compiler.IsComplementors(next2) || this.Compiler.IsFinalizers(next2) || this.Compiler.IsOrganizers(next2)))
+                            return node.Update(NodeType.CallStructure).Add(CompactAssembleNode(walker));
+                        else
+                        {
+                            var child = CompactAssembleNode(walker);
+                            if (child != null)
+                                if (child.Is(NodeType.BlockStructure))
+                                    child = this.Compiler.CreateCallableNode(this.Compiler.CreateLineNode(child.Insert(0, this.Compiler.CreateNode("handle(data);"))), this.Compiler.CreateNode("data", NodeType.Chunk, TokenType.Keyword));
+                                else if (!child.Is(NodeType.CallStructure) || child.Count > 0)
+                                    child = this.Compiler.CreateCallableNode(this.Compiler.CreateBlockNode(this.Compiler.CreateNode("handle(data);"), this.Compiler.CreateLineNode(child)), this.Compiler.CreateNode("data", NodeType.Chunk, TokenType.Keyword));
+                                else child = this.Compiler.TrimSeparators(child);
+                            return node.Update(NodeType.CallStructure).Add(child);
+                        }
 
-            switch (node.Token.Value.ToLower())
-            {
-                case "then":
-                case "otherwise":
-                case "anyway":
-                    node.Token.Update(TokenType.FunctionKeyword, node.Token.IsMatch("otherwise") ? $"{dot}catch" : node.Token.IsMatch("anyway") ? $"{dot}finally" : $"{dot}then");
-                    if (next == null) return new Node();
-                    else if (next.IsMatch("("))
-                        return node.Update(NodeType.CallStructure).Add(AssembleNode(walker));
-                    else if (next.Is(TokenType.Keyword) && (this.Compiler.IsSeparators(next2) || this.Compiler.IsComplementors(next2) || this.Compiler.IsFinalizers(next2) || this.Compiler.IsOrganizers(next2)))
-                        return node.Update(NodeType.CallStructure).Add(CompactAssembleNode(walker));
-                    else
-                    {
-                        var child = CompactAssembleNode(walker);
-                        if (child != null)
-                            if (child.Is(NodeType.BlockStructure))
-                                child = this.Compiler.CreateCallableNode(this.Compiler.CreateLineNode(child.Insert(0, this.Compiler.CreateNode("handle(data);"))), this.Compiler.CreateNode("data", NodeType.Chunk, TokenType.Keyword));
-                            else if (!child.Is(NodeType.CallStructure) || child.Count > 0)
-                                child = this.Compiler.CreateCallableNode(this.Compiler.CreateBlockNode(this.Compiler.CreateNode("handle(data);"), this.Compiler.CreateLineNode(child)), this.Compiler.CreateNode("data", NodeType.Chunk, TokenType.Keyword));
-                            else child = this.Compiler.TrimSeparators(child);
-                        return node.Update(NodeType.CallStructure).Add(child);
-                    }
+                    case "where":
+                        node.Token.Update(TokenType.FunctionKeyword, $"{dot}filter");
+                        return node.Update(NodeType.CallStructure).Add(this.Compiler.CreateCallableNode(CompactAssembleNode(walker), this.Compiler.CreateNode("data")));
 
-                case "where":
-                    node.Token.Update(TokenType.FunctionKeyword, "filter");
-                    return node.Update(NodeType.CallStructure).Add(this.Compiler.CreateCallableNode(CompactAssembleNode(walker), this.Compiler.CreateNode("data")));
+                    case "distinct":
+                        node.Token.Update(TokenType.FunctionKeyword, $"{dot}filter");
+                        return node.Update(NodeType.CallStructure).Add(this.Compiler.CreateCallableNode(this.Compiler.CreateProceduresNode("", this.Compiler.CreateNode("self.indexOf(data) === index"), this.Compiler.CreateNode("data")), this.Compiler.CreateNode("data")));
 
-                case "distinct":
-                    node.Token.Update(TokenType.FunctionKeyword, "filter");
-                    return node.Update(NodeType.CallStructure).Add(this.Compiler.CreateCallableNode(this.Compiler.CreateProceduresNode("", this.Compiler.CreateNode("self.indexOf(data) === index"), this.Compiler.CreateNode("data")), this.Compiler.CreateNode("data")));
+                    case "limit":
+                        if (this.Compiler.IsDelimiters(next)) walker.Walk();
+                        node.Token.Update(TokenType.FunctionKeyword, $"{dot}slice");
+                        var nlimit = SequenceAssembleNode(walker);
+                        return node.Update(NodeType.CallStructure).AddRange(nlimit.Count > 1 ? nlimit.Children.ToArray() : new[] { this.Compiler.CreateNode("0", NodeType.Chunk, TokenType.NumberData), nlimit });
 
-                case "limit":
-                    if (this.Compiler.IsDelimiters(next)) walker.Walk();
-                    node.Token.Update(TokenType.FunctionKeyword, "slice");
-                    var nlimit = SequenceAssembleNode(walker);
-                    return node.Update(NodeType.CallStructure).AddRange(nlimit.Count > 1 ? nlimit.Children.ToArray() : new[] { this.Compiler.CreateNode("0", NodeType.Chunk, TokenType.NumberData), nlimit });
+                    case "order":
+                        if (this.Compiler.IsDelimiters(next)) walker.Walk();
+                        var norders = SequenceAssembleNode(walker);
+                        var orderItems = norders.Is(NodeType.BlockStructure) ? norders.Children : new List<Node> { norders };
+                        var childrenOrder = new List<Node>();
 
-                case "order":
-                    if (this.Compiler.IsDelimiters(next)) walker.Walk();
-                    var norders = SequenceAssembleNode(walker);
-                    var orderItems = norders.Is(NodeType.BlockStructure) ? norders.Children : new List<Node> { norders };
-                    var childrenOrder = new List<Node>();
+                        string KeyAccess(Node key, string prefix)
+                        {
+                            if (key == null) return prefix;
+                            if (key.Token != null && !string.IsNullOrEmpty(key.Token.Value) && key.Children.Count == 0)
+                                return prefix + "." + key.Token.Value;
+                            // fallback: join child token values by dot
+                            var parts = new List<string>();
+                            if (!string.IsNullOrEmpty(key.Token?.Value)) parts.Add(key.Token.Value);
+                            parts.AddRange(key.Children.Select(c => c.Token?.Value ?? c.ToString()));
+                            return prefix + "." + string.Join(".", parts.Where(p => !string.IsNullOrEmpty(p)));
+                        }
 
-                    string KeyAccess(Node key, string prefix)
-                    {
-                        if (key == null) return prefix;
-                        if (key.Token != null && !string.IsNullOrEmpty(key.Token.Value) && key.Children.Count == 0)
-                            return prefix + "." + key.Token.Value;
-                        // fallback: join child token values by dot
-                        var parts = new List<string>();
-                        if (!string.IsNullOrEmpty(key.Token?.Value)) parts.Add(key.Token.Value);
-                        parts.AddRange(key.Children.Select(c => c.Token?.Value ?? c.ToString()));
-                        return prefix + "." + string.Join(".", parts.Where(p => !string.IsNullOrEmpty(p)));
-                    }
+                        foreach (var item in orderItems)
+                        {
+                            // build comparator string: (a, b) => (a, b) => a.key > b.key ? 1 : a.key == b.key ? 0 : -1
+                            var keyExprA = KeyAccess(item, "a");
+                            var keyExprB = KeyAccess(item, "b");
+                            var comparator = $"(a,b)=>(a,b)=>{keyExprA}>{keyExprB}?1:{keyExprA}=={keyExprB}?0:-1";
+                            var comparatorNode = this.Compiler.CreateNode(comparator, NodeType.Chunk, TokenType.Unknown);
+                            childrenOrder.Add(this.Compiler.CreateCallFunctionNode("sort", comparatorNode));
+                        }
 
-                    foreach (var item in orderItems)
-                    {
-                        // build comparator string: (a, b) => (a, b) => a.key > b.key ? 1 : a.key == b.key ? 0 : -1
-                        var keyExprA = KeyAccess(item, "a");
-                        var keyExprB = KeyAccess(item, "b");
-                        var comparator = $"(a,b)=>(a,b)=>{keyExprA}>{keyExprB}?1:{keyExprA}=={keyExprB}?0:-1";
-                        var comparatorNode = this.Compiler.CreateNode(comparator, NodeType.Chunk, TokenType.Unknown);
-                        childrenOrder.Add(this.Compiler.CreateCallFunctionNode("sort", comparatorNode));
-                    }
+                        return this.Compiler.CreateNode(dot, NodeType.Prepend, TokenType.Unknown, childrenOrder.ToArray());
 
-                    return this.Compiler.CreateNode("", NodeType.Prepend, TokenType.Unknown, childrenOrder.ToArray());
-            }
+                    case "keys":
+                    case "values":
+                        node.Token.Update(TokenType.FunctionKeyword, dot+node.Token.Value);
+                        return node.Update(NodeType.CallStructure).AddRange(
+                            this.Compiler.CreatePackNode(),
+                            Compiler.CreateDotNode(
+                                Compiler.CreateNode("toArray", TokenType.FunctionKeyword, NodeType.CallStructure),
+                                this.Compiler.CreatePackNode()
+                            )
+                         );
+                }
 
             return base.AssembleSuffixNode(node, walker);
         }

@@ -95,7 +95,12 @@ namespace MiMFa.Engine.Model
         }
         public bool IsMatch(params string[] values)
         {
-            return Token.IsMatch(values);
+            if (Token.IsMatch(values)) return true;
+            string val = this.Value;
+            foreach (var v in values)
+                if (string.Equals(val, v, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            return false;
         }
         public bool Has(Func<Node, bool> condition)
         {
