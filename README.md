@@ -1,16 +1,34 @@
 # DEAL.JS (Declarative and Extensible Abstract Language for JavaScript) Compiler
+**Bridge Human, AI, and Machine through a common executable language.**
+```
+                        HUMAN
+                           ▲
+                         /   \
+                        /     \
+                       /       \
+                      /         \
+                     /  DEAL.JS  \
+                    /             \
+                   ▼               ▼
+                   AI ◄ ── ── ── ► MACHINE
+```
 
-DEAL.JS is a deterministic, reusable, human-readable, extensible command language for acquiring, transforming, analyzing, and automating data workflows. A structured intermediate representation (IR) between natural language and executable JavaScript scraping logic. In other words, DEAL is a procedural, English-like domain-specific language that compiles deterministically into JavaScript browser automation code.
+DEAL.JS is a declarative language layer for JavaScript that represents computational instructions using constrained natural-language-like syntax while preserving unrestricted JavaScript interoperability and supporting extensible vocabulary.
+
+In other words, DEAL is a deterministic, reusable, human-readable, extensible command language for acquiring, transforming, analyzing, and automating data workflows. A structured intermediate representation (IR) between natural language and executable JavaScript scraping logic. In other words, DEAL is a procedural, English-like domain-specific language that compiles deterministically into JavaScript code.
+* DEAL is understandable by the human, generatable by AI, and compilable by the machine.
 * DEAL instructions will parse directly into complex and optimized pure JavaScript code to use everywhere.
 * You can write pure JavaScript between your instructions freely.
 
-Start DEAL directly using the tutorial sample [here](SAMPLE.md) quickly...
+
+Start DEAL.JS directly using the tutorial sample [here](SAMPLE.md) quickly...
 
 Also you can find more examples and their parsed JS versions [here](Samples/).
 
 
 ## Main Principles
-DEAL has **five** main principles:
+DEAL does not attempt to turn unrestricted natural language into executable programs. Instead, it defines a constrained and extensible grammatical language whose declarative instructions have deterministic JavaScript translations, while allowing ordinary JavaScript to remain embedded in the same source.
+So DEAL has **five** main principles:
 1. Every syntax will be the same as english grammar.
     * For example:
     ```ts
