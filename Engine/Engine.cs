@@ -15,13 +15,14 @@ namespace MiMFa.Engine
 
         public Options Options { get; }
 
-        public Dictionary<string, string> Libraries { get; protected set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        public List<string> Dependencies { get; protected set; } = new List<string>();
 
         public event LogEventHandler Logged = null;
-        public event LibraryEventHandler AttachedLibrary = null;
+        public event DependencyEventHandler UsedDependency = null;
         public Input Input { get; set; }
         public Output Output { get; set; }
         public ResourceProvider ResourceProvider { get; set; }
+        public string SourceDirectory { get; set; } = "Library\\";
 
         public Engine(StageBase[] compileStages, StageBase executeStage, Options options = null, ResourceProvider resourceProvider = null)
         {
@@ -91,7 +92,7 @@ namespace MiMFa.Engine
             }
             catch (Exception e)
             {
-                OnLogged($"Could not execute the {(string.IsNullOrWhiteSpace(path) ?"scripts":"\""+ path + "file \"")}! ❌ ", LogStatus.Error);
+                OnLogged($"Could not execute the {(string.IsNullOrWhiteSpace(path) ?"scripts":"\""+ path + "\" file")}! ❌ ", LogStatus.Error);
                 OnLogged(e.Message, LogStatus.Error);
                 Output.Error(e);
                 return null;
@@ -102,19 +103,26 @@ namespace MiMFa.Engine
             }
         }
 
-        public virtual void AttachLibrary(string path, string code)
+        public virtual bool UseDependency(Input input)
         {
-            Libraries[path] = code;
-            OnAttachedLibrary(path, code);
+            if (HasDependency(input.Source)) return false;
+            Input inp = Input;
+            Output oup = Output;
+            var o = Execute(input);
+            Input = inp;
+            Output = oup;
+            Dependencies.Add(input.Source);
+            OnUsedDependency(input.Source, o);
+            return true;
         }
-        public virtual bool HasLibrary(string path)
+        public virtual bool HasDependency(string source)
         {
-            return Libraries.ContainsKey(path);
+            return Dependencies.Contains(source);
         }
 
-        public void OnAttachedLibrary(string path, string content = null)
+        public void OnUsedDependency(string source, object value = null)
         {
-            if (AttachedLibrary != null) AttachedLibrary(this, new LibraryEventArgs(path, content));
+            if (UsedDependency != null) UsedDependency(this, new DependencyEventArgs(source, value));
         }
         public void OnLogged(string message = "", LogStatus? status = LogStatus.Info, DateTime? time = null)
         {

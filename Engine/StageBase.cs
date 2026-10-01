@@ -2,17 +2,17 @@ namespace MiMFa.Engine
 {
     public abstract class StageBase
     {
-        public virtual Engine Compiler { get; set; }
+        public virtual Engine Engine { get; set; }
 
-        public virtual bool Initialize(Engine compiler)
+        public virtual bool Initialize(Engine engine)
         {
-            if (compiler != null) Compiler = compiler;
+            if (engine != null) Engine = engine;
             return true;
         }
 
-        public virtual object Transform(object input, Engine compiler)
+        public virtual object Transform(object input, Engine engine)
         {
-            Initialize(compiler);
+            Initialize(engine);
             return input;
         }
     }

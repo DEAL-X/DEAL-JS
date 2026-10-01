@@ -12,7 +12,7 @@ namespace MiMFa.Engine.DEAL.JS
 {
     public class Tokenizer : MiMFa.Engine.JavaScript.Tokenizer
     {
-        public new Engine Compiler { get; set; }
+        public new Engine Engine { get; set; }
         public Dictionary<string, TokenType> Acceptors { get; set; } = new Dictionary<string, TokenType>();
         public Dictionary<string, TokenType> DataAcceptors { get; set; } = new Dictionary<string, TokenType>();
         public Dictionary<string, string> CaseAcceptors { get; set; } = new Dictionary<string, string>();
@@ -22,15 +22,15 @@ namespace MiMFa.Engine.DEAL.JS
 
         public Token LastToken = null;
 
-        public override bool Initialize(MiMFa.Engine.Engine compiler)
+        public override bool Initialize(MiMFa.Engine.Engine engine)
         {
-            if (compiler != null) base.Initialize(Compiler = compiler as Engine);
+            if (engine != null) base.Initialize(Engine = engine as Engine);
             return true;
         }
 
-        public override IEnumerable<Token> Tokenize(CodeWalker walker, MiMFa.Engine.Engine compiler = null)
+        public override IEnumerable<Token> Tokenize(CodeWalker walker, MiMFa.Engine.Engine engine = null)
         {
-            foreach (var item in base.Tokenize(walker, compiler))
+            foreach (var item in base.Tokenize(walker, engine))
                 yield return LastToken = item;
         }
 
@@ -111,14 +111,14 @@ namespace MiMFa.Engine.DEAL.JS
                                     case "\n":
                                     case ",":
                                     case ";":
-                                        if (Compiler != null) try { Compiler.Reserves[key] = ""; } catch { }
+                                        if (Engine != null) try { Engine.Reserves[key] = ""; } catch { }
                                         return GetAcceptedToken(TokenType.Comment, $"// Reserved {Newtonsoft.Json.JsonConvert.ToString(key)} as a noise", location);
                                     case "be":
                                     case "as":
                                     case "=":
                                         walker.MoveToProcedure();
                                         var val = TokenizeCode(walker)?.Value ?? "";
-                                        try { Compiler?.Reserves.Add(key, val); } catch { }
+                                        try { Engine?.Reserves.Add(key, val); } catch { }
                                         walker.MoveToProcedure();
                                         if (walker.Walk() != ";") walker.Move(-1);
                                         return GetAcceptedToken(TokenType.Comment, $"/* Reserved {Newtonsoft.Json.JsonConvert.ToString(key)} as the {Newtonsoft.Json.JsonConvert.ToString(val.Replace("*/", "*\\/"))} */", location);
@@ -236,7 +236,7 @@ namespace MiMFa.Engine.DEAL.JS
         protected virtual Token TokenizeXPath(CodeWalker walker, Position location)
         {
             walker.Walk();
-            var value = string.Concat(walker.WalkUntil(ch => ch == "\\" && walker.Peek(-1) != Compiler?.Options?.Escape).ToArray());
+            var value = string.Concat(walker.WalkUntil(ch => ch == "\\" && walker.Peek(-1) != Engine?.Options?.Escape).ToArray());
             walker.Walk();
             return GetAcceptedToken(TokenType.StringData, value, location);
         }
@@ -250,11 +250,11 @@ namespace MiMFa.Engine.DEAL.JS
         {
             if (string.IsNullOrWhiteSpace(path)) return 0;
             if (Regex.IsMatch(path, "^\\w+:\\/\\/.+$")) return UseUrl(path);
-            var compiler = this.Compiler as MiMFa.Engine.Engine;
+            var compiler = this.Engine as MiMFa.Engine.Engine;
             if (compiler == null) return 0;
             var baseDirectory = Regex.IsMatch(path, "^\\.[\\/\\\\]") ?
-                compiler?.ResourceProvider?.DirectoryName(compiler.Input?.Source ?? "DEAL.JS\\Library\\index") :
-                compiler?.ResourceProvider?.DirectoryName("DEAL.JS\\Library\\index");
+                compiler?.ResourceProvider?.DirectoryName(compiler.Input?.Source ?? compiler.SourceDirectory+"index") :
+                compiler?.ResourceProvider?.DirectoryName(compiler.SourceDirectory + "index");
             var val = compiler?.ResourceProvider?.Resolve(path, baseDirectory);
             if (!string.IsNullOrEmpty(val) && val.EndsWith("\\")) return UseFolder(val);
             int num;
@@ -271,7 +271,7 @@ namespace MiMFa.Engine.DEAL.JS
             int results = 0;
             try
             {
-                var rp = Compiler.ResourceProvider;
+                var rp = Engine.ResourceProvider;
                 if (rp != null && rp.Exists(folder))
                 {
                     var res = UseFile(folder + "\\index");
@@ -293,25 +293,21 @@ namespace MiMFa.Engine.DEAL.JS
         {
             if (string.IsNullOrWhiteSpace(file)) return 0;
             int num = 0;
-            if (!Regex.IsMatch(file, "\\.(djs|js)$", RegexOptions.IgnoreCase))
-                return (num = UseFile(file + ".djs")) > 0 ? num : UseFile(file + ".js");
+            if (!Regex.IsMatch(file, "\\.(deal|djs|js)$", RegexOptions.IgnoreCase))
+                return (num = UseFile(file + ".deal")) > 0 ? num : (num = UseFile(file + ".djs")) > 0 ? num : UseFile(file + ".js");
             file = System.IO.Path.GetFullPath(file);
             try
             {
-                var compiler = this.Compiler as MiMFa.Engine.Engine;
+                var compiler = this.Engine as MiMFa.Engine.Engine;
                 var rp = compiler?.ResourceProvider;
-                if ((compiler as Engine).HasLibrary(file)) return 1;
+                if ((compiler as Engine).HasDependency(file)) return 1;
                 if (rp != null && rp.Exists(file))
                 {
-                    Input input = compiler.Input;
-                    Output output = compiler.Output;
-                    int c = (compiler as Engine).Libraries.Count;
-                    (compiler as Engine).AttachLibrary(
-                        file,
-                        (compiler as Engine).Compile(new Input(rp.GetFileContents(file, System.Text.Encoding.UTF8), file)).Content);
-                    compiler.Input = input;
-                    compiler.Output = output;
-                    return (compiler as Engine).Libraries.Count - c;
+                    int c = (compiler as Engine).Dependencies.Count;
+                    (compiler as Engine).UseDependency(
+                        new Input(rp.GetFileContents(file, System.Text.Encoding.UTF8), file)
+                    );
+                    return (compiler as Engine).Dependencies.Count - c;
                 }
             }
             catch { }
@@ -424,7 +420,7 @@ namespace MiMFa.Engine.DEAL.JS
         {
             try
             {
-                var reserves = Compiler?.Reserves;
+                var reserves = Engine?.Reserves;
                 if (reserves != null)
                 {
                     foreach (var reserve in reserves)
@@ -457,7 +453,7 @@ namespace MiMFa.Engine.DEAL.JS
             int d = 0;
             try
             {
-                var reserves = Compiler?.Reserves;
+                var reserves = Engine?.Reserves;
                 if (reserves != null)
                 {
                     var keys = reserves.Keys.ToArray();

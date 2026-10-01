@@ -45,46 +45,46 @@
 
 
   <ItemGroup>
-    <None Update="DEAL.JS\Library\deal\data\local.djs">
+    <None Update="Library\deal\data\local.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="DEAL.JS\Library\deal\data\read.djs">
+    <None Update="Library\deal\data\read.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="DEAL.JS\Library\deal\core\statements.djs">
+    <None Update="Library\deal\core\statements.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="DEAL.JS\Library\deal\handler\identifiers.djs">
+    <None Update="Library\deal\handler\identifiers.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="DEAL.JS\Library\deal\selector\any.djs">
+    <None Update="Library\deal\selector\any.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="DEAL.JS\Library\deal\selector\one.djs">
+    <None Update="Library\deal\selector\one.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="DEAL.JS\Library\deal\core\operators.djs">
+    <None Update="Library\deal\core\operators.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="DEAL.JS\Library\deal\core\noises.djs">
+    <None Update="Library\deal\core\noises.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="DEAL.JS\Library\deal\core\functions.djs">
+    <None Update="Library\deal\core\functions.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="DEAL.JS\Library\deal\core\identifiers.djs">
+    <None Update="Library\deal\core\identifiers.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="DEAL.JS\Library\deal\selector\all.djs">
+    <None Update="Library\deal\selector\all.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="DEAL.JS\Library\deal\web\transfer.djs">
+    <None Update="Library\deal\web\transfer.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="DEAL.JS\Library\deal\data\resource.djs">
+    <None Update="Library\deal\data\resource.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="DEAL.JS\Library\deal\convert\types.djs">
+    <None Update="Library\deal\convert\types.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -22,3 +22,27 @@ D:\Product\Technology\MiMFa DEAL.JS - Compiler\obj\Debug\netstandard2.0\MiMFa DE
 D:\Product\Technology\MiMFa DEAL.JS - Compiler\obj\Debug\netstandard2.0\MiMFa DEAL.JS - Compiler.csproj.CoreCompileInputs.cache
 D:\Product\Technology\MiMFa DEAL.JS - Compiler\obj\Debug\netstandard2.0\MiMFa DEAL.JS - Compiler.dll
 D:\Product\Technology\MiMFa DEAL.JS - Compiler\obj\Debug\netstandard2.0\MiMFa DEAL.JS - Compiler.pdb
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\Library\deal\convert\types.djs
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\Library\deal\core\functions.djs
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\Library\deal\core\identifiers.djs
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\Library\deal\core\noises.djs
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\Library\deal\core\operators.djs
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\Library\deal\core\statements.djs
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\Library\deal\data\local.djs
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\Library\deal\data\read.djs
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\Library\deal\data\resource.djs
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\Library\deal\handler\identifiers.djs
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\Library\deal\selector\all.djs
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\Library\deal\selector\any.djs
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\Library\deal\selector\one.djs
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\Library\deal\web\transfer.djs
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\MiMFa DEAL.JS - Compiler.deps.json
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\MiMFa DEAL.JS - Compiler.dll
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\bin\Debug\netstandard2.0\MiMFa DEAL.JS - Compiler.pdb
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\obj\Debug\netstandard2.0\MiMFa DEAL.JS - Compiler.csproj.AssemblyReference.cache
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\obj\Debug\netstandard2.0\MiMFa DEAL.JS - Compiler.GeneratedMSBuildEditorConfig.editorconfig
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\obj\Debug\netstandard2.0\MiMFa DEAL.JS - Compiler.AssemblyInfoInputs.cache
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\obj\Debug\netstandard2.0\MiMFa DEAL.JS - Compiler.AssemblyInfo.cs
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\obj\Debug\netstandard2.0\MiMFa DEAL.JS - Compiler.csproj.CoreCompileInputs.cache
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\obj\Debug\netstandard2.0\MiMFa DEAL.JS - Compiler.dll
+D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Compiler\obj\Debug\netstandard2.0\MiMFa DEAL.JS - Compiler.pdb

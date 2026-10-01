@@ -10,10 +10,10 @@ namespace MiMFa.Engine
         {
             Transformer = transformer;
         }
-        public override object Transform(object input, Engine compiler)
+        public override object Transform(object input, Engine engine)
         {
-            Initialize(compiler);
-            return Transformer(input, compiler);
+            Initialize(engine);
+            return Transformer(input, engine);
         }
     }
 }

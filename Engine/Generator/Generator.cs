@@ -15,7 +15,7 @@ namespace MiMFa.Engine.Generator
         {
             var program = (Node)input;
             var walker = new NodeWalker(program.Children.ToArray(), program.Token.Value??compiler?.Input?.Source);
-            return string.Join(compiler.Options.MakeNewLine(Indention), Generate(walker, compiler));
+            return string.Join(compiler.Options.MakeNewLine(Indention), Generate(walker, compiler).Select(v=>v.Trim()));
         }
 
         public virtual IEnumerable<string> Generate(NodeWalker walker, MiMFa.Engine.Engine compiler = null)

@@ -8,11 +8,11 @@ namespace MiMFa.Engine.DEAL.JS
     /// <summary>JavaScript token-to-independent-node parser.</summary>
     public class Parser : MiMFa.Engine.JavaScript.Parser
     {
-        public new Engine Compiler { get; set; }
+        public new Engine Engine { get; set; }
 
-        public override bool Initialize(MiMFa.Engine.Engine compiler)
+        public override bool Initialize(MiMFa.Engine.Engine engine)
         {
-            if (compiler != null) base.Initialize(Compiler = compiler as Engine);
+            if (engine != null) base.Initialize(Engine = engine as Engine);
             return true;
         }
 
@@ -86,7 +86,7 @@ namespace MiMFa.Engine.DEAL.JS
 
                 case "equal":
                 case "equals":
-                    if (Compiler.IsDelimiters(next))
+                    if (Engine.IsDelimiters(next))
                     {
                         walker.MoveToProcedure();
                         return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "==="), walker);
@@ -115,14 +115,14 @@ namespace MiMFa.Engine.DEAL.JS
             }
 
             if (
-                (Compiler.IsAcceptors(before) || Compiler.IsDelimiters(before) || Compiler.IsInitializers(before) || Compiler.IsOrganizers(before)) &&
-                !Compiler.IsSeparators(token) &&
-                (Compiler.IsSeparators(next) || Compiler.IsComplementors(next) || Compiler.IsMediators(next) || Compiler.IsFinalizers(next) || Compiler.IsOrganizers(next))
+                (Engine.IsAcceptors(before) || Engine.IsDelimiters(before) || Engine.IsInitializers(before) || Engine.IsOrganizers(before)) &&
+                !Engine.IsSeparators(token) &&
+                (Engine.IsSeparators(next) || Engine.IsComplementors(next) || Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next))
             )
                 return ParseDataToken(token.Clone(TokenType.StringData), walker);
-            else if (Compiler.IsSeparators(token))
+            else if (Engine.IsSeparators(token))
             {
-                if (Compiler.IsOrganizers(next))
+                if (Engine.IsOrganizers(next))
                     return new Node[] { new Node(token.Update(TokenType.TerminatorSymbol, ";"), NodeType.Chunk) };
                 else if (token.Is(TokenType.DelimiterSymbol))
                     return new Node[] { new Node(token, NodeType.Depend) };

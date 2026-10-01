@@ -7,15 +7,15 @@ namespace MiMFa.Engine.DEAL.JS
 {
     public class Assembler : MiMFa.Engine.JavaScript.Assembler
     {
-        public new Engine Compiler { get; set; }
+        public new Engine Engine { get; set; }
 
         public int BreakParentSwitch { get; set; } = 0;
         public int BreakCollectSwitch { get; set; } = 0;
         public string[] EqualsSign => new string[] { "=", "=>", "->", ":" };
 
-        public override bool Initialize(MiMFa.Engine.Engine compiler)
+        public override bool Initialize(MiMFa.Engine.Engine engine)
         {
-            if (compiler != null) base.Initialize(Compiler = compiler as Engine);
+            if (engine != null) base.Initialize(Engine = engine as Engine);
             return true;
         }
 
@@ -34,7 +34,7 @@ namespace MiMFa.Engine.DEAL.JS
 
         protected virtual Node QueryAssembleNode(NodeWalker walker)
         {
-            return this.Compiler.CreateLineNode(SectionAssembleNode(walker));
+            return this.Engine.CreateLineNode(SectionAssembleNode(walker));
         }
 
         protected override Node SectionAssembleNode(NodeWalker walker)
@@ -55,8 +55,8 @@ namespace MiMFa.Engine.DEAL.JS
                 else if (walker.Current != null && (walker.Current.Is(NodeType.Append) || !en.Current.Is(TokenType.TerminatorSymbol)))
                 {
                     var next = walker.PeekProcedure();
-                    if (next != null && !this.Compiler.IsFlag(next))
-                        if ((en.Current?.Is(NodeType.Prepend) == true && en.Current.Count <= 0) || this.Compiler.IsComplementors(next))
+                    if (next != null && !this.Engine.IsFlag(next))
+                        if ((en.Current?.Is(NodeType.Prepend) == true && en.Current.Count <= 0) || this.Engine.IsComplementors(next))
                             foreach (var node in SectionAssembleNodes(walker))
                                 yield return node;
                         else if (next.Is(TokenType.Symbol))
@@ -71,7 +71,7 @@ namespace MiMFa.Engine.DEAL.JS
 
         protected override Node SequenceAssembleNode(NodeWalker walker)
         {
-            return this.Compiler.TrimSeparators(base.SequenceAssembleNode(TrimSeparators(walker)));
+            return this.Engine.TrimSeparators(base.SequenceAssembleNode(TrimSeparators(walker)));
         }
         protected override IEnumerable<Node> SequenceAssembleNodes(NodeWalker walker)
         {
@@ -86,20 +86,20 @@ namespace MiMFa.Engine.DEAL.JS
                 if (BreakParentSwitch > 0)
                     break;
                 if (en.MoveNext()) yield return en.Current;
-                else if (walker.Current != null && (walker.Current.Is(NodeType.Append) || !this.Compiler.IsFinalizers(en.Current)))
+                else if (walker.Current != null && (walker.Current.Is(NodeType.Append) || !this.Engine.IsFinalizers(en.Current)))
                 {
                     var next = walker.PeekProcedure();
                     var next2 = walker.PeekProcedure(1);
-                    if (next != null && !this.Compiler.IsFinalizers(next) && !this.Compiler.IsOrganizers(next) && !this.Compiler.IsFlag(next))
+                    if (next != null && !this.Engine.IsFinalizers(next) && !this.Engine.IsOrganizers(next) && !this.Engine.IsFlag(next))
                     {
-                        if ((en.Current?.Is(NodeType.Prepend) == true && en.Current.Count <= 0) || this.Compiler.IsMediators(next) || this.Compiler.IsComplementors(next))
+                        if ((en.Current?.Is(NodeType.Prepend) == true && en.Current.Count <= 0) || this.Engine.IsMediators(next) || this.Engine.IsComplementors(next))
                             foreach (var node in SequenceAssembleNodes(walker))
                                 yield return node;
                         else if (
-                            this.Compiler.IsDelimiters(next) &&
-                            !this.Compiler.IsComplementors(next2) &&
-                            !this.Compiler.IsFinalizers(next2) &&
-                            !this.Compiler.IsOrganizers(next2))
+                            this.Engine.IsDelimiters(next) &&
+                            !this.Engine.IsComplementors(next2) &&
+                            !this.Engine.IsFinalizers(next2) &&
+                            !this.Engine.IsOrganizers(next2))
                             foreach (var node in SequenceAssembleNodes(walker))
                                 yield return node;
                     }
@@ -112,7 +112,7 @@ namespace MiMFa.Engine.DEAL.JS
 
         protected override Node CompactAssembleNode(NodeWalker walker)
         {
-            return this.Compiler.TrimSeparators(base.CompactAssembleNode(TrimSeparators(walker)));
+            return this.Engine.TrimSeparators(base.CompactAssembleNode(TrimSeparators(walker)));
         }
         protected override IEnumerable<Node> CompactAssembleNodes(NodeWalker walker)
         {
@@ -126,11 +126,11 @@ namespace MiMFa.Engine.DEAL.JS
                 yield break;
             if (BreakParentSwitch > 0)
                 yield break;
-            else if (walker.Current != null && (walker.Current.Is(NodeType.Append) || !this.Compiler.IsFinalizers(last)))
+            else if (walker.Current != null && (walker.Current.Is(NodeType.Append) || !this.Engine.IsFinalizers(last)))
             {
                 var next = walker.PeekProcedure();
-                if (next != null && !this.Compiler.IsSeparators(next) && !this.Compiler.IsFinalizers(next) && !this.Compiler.IsOrganizers(next) && !this.Compiler.IsFlag(next))
-                    if ((last.Is(NodeType.Prepend) && last.Count <= 0) || this.Compiler.IsConnectors(next) || this.Compiler.IsMediators(next) || this.Compiler.IsComplementors(next))
+                if (next != null && !this.Engine.IsSeparators(next) && !this.Engine.IsFinalizers(next) && !this.Engine.IsOrganizers(next) && !this.Engine.IsFlag(next))
+                    if ((last.Is(NodeType.Prepend) && last.Count <= 0) || this.Engine.IsConnectors(next) || this.Engine.IsMediators(next) || this.Engine.IsComplementors(next))
                         foreach (var node in CompactAssembleNodes(walker))
                             yield return node;
                     else if (
@@ -138,11 +138,11 @@ namespace MiMFa.Engine.DEAL.JS
                         last.Token.Is(TokenType.Keyword) &&
                         !last.Is(NodeType.DefineStructure) &&
                         next.Is(TokenType.Keyword) &&
-                        !this.Compiler.IsSeparators(last.LastLeaf.Token) &&
-                        !this.Compiler.IsOrganizers(next)
+                        !this.Engine.IsSeparators(last.LastLeaf.Token) &&
+                        !this.Engine.IsOrganizers(next)
                     )
                     {
-                        yield return this.Compiler.CreateNode(".");
+                        yield return this.Engine.CreateNode(".");
                         foreach (var node in CompactAssembleNodes(walker))
                             yield return node;
                     }
@@ -160,14 +160,14 @@ namespace MiMFa.Engine.DEAL.JS
             {
                 case "#":
                     var name = walker.Walk().Value;
-                    if (this.Compiler.IsDelimiters(next2) || next2?.IsMatch(EqualsSign) == true) walker.Remove(next2);
-                    return Compiler?.SetActionCommand(name,
-                          this.Compiler.CreateLineNode(
-                              this.Compiler.CreateCallNode(
-                                 this.Compiler.CreatePackNode(
-                                     this.Compiler.CreateDefineIdentifierNode(name,
-                                         this.Compiler.CreateCallableNode(
-                                             this.Compiler.TrimSeparators(
+                    if (this.Engine.IsDelimiters(next2) || next2?.IsMatch(EqualsSign) == true) walker.Remove(next2);
+                    return Engine?.SetActionCommand(name,
+                          this.Engine.CreateLineNode(
+                              this.Engine.CreateCallNode(
+                                 this.Engine.CreatePackNode(
+                                     this.Engine.CreateDefineIdentifierNode(name,
+                                         this.Engine.CreateCallableNode(
+                                             this.Engine.TrimSeparators(
                                                  SectionAssembleNode(walker)
                                             )
                                          ), null
@@ -188,30 +188,30 @@ namespace MiMFa.Engine.DEAL.JS
                     if (next?.IsMatch("(") == true)
                     {
                         node.Token.Value = "function";
-                        Compiler?.SetFunctionCommand(cname.Token.Update(TokenType.FunctionKeyword));
+                        Engine?.SetFunctionCommand(cname.Token.Update(TokenType.FunctionKeyword));
                         return node.Update(NodeType.DefineStructure | NodeType.Region | NodeType.Line | NodeType.Prepend).AddRange(
                             cname.Add(AssembleNode(walker)),
-                            this.Compiler.CreateBlockNode(SectionAssembleNode(walker.PeekProcedure()?.IsMatch(EqualsSign) == true ? walker.MoveToProcedure() : walker))
+                            this.Engine.CreateBlockNode(SectionAssembleNode(walker.PeekProcedure()?.IsMatch(EqualsSign) == true ? walker.MoveToProcedure() : walker))
                         );
                     }
                     else
                     {
                         if (next.Is(TokenType.Middle | TokenType.Symbol))
                             walker.Walk();
-                        Compiler?.SetDefinitionCommand(cname.Token.Update(TokenType.IdentifierKeyword));
-                        return this.Compiler.CreateDefineIdentifierNode(cname.Token.Value, SectionAssembleNode(walker));
+                        Engine?.SetDefinitionCommand(cname.Token.Update(TokenType.IdentifierKeyword));
+                        return this.Engine.CreateDefineIdentifierNode(cname.Token.Value, SectionAssembleNode(walker));
                     }
 
                 case "implements":
                 case "extends":
-                    if (this.Compiler.IsDelimiters(next)) walker.Walk();
+                    if (this.Engine.IsDelimiters(next)) walker.Walk();
                     return node.Update(NodeType.DefineStructure).AddRange(walker.Walk(), AssembleNode(walker));
 
                 case "do":
                 case "begin":
                 case "doing":
                     if (node.Token.IsMatch("do") && next?.IsMatch("{") == true) break;
-                    if (this.Compiler.IsDelimiters(next)) walker.Walk();
+                    if (this.Engine.IsDelimiters(next)) walker.Walk();
 
                     Location++;
                     var doChildren = new List<Node>();
@@ -222,40 +222,40 @@ namespace MiMFa.Engine.DEAL.JS
                     }
                     if (walker.IsRunning && walker.Current.IsMatch("end")) walker.Walk();
                     Location--;
-                    if (this.Compiler.IsSeparators(walker.Current))
+                    if (this.Engine.IsSeparators(walker.Current))
                     {
                         BreakCollectSwitch++;
                         walker.Walk();
                     }
                     if (node.Token.IsMatch("doing"))
-                        return this.Compiler.CreateCallableNode(this.Compiler.CreateBlockNode(doChildren.ToArray()));
-                    else return this.Compiler.CreateBlockNode(doChildren.ToArray());
+                        return this.Engine.CreateCallableNode(this.Engine.CreateBlockNode(doChildren.ToArray()));
+                    else return this.Engine.CreateBlockNode(doChildren.ToArray());
 
                 case "if":
                     if (next?.IsMatch("(") == true) break;
-                    if (this.Compiler.IsDelimiters(next)) walker.Walk();
+                    if (this.Engine.IsDelimiters(next)) walker.Walk();
 
                     var cond = CompactAssembleNode(walker);
                     var onTrue = CompactAssembleNode(walker);
                     var onFalse = (TrimSeparators(walker).PeekProcedure()?.IsMatch("else") == true) ? CompactAssembleNode(walker.MoveToProcedure()) : null;
                     bool isnormal = onFalse == null || (
-                        this.Compiler.IsGlobalNeeder(onTrue) ||
-                        this.Compiler.IsGlobalNeeder(onFalse) ||
+                        this.Engine.IsGlobalNeeder(onTrue) ||
+                        this.Engine.IsGlobalNeeder(onFalse) ||
                         before == null ||
-                        this.Compiler.IsFlag(before) ||
+                        this.Engine.IsFlag(before) ||
                         before.IsMatch("{", "do", "begin", "end", "else") ||
                         before.Is(TokenType.TerminatorSymbol)
                     );
                     if (isnormal) return node.Update(NodeType.ConditionStructure).AddRange(
-                          cond, this.Compiler.CreateLineNode(onTrue), onFalse == null? null: this.Compiler.CreateLineNode(Compiler.CreateNode("else", TokenType.Statement, NodeType.ConditionStructure, onFalse))
+                          cond, this.Engine.CreateLineNode(onTrue), onFalse == null? null: this.Engine.CreateLineNode(Engine.CreateNode("else", TokenType.Statement, NodeType.ConditionStructure, onFalse))
                       );
-                    else return this.Compiler.CreatePackNode(
-                        cond.AddRange(Compiler.CreateNode("?", TokenType.Symbol, NodeType.Depend, this.Compiler.TrimSeparators(onTrue), Compiler.CreateNode(":", TokenType.Symbol, NodeType.Depend, this.Compiler.TrimSeparators(onFalse))))
+                    else return this.Engine.CreatePackNode(
+                        cond.AddRange(Engine.CreateNode("?", TokenType.Symbol, NodeType.Depend, this.Engine.TrimSeparators(onTrue), Engine.CreateNode(":", TokenType.Symbol, NodeType.Depend, this.Engine.TrimSeparators(onFalse))))
                     );
 
                 case "for":
                     if (next?.IsMatch("(") == true) break;
-                    if (this.Compiler.IsDelimiters(next)) walker.Walk();
+                    if (this.Engine.IsDelimiters(next)) walker.Walk();
                     if (
                         walker.PeekProcedure(1)?.IsMatch("of", "in") == true ||
                         walker.PeekProcedure(2)?.IsMatch("of", "in") == true ||
@@ -264,12 +264,12 @@ namespace MiMFa.Engine.DEAL.JS
                     {
                         if (walker.PeekProcedure(1).IsMatch("var", "const", "let"))
                             return node.Update(NodeType.IterationStructure).AddRange(
-                                 this.Compiler.CreatePackNode(CompactAssembleNode(walker)),
+                                 this.Engine.CreatePackNode(CompactAssembleNode(walker)),
                                  CompactAssembleNode(walker)
                             );
                         else return node.Update(NodeType.IterationStructure).AddRange(
-                            this.Compiler.CreatePackNode(
-                                this.Compiler.CreateNode(
+                            this.Engine.CreatePackNode(
+                                this.Engine.CreateNode(
                                     "const",
                                     TokenType.Statement, NodeType.DefineStructure,
                                     CompactAssembleNode(walker)
@@ -280,26 +280,26 @@ namespace MiMFa.Engine.DEAL.JS
                     }
                     else
                         return node.Update(NodeType.IterationStructure).AddRange(
-                        this.Compiler.CreatePackNode(
-                            this.Compiler.CreateNode("", this.Compiler.TrimSeparators(CompactAssembleNode(walker)), this.Compiler.CreateNode(";", TokenType.TerminatorSymbol)),
-                            this.Compiler.CreateNode("", this.Compiler.TrimSeparators(CompactAssembleNode(walker)), this.Compiler.CreateNode(";", TokenType.TerminatorSymbol)),
-                            this.Compiler.TrimSeparators(CompactAssembleNode(walker))
+                        this.Engine.CreatePackNode(
+                            this.Engine.CreateNode("", this.Engine.TrimSeparators(CompactAssembleNode(walker)), this.Engine.CreateNode(";", TokenType.TerminatorSymbol)),
+                            this.Engine.CreateNode("", this.Engine.TrimSeparators(CompactAssembleNode(walker)), this.Engine.CreateNode(";", TokenType.TerminatorSymbol)),
+                            this.Engine.TrimSeparators(CompactAssembleNode(walker))
                         ),
                         CompactAssembleNode(walker)
                     );
 
                 case "while":
                     if (next?.IsMatch("(") == true) break;
-                    if (this.Compiler.IsDelimiters(next)) walker.Walk();
+                    if (this.Engine.IsDelimiters(next)) walker.Walk();
 
                     return node.Update(NodeType.IterationStructure).AddRange(
-                        this.Compiler.CreatePackNode(CompactAssembleNode(walker)),
+                        this.Engine.CreatePackNode(CompactAssembleNode(walker)),
                          CompactAssembleNode(walker)
                      );
 
                 case "try":
                     if (next?.IsMatch("{") == true) break;
-                    if (this.Compiler.IsDelimiters(next)) walker.Walk();
+                    if (this.Engine.IsDelimiters(next)) walker.Walk();
 
                     var children = new List<Node>();
                     while (walker.Current != null && !walker.Current.IsMatch("catch", "finally"))
@@ -307,32 +307,32 @@ namespace MiMFa.Engine.DEAL.JS
                         var n = SectionAssembleNode(walker);
                         if (!n.Is(NodeType.None)) children.Add(n);
                     }
-                    return node.Add(this.Compiler.CreateBlockNode(children.ToArray()));
+                    return node.Add(this.Engine.CreateBlockNode(children.ToArray()));
                 case "catch":
                     if (next?.IsMatch("{") == true) break;
-                    if (this.Compiler.IsDelimiters(next)) walker.Walk();
+                    if (this.Engine.IsDelimiters(next)) walker.Walk();
 
-                    if (next?.Is(TokenType.Keyword) == true && this.Compiler.IsDelimiters(next2))
+                    if (next?.Is(TokenType.Keyword) == true && this.Engine.IsDelimiters(next2))
                         return node.AddRange(
-                                this.Compiler.CreatePackNode(this.Compiler.TrimSeparators(CompactAssembleNode(walker))),
-                                this.Compiler.CreateBlockNode(SectionAssembleNode(walker.MoveToProcedure())),
+                                this.Engine.CreatePackNode(this.Engine.TrimSeparators(CompactAssembleNode(walker))),
+                                this.Engine.CreateBlockNode(SectionAssembleNode(walker.MoveToProcedure())),
                                 walker.PeekProcedure()?.IsMatch("finally", "catch") == true ? AssembleNode(walker) : null);
                     else return node.AddRange(
                              (next.IsMatch("(") ? new[] {
                                 AssembleNode(walker),
-                                this.Compiler.CreateBlockNode(SectionAssembleNode(walker)),
+                                this.Engine.CreateBlockNode(SectionAssembleNode(walker)),
                                 walker.PeekProcedure()?.IsMatch("finally", "catch") == true ? AssembleNode(walker) : null
                              } : new[] {
-                                this.Compiler.CreateBlockNode(SectionAssembleNode(walker)),
+                                this.Engine.CreateBlockNode(SectionAssembleNode(walker)),
                                 walker.PeekProcedure()?.IsMatch("finally", "catch") == true ? AssembleNode(walker) : null}
                              )
                      );
                 case "finally":
                     if (next?.IsMatch("{") == true) break;
-                    if (this.Compiler.IsDelimiters(next)) walker.Walk();
+                    if (this.Engine.IsDelimiters(next)) walker.Walk();
 
                     return node.AddRange(
-                        this.Compiler.CreateBlockNode(SectionAssembleNode(walker)),
+                        this.Engine.CreateBlockNode(SectionAssembleNode(walker)),
                         walker.PeekProcedure()?.IsMatch("finally", "catch") == true ? AssembleNode(walker) : null
                     );
             }
@@ -342,16 +342,16 @@ namespace MiMFa.Engine.DEAL.JS
         protected override Node AssembleSymbolNode(Node node, NodeWalker walker)
         {
             var next = walker.PeekProcedure();
-            if (Compiler.IsSeparators(node))
+            if (Engine.IsSeparators(node))
             {
                 if (
-                    (Compiler.IsConnectors(next) || Compiler.IsComplementors(next) || Compiler.IsMediators(next) || Compiler.IsFinalizers(next)) &&
+                    (Engine.IsConnectors(next) || Engine.IsComplementors(next) || Engine.IsMediators(next) || Engine.IsFinalizers(next)) &&
                     !next.Is(TokenType.Comment) &&
-                    (!Compiler.IsFlag(next) || !node.Is(TokenType.TerminatorSymbol))
+                    (!Engine.IsFlag(next) || !node.Is(TokenType.TerminatorSymbol))
                     )
                     return new Node();
             }
-            if (next?.Is(TokenType.Symbol) == true && !this.Compiler.IsInitializers(next))
+            if (next?.Is(TokenType.Symbol) == true && !this.Engine.IsInitializers(next))
                 if (node.Is(TokenType.DelimiterSymbol))
                 {
                     BreakCollectSwitch++;
@@ -378,11 +378,11 @@ namespace MiMFa.Engine.DEAL.JS
 
             if (newNode?.Is(NodeType.CallStructure) == true)
             {
-                string fname = Compiler?.GetFunctionName(newNode.Token.Value);
-                string iname = fname != null ? null : Compiler?.GetKeywordName(newNode.Token.Value);
-                string fcname = Compiler?.GetFunctionCommandName(newNode.Token.Value);
-                string dcname = Compiler?.GetDefinitionCommandName(newNode.Token.Value);
-                string acname = Compiler?.GetActionCommandName(newNode.Token.Value);
+                string fname = Engine?.GetFunctionName(newNode.Token.Value);
+                string iname = fname != null ? null : Engine?.GetKeywordName(newNode.Token.Value);
+                string fcname = Engine?.GetFunctionCommandName(newNode.Token.Value);
+                string dcname = Engine?.GetDefinitionCommandName(newNode.Token.Value);
+                string acname = Engine?.GetActionCommandName(newNode.Token.Value);
                 fname = fname ?? fcname;
                 if (newNode.Is(TokenType.FunctionKeyword))
                 {
@@ -399,7 +399,7 @@ namespace MiMFa.Engine.DEAL.JS
                             return newNode
                                 .Update(NodeType.CallStructure)
                                 .AddRange(
-                                    this.Compiler.IsComplementors(next) ? null : this.Compiler.CreateDotNode(),
+                                    this.Engine.IsComplementors(next) ? null : this.Engine.CreateDotNode(),
                                     CompactAssembleNode(walker)
                                 );
                         }
@@ -407,57 +407,57 @@ namespace MiMFa.Engine.DEAL.JS
                 }
                 else if (!newNode.Is(TokenType.NamespaceKeyword))
                 {
-                    if (acname != null) return this.Compiler.CreateNode(acname, NodeType.Chunk, TokenType.Data);
+                    if (acname != null) return this.Engine.CreateNode(acname, NodeType.Chunk, TokenType.Data);
                     else
                     {
                         newNode.Token.Update(TokenType.IdentifierKeyword, fname ?? dcname ?? iname);
                         if (
                             next?.Is(TokenType.Keyword, TokenType.Data, TokenType.Start | TokenType.Scope) == true &&
-                            !this.Compiler.IsSeparators(next) &&
-                            !this.Compiler.IsMediators(next) &&
-                            !this.Compiler.IsComplementors(next) &&
-                            !this.Compiler.IsFinalizers(next) &&
-                            !this.Compiler.IsOrganizers(next) &&
+                            !this.Engine.IsSeparators(next) &&
+                            !this.Engine.IsMediators(next) &&
+                            !this.Engine.IsComplementors(next) &&
+                            !this.Engine.IsFinalizers(next) &&
+                            !this.Engine.IsOrganizers(next) &&
                             (
                                 fname != null ||
                                 next.Is(TokenType.Data) ||
                                 next.IsMatch("(", "...") ||
-                                this.Compiler.IsSeparators(next2) ||
-                                this.Compiler.IsMediators(next2) ||
-                                this.Compiler.IsComplementors(next2) ||
-                                this.Compiler.IsFinalizers(next2) ||
-                                this.Compiler.IsOrganizers(next2)
+                                this.Engine.IsSeparators(next2) ||
+                                this.Engine.IsMediators(next2) ||
+                                this.Engine.IsComplementors(next2) ||
+                                this.Engine.IsFinalizers(next2) ||
+                                this.Engine.IsOrganizers(next2)
                             )
                         )
                         {
                             newNode.Token.Update(TokenType.FunctionKeyword);
                             return newNode.Update(NodeType.CallStructure)
-                                .Add(next.IsMatch("(")? AssembleNode(walker) : Compiler.CreatePackNode(SequenceAssembleNode(walker)));
+                                .Add(next.IsMatch("(")? AssembleNode(walker) : Engine.CreatePackNode(SequenceAssembleNode(walker)));
                         }
                         else if (next?.Is(TokenType.Keyword)==true)
                         {
                             newNode.Token.Update(TokenType.NamespaceKeyword);
                             return newNode.Update(NodeType.CallStructure).AddRange(
-                                this.Compiler.IsComplementors(next) ? null : this.Compiler.CreateDotNode(),
+                                this.Engine.IsComplementors(next) ? null : this.Engine.CreateDotNode(),
                                 CompactAssembleNode(walker)
                             );
                         }
-                        else if (fcname != null && (next == null || this.Compiler.IsSeparators(next) || this.Compiler.IsComplementors(next) || this.Compiler.IsMediators(next) || this.Compiler.IsFinalizers(next) || this.Compiler.IsOrganizers(next)))
-                            return this.Compiler.CreateCallFunctionNode(fcname);
-                        else if (this.Compiler.IsDelimiters(next))
+                        else if (fcname != null && (next == null || this.Engine.IsSeparators(next) || this.Engine.IsComplementors(next) || this.Engine.IsMediators(next) || this.Engine.IsFinalizers(next) || this.Engine.IsOrganizers(next)))
+                            return this.Engine.CreateCallFunctionNode(fcname);
+                        else if (this.Engine.IsDelimiters(next))
                         {
-                            if (this.Compiler.IsOrganizers(before))
+                            if (this.Engine.IsOrganizers(before))
                             {
                                 walker.Remove(next);
                                 return newNode.Update(NodeType.CallStructure);
                             }
                             else if (
                                 next2?.Is(TokenType.Keyword) == true ||
-                                this.Compiler.IsConnectors(next2) ||
-                                this.Compiler.IsComplementors(next2) ||
-                                this.Compiler.IsMediators(next2) ||
-                                this.Compiler.IsFinalizers(next2) ||
-                                this.Compiler.IsOrganizers(next2)
+                                this.Engine.IsConnectors(next2) ||
+                                this.Engine.IsComplementors(next2) ||
+                                this.Engine.IsMediators(next2) ||
+                                this.Engine.IsFinalizers(next2) ||
+                                this.Engine.IsOrganizers(next2)
                             )
                                 return newNode.Update(NodeType.CallStructure);
                         }
@@ -473,7 +473,7 @@ namespace MiMFa.Engine.DEAL.JS
         {
             var type = node.Token.Value.Contains("\n") ? NodeType.Region :
                 (node.Token.Value.StartsWith("/*") ? NodeType.Chunk : NodeType.Line);
-            if (node.Token.Value.StartsWith("//") || this.Compiler.IsFlag(walker.Current))
+            if (node.Token.Value.StartsWith("//") || this.Engine.IsFlag(walker.Current))
                 return node.Update(node.Type|type);
             return new Node(new Token(TokenType.Unknown), type, node, CompactAssembleNode(walker));
         }
@@ -488,15 +488,15 @@ namespace MiMFa.Engine.DEAL.JS
                     if (next == null) return new Node();
                     else if (next.IsMatch("("))
                         return node.Update(NodeType.CallStructure).Add(AssembleNode(walker));
-                    else if (next.Is(TokenType.Keyword) && (this.Compiler.IsDelimiters(next2) || this.Compiler.IsComplementors(next2) || this.Compiler.IsOrganizers(next2)))
+                    else if (next.Is(TokenType.Keyword) && (this.Engine.IsDelimiters(next2) || this.Engine.IsComplementors(next2) || this.Engine.IsOrganizers(next2)))
                         return node.Update(NodeType.CallStructure).Add(CompactAssembleNode(walker));
                     else
                     {
                         var child = CompactAssembleNode(walker);
                         if (child != null)
-                            if (child.Is(NodeType.BlockStructure)) child = this.Compiler.CreateCallableNode(child);
-                            else if (!child.Is(NodeType.CallStructure) || child.Count > 0) child = this.Compiler.CreateCallableNode(child);
-                            else child = Compiler.TrimSeparators(child);
+                            if (child.Is(NodeType.BlockStructure)) child = this.Engine.CreateCallableNode(child);
+                            else if (!child.Is(NodeType.CallStructure) || child.Count > 0) child = this.Engine.CreateCallableNode(child);
+                            else child = Engine.TrimSeparators(child);
                         return node.Update(NodeType.CallStructure).Add(child);
                     }
             }
@@ -507,8 +507,8 @@ namespace MiMFa.Engine.DEAL.JS
             switch (node.Token.Value.ToLower())
             {
                 case "as":
-                    Assembled.Insert(Assembled.Length - 1, this.Compiler.CreateOpenBlockNode(), AssembleNode(walker), this.Compiler.CreateNode(":", TokenType.Symbol, NodeType.Depend));
-                    return this.Compiler.CreateCloseBlockNode();
+                    Assembled.Insert(Assembled.Length - 1, this.Engine.CreateOpenBlockNode(), AssembleNode(walker), this.Engine.CreateNode(":", TokenType.Symbol, NodeType.Depend));
+                    return this.Engine.CreateCloseBlockNode();
             }
 
             return base.AssembleMiddleNode(node, walker);
@@ -519,7 +519,7 @@ namespace MiMFa.Engine.DEAL.JS
             var next = walker.PeekProcedure();
             var next2 = walker.PeekProcedure(1);
             string dot = before == null || before.Value != "." ? "." : null;
-            if (next == null || !next.Is(TokenType.Symbol) || next.Is(TokenType.ConcatenatorSymbol) || this.Compiler.IsDelimiters(next))
+            if (next == null || !next.Is(TokenType.Symbol) || next.Is(TokenType.ConcatenatorSymbol) || this.Engine.IsDelimiters(next))
                 switch (node.Token.Value.ToLower())
                 {
                     case "then":
@@ -529,36 +529,36 @@ namespace MiMFa.Engine.DEAL.JS
                         if (next == null) return new Node();
                         else if (next.IsMatch("("))
                             return node.Update(NodeType.CallStructure).Add(AssembleNode(walker));
-                        else if (next.Is(TokenType.Keyword) && (this.Compiler.IsSeparators(next2) || this.Compiler.IsComplementors(next2) || this.Compiler.IsFinalizers(next2) || this.Compiler.IsOrganizers(next2)))
+                        else if (next.Is(TokenType.Keyword) && (this.Engine.IsSeparators(next2) || this.Engine.IsComplementors(next2) || this.Engine.IsFinalizers(next2) || this.Engine.IsOrganizers(next2)))
                             return node.Update(NodeType.CallStructure).Add(CompactAssembleNode(walker));
                         else
                         {
                             var child = CompactAssembleNode(walker);
                             if (child != null)
                                 if (child.Is(NodeType.BlockStructure))
-                                    child = this.Compiler.CreateCallableNode(this.Compiler.CreateLineNode(child.Insert(0, this.Compiler.CreateNode("handle(data);"))), this.Compiler.CreateNode("data", NodeType.Chunk, TokenType.Keyword));
+                                    child = this.Engine.CreateCallableNode(this.Engine.CreateLineNode(child.Insert(0, this.Engine.CreateNode("handle(data);"))), this.Engine.CreateNode("data", NodeType.Chunk, TokenType.Keyword));
                                 else if (!child.Is(NodeType.CallStructure) || child.Count > 0)
-                                    child = this.Compiler.CreateCallableNode(this.Compiler.CreateBlockNode(this.Compiler.CreateNode("handle(data);"), this.Compiler.CreateLineNode(child)), this.Compiler.CreateNode("data", NodeType.Chunk, TokenType.Keyword));
-                                else child = this.Compiler.TrimSeparators(child);
+                                    child = this.Engine.CreateCallableNode(this.Engine.CreateBlockNode(this.Engine.CreateNode("handle(data);"), this.Engine.CreateLineNode(child)), this.Engine.CreateNode("data", NodeType.Chunk, TokenType.Keyword));
+                                else child = this.Engine.TrimSeparators(child);
                             return node.Update(NodeType.CallStructure).Add(child);
                         }
 
                     case "where":
                         node.Token.Update(TokenType.FunctionKeyword, $"{dot}filter");
-                        return node.Update(NodeType.CallStructure).Add(this.Compiler.CreateCallableNode(CompactAssembleNode(walker), this.Compiler.CreateNode("data")));
+                        return node.Update(NodeType.CallStructure).Add(this.Engine.CreateCallableNode(CompactAssembleNode(walker), this.Engine.CreateNode("data")));
 
                     case "distinct":
                         node.Token.Update(TokenType.FunctionKeyword, $"{dot}filter");
-                        return node.Update(NodeType.CallStructure).Add(this.Compiler.CreateCallableNode(this.Compiler.CreateProceduresNode("", this.Compiler.CreateNode("self.indexOf(data) === index"), this.Compiler.CreateNode("data")), this.Compiler.CreateNode("data")));
+                        return node.Update(NodeType.CallStructure).Add(this.Engine.CreateCallableNode(this.Engine.CreateProceduresNode("", this.Engine.CreateNode("self.indexOf(data) === index"), this.Engine.CreateNode("data")), this.Engine.CreateNode("data")));
 
                     case "limit":
-                        if (this.Compiler.IsDelimiters(next)) walker.Walk();
+                        if (this.Engine.IsDelimiters(next)) walker.Walk();
                         node.Token.Update(TokenType.FunctionKeyword, $"{dot}slice");
                         var nlimit = SequenceAssembleNode(walker);
-                        return node.Update(NodeType.CallStructure).AddRange(nlimit.Count > 1 ? nlimit.Children.ToArray() : new[] { this.Compiler.CreateNode("0", NodeType.Chunk, TokenType.NumberData), nlimit });
+                        return node.Update(NodeType.CallStructure).AddRange(nlimit.Count > 1 ? nlimit.Children.ToArray() : new[] { this.Engine.CreateNode("0", NodeType.Chunk, TokenType.NumberData), nlimit });
 
                     case "order":
-                        if (this.Compiler.IsDelimiters(next)) walker.Walk();
+                        if (this.Engine.IsDelimiters(next)) walker.Walk();
                         var norders = SequenceAssembleNode(walker);
                         var orderItems = norders.Is(NodeType.BlockStructure) ? norders.Children : new List<Node> { norders };
                         var childrenOrder = new List<Node>();
@@ -581,20 +581,20 @@ namespace MiMFa.Engine.DEAL.JS
                             var keyExprA = KeyAccess(item, "a");
                             var keyExprB = KeyAccess(item, "b");
                             var comparator = $"(a,b)=>(a,b)=>{keyExprA}>{keyExprB}?1:{keyExprA}=={keyExprB}?0:-1";
-                            var comparatorNode = this.Compiler.CreateNode(comparator, NodeType.Chunk, TokenType.Unknown);
-                            childrenOrder.Add(this.Compiler.CreateCallFunctionNode("sort", comparatorNode));
+                            var comparatorNode = this.Engine.CreateNode(comparator, NodeType.Chunk, TokenType.Unknown);
+                            childrenOrder.Add(this.Engine.CreateCallFunctionNode("sort", comparatorNode));
                         }
 
-                        return this.Compiler.CreateNode(dot, NodeType.Prepend, TokenType.Unknown, childrenOrder.ToArray());
+                        return this.Engine.CreateNode(dot, NodeType.Prepend, TokenType.Unknown, childrenOrder.ToArray());
 
                     case "keys":
                     case "values":
                         node.Token.Update(TokenType.FunctionKeyword, dot+node.Token.Value);
                         return node.Update(NodeType.CallStructure).AddRange(
-                            this.Compiler.CreatePackNode(),
-                            Compiler.CreateDotNode(
-                                Compiler.CreateNode("toArray", TokenType.FunctionKeyword, NodeType.CallStructure),
-                                this.Compiler.CreatePackNode()
+                            this.Engine.CreatePackNode(),
+                            Engine.CreateDotNode(
+                                Engine.CreateNode("toArray", TokenType.FunctionKeyword, NodeType.CallStructure),
+                                this.Engine.CreatePackNode()
                             )
                          );
                 }

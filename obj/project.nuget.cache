@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "PuO2PGjS2DDKkVcuc0ZjNQncEJoieHfz5pvPiuMBSp6ZnWywHRXqcIUJnM4EUIEJ9w/GjVWQ+I3xwH40eqxy9A==",
+  "dgSpecHash": "+m3nW1csYo2qRf3Q9hBt4mbbPXkawjB10eKM/ifarmNnlIDqKWnI66xvKOpRrCfmHZ9J1HKjonebRwtHx7tOng==",
   "success": true,
-  "projectFilePath": "D:\\Product\\Technology\\MiMFa DEAL.JS - Compiler\\MiMFa DEAL.JS - Compiler.csproj",
+  "projectFilePath": "D:\\Product\\Technology\\MiMFa DEAL\\MiMFa DEAL.JS - Compiler\\MiMFa DEAL.JS - Compiler.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\MiMFa\\.nuget\\packages\\microsoft.csharp\\4.7.0\\microsoft.csharp.4.7.0.nupkg.sha512",
     "C:\\Users\\MiMFa\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",

@@ -119,7 +119,7 @@ namespace MiMFa.Engine.JavaScript
                 else if (!string.IsNullOrWhiteSpace(next)) return TokenizeRegExPath(walker, location);
             }
 
-            if (Regex.IsMatch(current.ToString(), "[A-Z_$]", RegexOptions.IgnoreCase))
+            if (Regex.IsMatch(current.ToString(), "[A-Z_$#]", RegexOptions.IgnoreCase))
                 return TokenizeKeyword(walker, location);
 
             if (Regex.IsMatch(current.ToString(), @"[0-9]") || (Regex.IsMatch(current.ToString(), @"[\-\+]") && Regex.IsMatch(next.ToString(), @"[0-9\.]")))
@@ -136,7 +136,7 @@ namespace MiMFa.Engine.JavaScript
 
         protected virtual Token TokenizeKeyword(CodeWalker walker, Position location)
         {
-            var chars = walker.WalkWhile(ch => Regex.IsMatch(ch.ToString(), "[A-Za-z0-9_$]")).ToArray();
+            var chars = (new string[] { walker.Walk() }).Concat(walker.WalkWhile(ch => Regex.IsMatch(ch.ToString(), "[A-Za-z0-9_$]"))).ToArray();
             var value = string.Concat(chars);
             var type = TokenType.Keyword;
             walker.MoveToProcedure();
@@ -160,7 +160,7 @@ namespace MiMFa.Engine.JavaScript
         protected virtual Token TokenizeRegExPath(CodeWalker walker, Position location)
         {
             walker.Walk(); // consume '/'
-            var value = string.Concat(walker.WalkUntil(ch => ch == "/" && walker.Peek(-1) != (this.Compiler?.Options?.Escape ?? "\\")[0].ToString()).ToArray());
+            var value = string.Concat(walker.WalkUntil(ch => ch == "/" && walker.Peek(-1) != (this.Engine?.Options?.Escape ?? "\\")[0].ToString()).ToArray());
             walker.Walk(); // consume closing '/'
             value = "/" + value + "/" + string.Concat(walker.WalkWhile(ch => Regex.IsMatch(ch.ToString(), "[gimsuy]", RegexOptions.IgnoreCase)).ToArray());
             return new Token(TokenType.PatternData, value, location);
@@ -175,7 +175,7 @@ namespace MiMFa.Engine.JavaScript
             {
                 var ch = walker.Walk();
                 if (!escaped && ch == quote) break;
-                if (ch == (this.Compiler?.Options?.Escape ?? "\\")[0].ToString() && !escaped)
+                if (ch == (this.Engine?.Options?.Escape ?? "\\")[0].ToString() && !escaped)
                 {
                     escaped = true;
                     continue;
@@ -212,7 +212,7 @@ namespace MiMFa.Engine.JavaScript
                     case "{": case "(":
                         return new Token(TokenType.Start | TokenType.Scope, sign, location);
                     case "[":
-                        return new Token(TokenType.Start | TokenType.Scope | TokenType.Prefix | TokenType.Suffix | TokenType.Symbol, sign, location);
+                        return new Token(TokenType.Start | TokenType.Scope, sign, location);
                     case "}": case ")":
                     case "]":
                         return new Token(TokenType.End | TokenType.Scope, sign, location);

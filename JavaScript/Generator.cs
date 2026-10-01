@@ -12,39 +12,17 @@ namespace MiMFa.Engine.JavaScript
 {
     public class Generator : MiMFa.Engine.Generator.Generator
     {
-        //protected override string GenerateCode(Node node, NodeWalker walker)
-        //{
-        //    var value = node.Token?.Value ?? string.Empty;
-        //    if (
-        //        value == "do" || value == "try" || value == "catch" || value == "finally" ||
-        //        value == "class" || value == "interface" || value == "enum" || value == "package" ||
-        //        //value == "if" || value == "else" || value == "switch" || value == "case" || value == "default" ||
-        //        //value == "for" || value == "while"
-        //        node.Is(TokenType.Comment, TokenType.End, TokenType.Keyword, TokenType.Data, TokenType.Unknown) ||
-        //        (node.Is(NodeType.BlockStructure) && value == "(")
-        //        )
-        //        return base.GenerateCode(node, walker) ?? "";
-        //    var code = base.GenerateCode(node, walker) ?? "";
-        //    return string.IsNullOrEmpty(code) ? "" : System.Text.RegularExpressions.Regex.IsMatch(code, "[;\\}]\\s*$") ? code : $"{code};";
-        //}
-
-        protected virtual IList<string> GenerateArray(params Node[] nodes)
-        {
-            var walker = new NodeWalker(nodes.ToArray());
-            return Generate(walker).ToList();
-        }
+        protected virtual string NewLine(int? indention = null) => Engine.Options.MakeNewLine(indention??Indention);
+        protected virtual IList<string> GenerateArray(params Node[] nodes) => Generate(new NodeWalker(nodes.ToArray())).ToList();
         protected virtual string GenerateArrayCode(params Node[] nodes) => GenerateArrayCode(nodes, "");
-        protected virtual string GenerateArrayCode(IEnumerable<Node> nodes, string separator = null)
-        {
-            return string.Join(separator ?? "", GenerateArray(nodes.ToArray())).Trim();
-        }
+        protected virtual string GenerateArrayCode(IEnumerable<Node> nodes, string separator = null) => string.Join(separator ?? "", GenerateArray(nodes.ToArray()));
 
         protected override string GenerateProgramCode(Node node, NodeWalker walker)
         {
-            if (Compiler != null) return
-                    Transform(node, Compiler) as string +
-                    Compiler.Options.MakeNewLine(Indention) +
-                    Compiler.Options.MakeNewLine(Indention);
+            if (Engine != null) return
+                    Transform(node, Engine) as string +
+                    NewLine() +
+                    NewLine();
             return null;
         }
         protected override string GenerateStructureCode(Node node, NodeWalker walker)
@@ -57,110 +35,117 @@ namespace MiMFa.Engine.JavaScript
                     next != null &&
                     (
                         next.IsMatch("{") ||
-                        !next.IsMatch("=>")
-                    ) &&
-                    !next.Is(TokenType.Suffix, TokenType.Start, TokenType.Scope, TokenType.ConcatenatorSymbol, TokenType.DelimiterSymbol, TokenType.TerminatorSymbol)
+                        !(
+                            next.IsMatch("=>") ||
+                            next.Is(NodeType.Append) ||
+                            next.Is(NodeType.Depend) ||
+                            next.Is(TokenType.Suffix, TokenType.Start, TokenType.Scope, TokenType.ConcatenatorSymbol, TokenType.DelimiterSymbol, TokenType.TerminatorSymbol)
+                        )
+                    )
                 ) suffix = " ";
                 if (node.Token.Is(TokenType.ObjectData))
                 {
                     Indention++;
-                    var inner = GenerateArrayCode(node.Children, " ").Trim();
+                    var inner = GenerateArrayCode(node.Children, NewLine()).Trim();
                     Indention--;
-                    return $"{prefix}{node.Token.Value}{inner}}}{suffix}";
+                    if(inner.Contains("\n")) return $"{prefix}{{{NewLine(Indention+1)}{inner}{NewLine()}}}{suffix}";
+                    else if(string.IsNullOrWhiteSpace(inner)) return $"{prefix}{{}}{suffix}";
+                    else return $"{prefix}{{ {inner} }}{suffix}";
                 }
-                //else if (node.IsMatch("{") == true) suffix = Compiler.Options.MakeNewLine(Indention);
                 if (node.Token.Is(TokenType.ArrayData))
                 {
-                    Indention++;
-                    var parameters = GenerateArrayCode(node.Children, " ").Trim();
-                    Indention--;
-                    return $"{prefix}{node.Token.Value}{parameters}]{suffix}";
+                    var inner = GenerateArrayCode(node.Children, " ").Trim();
+                    if(string.IsNullOrWhiteSpace(inner)) return $"{prefix}[]{suffix}";
+                    return $"{prefix}[{inner}]{suffix}";
                 }
                 if (node.Token.Is(TokenType.Scope))
                     if (node.Token.IsMatch("{"))
                     {
                         Indention++;
-                        var body = GenerateArrayCode(node.Children, Compiler.Options.MakeNewLine(Indention) ?? "").Trim();
+                        var inner = GenerateArrayCode(node.Children, NewLine()).Trim();
                         Indention--;
-                        return $"{prefix}{node.Token.Value}{Compiler.Options.MakeNewLine(++Indention)}{body}{Compiler.Options.MakeNewLine(--Indention)}}}{suffix}";
+                        if(string.IsNullOrWhiteSpace(inner)) return $"{prefix}{{}}{suffix}";
+                        return $"{prefix}{{{NewLine(Indention+1)}{inner}{NewLine()}}}{suffix}";
                     }
                     else if (node.Token.IsMatch("["))
                     {
-                        Indention++;
-                        var parameters = GenerateArrayCode(node.Children, " ").Trim();
-                        Indention--;
-                        return $"{prefix}{node.Token.Value}{parameters}]{suffix}";
+                        var inner = GenerateArrayCode(node.Children, " ").Trim();
+                        if(string.IsNullOrWhiteSpace(inner)) return $"{prefix}[]{suffix}";
+                        return $"{prefix}[{inner}]{suffix}";
                     }
                     else if (node.Token.IsMatch("("))
                     {
-                        Indention++;
-                        var parameters = GenerateArrayCode(node.Children, " ").Trim();
-                        Indention--;
-                        return $"{prefix}{node.Token.Value}{parameters}){suffix}";
+                        var inner = GenerateArrayCode(node.Children, " ").Trim();
+                        if(string.IsNullOrWhiteSpace(inner)) return $"{prefix}(){suffix}";
+                        return $"{prefix}({inner}){suffix}";
                     }
                 Indention++;
-                var lines = GenerateArrayCode(node.Children, Compiler.Options.MakeNewLine(Indention) ?? "").Trim();
+                var lines = GenerateArrayCode(node.Children, NewLine()).Trim();
                 Indention--;
-                return $"{prefix}{node.Token.Value}{Compiler.Options.MakeNewLine(Indention + 1)}{lines}{suffix}";
+                return $"{prefix}{node.Token.Value}{NewLine(Indention + 1)}{lines}{suffix}";
             }
 
-            if (node.Is(NodeType.Region))
-                prefix = suffix = Compiler.Options.MakeNewLine(Indention);
-            //else if (node.Is(NodeType.Line))
-            //    prefix = Compiler.Options.MakeNewLine(Indention);
 
             if (node.Is(NodeType.DefineStructure))
             {
-                if (node.Token.Is(TokenType.FunctionKeyword))
-                    return $"{prefix}{node.Token.Value} {GenerateArrayCode(node.Children, " ")}{suffix}";
+                if (node.Is(NodeType.Append))
+                    prefix = " ";
+                if (node.Is(NodeType.Prepend) && node.Count <= 0)
+                    suffix = " ";
+                if (node.Is(NodeType.Region))
+                    prefix = NewLine();
+                if (node.Is(NodeType.Line))
+                    suffix = NewLine();
+
+                if (node.Count <= 0)
+                    return $"{prefix}{node.Token.Value}{suffix}";
+                if (node.First.Is(TokenType.FunctionKeyword))
+                    return $"{prefix}{node.Token.Value} {GenerateArrayCode(node.Children, " ").Trim()}{suffix}";
+                if (node.Is(TokenType.FunctionKeyword))
+                    return $"{prefix}{node.Token.Value}{GenerateArrayCode(node.Children)}{suffix}";
+                if (node.IsMatch("function", "function*"))
+                    return $"{prefix}{node.Token.Value} {GenerateArrayCode(node.Children)}{suffix}";
                 if (string.IsNullOrEmpty(node.Token.Value))
-                    return $"{prefix}{GenerateArrayCode(node.Children, " ")}{suffix}";
-                else return $"{prefix}{node.Token.Value} {GenerateArrayCode(node.Children, " ")}{suffix}";
+                    return $"{prefix}{GenerateArrayCode(node.Children)}{suffix}";
+                else return $"{prefix}{node.Token.Value} {GenerateArrayCode(node.Children, " ").Trim()}{suffix}";
             }
 
             if (node.Is(NodeType.CallStructure))
             {
-                if (node.Token.Is(TokenType.FunctionKeyword))
+                if (node.Is(NodeType.Region))
+                    prefix = NewLine();
+                if (node.Is(NodeType.Line))
+                    suffix = NewLine();
+
+                if (node.Count <= 0)
+                    return $"{prefix}{node.Token.Value}{suffix}";
+                if (node.Is(TokenType.FunctionKeyword))
                     return $"{prefix}{node.Token.Value}{GenerateArrayCode(node.Children)}{suffix}";
-                if (node.Token.Is(TokenType.NamespaceKeyword))
+                if (node.Is(TokenType.NamespaceKeyword))
                     return $"{prefix}{node.Token.Value}{GenerateArrayCode(node.Children)}{suffix}";
-                if (node.ForceFirst.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol, TokenType.End, TokenType.Suffix, TokenType.ConcatenatorSymbol) || node.ForceFirst.IsMatch("[", "("))
-                    return $"{prefix}{node.Token.Value}{GenerateArrayCode(node.Children)}{suffix}".Trim();
-                else return $"{prefix}{node.Token.Value} {GenerateArrayCode(node.Children)}{suffix}".Trim();
+                else return $"{prefix}{node.Token.Value} {GenerateArrayCode(node.Children).Trim()}{suffix}";
             }
 
-            //if (node.Is(NodeType.SelectorStructure))
-            //{
-            //    if (node.Is(NodeType.NormalSelectorStructure))
-            //        return node.Count < 3?
-            //            $"{node.Token.Value} {GenerateArrayCode(node.Children)}" :
-            //            $"{node.Token.Value}{GenerateArrayCode(node.ForceFirst.Children)} {GenerateCodeLine(node.ForceChild(1), walker)}";
-            //}
+            if (node.Is(NodeType.ConditionStructure, NodeType.IterationStructure) && node.Count > 1 && node.First.IsMatch("("))
+                return $"{node.Token.Value} {GenerateArrayCode(node.Children)}";
 
-            //if (node.Is(NodeType.IteratorStructure))
-            //{
-            //    if (node.Is(NodeType.ConditionIteratorStructure))
-            //    {
-            //        if (node.Is(NodeType.PostConditionIteratorStructure))
-            //            return $"do {GenerateCodeLine(node.ForceFirst, walker)}" + Compiler.Options.MakeNewLine(Indention) + $"while({GenerateArrayCode(node.ForceLast.Children)})";
-            //        return $"while({GenerateArrayCode(node.ForceFirst.Children)}) {GenerateCodeLine(node.ForceLast, walker)}" + Compiler.Options.MakeNewLine(Indention);
-            //    }
-            //    return $"for({GenerateArrayCode(node.ForceFirst.Children)}) {GenerateCodeLine(node.ForceLast, walker)}" + Compiler.Options.MakeNewLine(Indention);
-            //}
-
-            return GenerateCode(node.Update((NodeType)(node.Type - NodeType.Structure) | NodeType.Unknown), walker);
+            return GenerateCode(node.Update((node.Type & ~NodeType.Structure) | NodeType.Unknown), walker);
         }
         protected override string GenerateRegionCode(Node node, NodeWalker walker)
         {
             if (node.Count <= 0)
-                return $"{(walker.PeekProcedure(-2)?.Is(NodeType.Line) != true?Compiler.Options.MakeNewLine(Indention) : "")}{node.Token.Value}{(node.Is(NodeType.Line) ? Compiler.Options.MakeNewLine(Indention) : "")}";
-            else return $"{(walker.PeekProcedure(-2)?.Is(NodeType.Line) != true ? Compiler.Options.MakeNewLine(Indention) : "")}{(node.Token.Value + " " + GenerateArrayCode(node.Children)).Trim()}{(node.Is(NodeType.Line) ? Compiler.Options.MakeNewLine(Indention) : "")}";
+                return $"{(walker.PeekProcedure(-2)?.Is(NodeType.Line) != true?NewLine() : "")}{node.Token.Value}{(node.Is(NodeType.Line) ? NewLine() : "")}";
+            else if (string.IsNullOrWhiteSpace(node.Token.Value))
+                return $"{(walker.PeekProcedure(-2)?.Is(NodeType.Line) != true ? NewLine() : "")}{GenerateArrayCode(node.Children)}{(node.Is(NodeType.Line) ? NewLine() : "")}";
+            else return $"{(walker.PeekProcedure(-2)?.Is(NodeType.Line) != true ? NewLine() : "")}{node.Token.Value} {GenerateArrayCode(node.Children)}{(node.Is(NodeType.Line) ? NewLine() : "")}";
         }
         protected override string GenerateLineCode(Node node, NodeWalker walker)
         {
             if (node.Count <= 0)
-                return $"{node.Token.Value}{Compiler.Options.MakeNewLine(Indention)}";
-            else return $"{(node.Token.Value + " " + GenerateArrayCode(node.Children)).Trim()}{Compiler.Options.MakeNewLine(Indention)}";
+                return $"{node.Token.Value}{NewLine()}";
+            else if (string.IsNullOrWhiteSpace(node.Token.Value))
+                 return $"{GenerateArrayCode(node.Children)}{NewLine()}";
+            else return $"{node.Token.Value} {GenerateArrayCode(node.Children)}{NewLine()}";
         }
         protected override string GenerateChunkCode(Node node, NodeWalker walker)
         {
@@ -171,33 +156,51 @@ namespace MiMFa.Engine.JavaScript
         protected override string GenerateIndependCode(Node node, NodeWalker walker)
         {
             if (node.Count <= 0)
-                return $"{node.Token.Value}{Compiler.Options.MakeNewLine(Indention)}";
-            else return $"{node.Token.Value}{Compiler.Options.MakeNewLine(Indention)}{GenerateArrayCode(node.Children).TrimEnd()}";
+                return $"{node.Token.Value}{NewLine()}";
+            else return $"{node.Token.Value}{NewLine()}{GenerateArrayCode(node.Children)}";
         }
         protected override string GenerateDependCode(Node node, NodeWalker walker)
         {
-            if (node.Is(TokenType.ConcatenatorSymbol)) return node.Token.Value + GenerateArrayCode(node.Children);
-            if (node.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol)) return node.Token.Value + " " + GenerateArrayCode(node.Children);
-            else if (node.Count <= 0) return " " + node.Token.Value;
-            else return " " + node.Token.Value + " " + GenerateArrayCode(node.Children);
+            if (node.Is(TokenType.ConcatenatorSymbol))
+                return node.Token.Value + GenerateArrayCode(node.Children).Trim();
+            if (node.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol))
+                if (string.IsNullOrWhiteSpace(node.Token.Value)) 
+                    return " " + GenerateArrayCode(node.Children).Trim();
+                else return node.Token.Value + " " + GenerateArrayCode(node.Children).Trim();
+            else if (node.Count <= 0)
+                if (string.IsNullOrWhiteSpace(node.Token.Value)) return "";
+                else return " " + node.Token.Value;
+            else if (string.IsNullOrWhiteSpace(node.Token.Value)) 
+                return " " + GenerateArrayCode(node.Children).Trim();
+            else return " " + node.Token.Value + " " + GenerateArrayCode(node.Children).Trim();
         }
         protected override string GenerateAppendCode(Node node, NodeWalker walker)
         {
-            if (node.Is(TokenType.Suffix, TokenType.TerminatorSymbol, TokenType.ConcatenatorSymbol))
+            if (node.Count <= 0) return node.Token.Value;
+            else if (node.Is(TokenType.TerminatorSymbol))
+                return node.Token.Value + " " + GenerateArrayCode(node.Children);
+            else if (node.Is(TokenType.DelimiterSymbol))
+                return node.Token.Value + " " + GenerateArrayCode(node.Children);
+            else if (node.Is(TokenType.Suffix, TokenType.ConcatenatorSymbol))
                 return node.Token.Value + GenerateArrayCode(node.Children);
-            else if (node.Count <= 0) return node.Token.Value;
             else return " " + node.Token.Value + GenerateArrayCode(node.Children);
         }
         protected override string GeneratePrependCode(Node node, NodeWalker walker)
         {
-            if (node.Is(TokenType.Prefix, TokenType.TerminatorSymbol, TokenType.ConcatenatorSymbol)) return node.Token.Value + GenerateArrayCode(node.Children);
-            else if (node.Count <= 0) return node.Token.Value;
-            else return node.Token.Value + " " + GenerateArrayCode(node.Children);
+            if (node.Is(TokenType.Prefix, TokenType.ConcatenatorSymbol))
+                return node.Token.Value + GenerateArrayCode(node.Children);
+            else if (node.Count <= 0)
+                if (string.IsNullOrWhiteSpace(node.Token.Value)) return "";
+                else return node.Token.Value;
+            else if (string.IsNullOrWhiteSpace(node.Token.Value))
+                return GenerateArrayCode(node.Children);
+            else return node.Token.Value + " " + GenerateArrayCode(node.Children).Trim();
         }
         protected override string GenerateUnknownCode(Node node, NodeWalker walker)
         {
             if (node.Count <= 0) return node.Token.Value;
-            else return $"{node.Token.Value} {GenerateArrayCode(node.Children)}".Trim();
+            else if (string.IsNullOrWhiteSpace(node.Token.Value)) return GenerateArrayCode(node.Children);
+            else return $"{node.Token.Value} {GenerateArrayCode(node.Children).Trim()}";
         }
     }
 }

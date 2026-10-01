@@ -306,11 +306,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Product\\Technology\\MiMFa DEAL.JS - Compiler\\MiMFa DEAL.JS - Compiler.csproj",
+      "projectUniqueName": "D:\\Product\\Technology\\MiMFa DEAL\\MiMFa DEAL.JS - Compiler\\MiMFa DEAL.JS - Compiler.csproj",
       "projectName": "MiMFa DEAL.JS - Compiler",
-      "projectPath": "D:\\Product\\Technology\\MiMFa DEAL.JS - Compiler\\MiMFa DEAL.JS - Compiler.csproj",
+      "projectPath": "D:\\Product\\Technology\\MiMFa DEAL\\MiMFa DEAL.JS - Compiler\\MiMFa DEAL.JS - Compiler.csproj",
       "packagesPath": "C:\\Users\\MiMFa\\.nuget\\packages\\",
-      "outputPath": "D:\\Product\\Technology\\MiMFa DEAL.JS - Compiler\\obj\\",
+      "outputPath": "D:\\Product\\Technology\\MiMFa DEAL\\MiMFa DEAL.JS - Compiler\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",

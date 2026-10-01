@@ -4,15 +4,15 @@ using System.Text;
 
 namespace MiMFa.Engine.Core
 {
-    public class LibraryEventArgs : EventArgs
+    public class DependencyEventArgs : EventArgs
     {
-        public string Path { get; }
-        public string Content { get; }
+        public string Source { get; }
+        public object Value { get; }
 
-        public LibraryEventArgs(string path, string content = null)
+        public DependencyEventArgs(string path, object value = null)
         {
-            Path = path;
-            Content = content;
+            Source = path;
+            Value = value;
         }
 
         public override bool Equals(object obj)
@@ -27,9 +27,9 @@ namespace MiMFa.Engine.Core
 
         public override string ToString()
         {
-            return Content;
+            return (Value??string.Empty).ToString();
         }
     }
 
-    public delegate void LibraryEventHandler(Engine compiler, LibraryEventArgs e);
+    public delegate void DependencyEventHandler(Engine compiler, DependencyEventArgs e);
 }
