@@ -1,6 +1,6 @@
 // DEAL.JS Statements
 reserve foreach as			"for";
-reserve fault as			"throw";
+reserve fault as	        "throw";
 
 
 // JS Statements

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using MiMFa.Engine.Model;
 using MiMFa.Engine.Walker;
 
@@ -6,14 +7,53 @@ namespace MiMFa.Engine.JavaScript
 {
     public class Parser : MiMFa.Engine.Parser.Parser
     {
-        protected override IEnumerable<Node> ParseStatementToken(Token token, TokenWalker walker)
+        public virtual List<Node> ExtractKeywordToken(Token token, TokenWalker walker, bool strict = true)
         {
             var before = walker.PeekProcedure(-2);
             var next = walker.PeekProcedure();
-            if ((before != null && before.Is(TokenType.Prefix, TokenType.ConcatenatorSymbol)) ||
-                (next != null && next.Is(TokenType.Suffix, TokenType.ConcatenatorSymbol)))
+            if (
+                (Engine as Engine).GetKeyword(token) != null ||
+                (
+                    before != null &&
+                    (
+                        before.Is("new") ||
+                        (
+                            strict &&
+                            before.Is(TokenType.Statement, TokenType.Prefix, TokenType.Middle, TokenType.Symbol) &&
+                            !before.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol)
+                        ) ||
+                        (
+                            !strict &&
+                            before.Is(TokenType.ConcatenatorSymbol)
+                        )
+                    )
+                ) || (
+                    next != null &&
+                    (
+                        (
+                            strict &&
+                            next.Is(TokenType.Suffix, TokenType.Middle, TokenType.Symbol) &&
+                            !next.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol)
+                        ) ||
+                        (
+                            !strict && 
+                            next.Is(TokenType.ConcatenatorSymbol)
+                        )
+                    )
+                )
+            )
             {
-                foreach (var item in ParseKeywordToken(token.Update(TokenType.Keyword), walker))
+                return ParseKeywordToken(token.Update(TokenType.Keyword), walker).ToList();
+            }
+            return new List<Node>();
+        }
+
+        protected override IEnumerable<Node> ParseStatementToken(Token token, TokenWalker walker)
+        {
+            var keywords = ExtractKeywordToken(token, walker, false);
+            if (keywords.Count > 0)
+            {
+                foreach (var item in keywords)
                     yield return item;
                 yield break;
             }
@@ -44,7 +84,7 @@ namespace MiMFa.Engine.JavaScript
                     yield return new Node(token, NodeType.ConditionStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
                     break;
                 case "else":
-                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Depend);
+                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
                     break;
 
                 case "switch":
@@ -71,9 +111,6 @@ namespace MiMFa.Engine.JavaScript
 
                 case "break":
                 case "continue":
-                    yield return new Node(token, NodeType.Chunk);
-                    break;
-
                 case "return":
                     yield return new Node(token, NodeType.Prepend);
                     break;
@@ -138,10 +175,10 @@ namespace MiMFa.Engine.JavaScript
         protected override IEnumerable<Node> ParseScopeToken(Token token, TokenWalker walker)
         {
             if (token.Is(TokenType.Start))
-                if (token.IsMatch("{")) yield return new Node(token, NodeType.BlockStructure | NodeType.Region | NodeType.Line);
+                if (token.Is("{")) yield return new Node(token, NodeType.BlockStructure | NodeType.Region | NodeType.Line);
                 else yield return new Node(token, NodeType.BlockStructure | NodeType.Line);
             else if (token.Is(TokenType.End))
-                if (token.IsMatch("}")) yield return new Node(token, NodeType.BlockStructure | NodeType.Line);
+                if (token.Is("}")) yield return new Node(token, NodeType.BlockStructure | NodeType.Line);
                 else yield return new Node(token, NodeType.BlockStructure);
             else yield return new Node(token, NodeType.Chunk);
         }
@@ -163,10 +200,10 @@ namespace MiMFa.Engine.JavaScript
             else if (token.Is(TokenType.TerminatorSymbol)) yield return new Node(token, NodeType.Append);
             else if (token.Is(TokenType.ConcatenatorSymbol)) yield return new Node(token, NodeType.Depend);
             else if (token.Is(TokenType.Suffix)) yield return new Node(token, NodeType.Append);
-            else if (token.IsMatch(":")) yield return new Node(token, NodeType.Prepend | NodeType.Append);
-            else if (token.IsMatch("!")) yield return new Node(token, NodeType.Prepend);
-            else if (token.IsMatch("=>", "?", "??")) yield return new Node(token, NodeType.Depend);
-            else if (token.IsMatch("="))
+            else if (token.Is(":")) yield return new Node(token, NodeType.Prepend | NodeType.Append);
+            else if (token.Is("!")) yield return new Node(token, NodeType.Prepend);
+            else if (token.Is("=>", "?", "??")) yield return new Node(token, NodeType.Depend);
+            else if (token.Is("="))
             {
                 (Engine as Engine).SetKeyword(walker.PeekProcedure(-2));
                 yield return new Node(token, NodeType.Depend);
@@ -182,7 +219,7 @@ namespace MiMFa.Engine.JavaScript
         {
             var next = walker.PeekProcedure();
             if (next != null)
-                if (next.Is(TokenType.Start | TokenType.Scope) && next.IsMatch("("))
+                if (next.Is(TokenType.Start | TokenType.Scope) && next.Is("("))
                     yield return new Node(token.Clone(TokenType.FunctionKeyword), NodeType.CallStructure | NodeType.Prepend);
                 else if (next.Is(TokenType.ConcatenatorSymbol))
                     yield return new Node(token.Clone(TokenType.NamespaceKeyword), NodeType.CallStructure | NodeType.Prepend);
@@ -196,8 +233,8 @@ namespace MiMFa.Engine.JavaScript
                 token.Value.StartsWith("//") ? (
                     before.StartsWith("/*") ||
                     before == "}" ||
-                    walker.Peek()?.Value?.StartsWith("//") == true ?
-                        NodeType.Append | NodeType.Region | NodeType.Line :
+                    (!before.StartsWith("//") && walker.Peek()?.Value?.StartsWith("//") == true) ?
+                        NodeType.Region | NodeType.Line :
                         NodeType.Append | NodeType.Line
                 ) : (
                     token.Value.Contains("\n") ?
@@ -209,52 +246,47 @@ namespace MiMFa.Engine.JavaScript
         protected override IEnumerable<Node> ParseStartToken(Token token, TokenWalker walker)
         {
             if (token.Is(TokenType.Scope))
-                if (token.IsMatch("{")) yield return new Node(token, NodeType.BlockStructure | NodeType.Region | NodeType.Line);
+                if (token.Is("{")) yield return new Node(token, NodeType.BlockStructure | NodeType.Region | NodeType.Line);
                 else yield return new Node(token, NodeType.BlockStructure | NodeType.Line);
             else yield return new Node(token, NodeType.Chunk | NodeType.Prepend);
         }
         protected override IEnumerable<Node> ParsePrefixToken(Token token, TokenWalker walker)
         {
-            var before = walker.PeekProcedure(-2);
-            var next = walker.PeekProcedure();
-            if ((before != null && before.Is(TokenType.Prefix, TokenType.ConcatenatorSymbol)) ||
-                (next != null && next.Is(TokenType.Suffix, TokenType.ConcatenatorSymbol)))
+            var keywords = ExtractKeywordToken(token, walker);
+            if (keywords.Count > 0)
             {
-                foreach (var item in ParseKeywordToken(token.Update(TokenType.Keyword), walker))
+                foreach (var item in keywords)
                     yield return item;
                 yield break;
             }
-            yield return new Node(token, NodeType.Prepend);
+            else yield return new Node(token, NodeType.Prepend);
         }
         protected override IEnumerable<Node> ParseMiddleToken(Token token, TokenWalker walker)
         {
-            var before = walker.PeekProcedure(-2);
-            var next = walker.PeekProcedure();
-            if ((before != null && before.Is(TokenType.Prefix, TokenType.ConcatenatorSymbol)) ||
-                (next != null && next.Is(TokenType.Suffix, TokenType.ConcatenatorSymbol)))
+            var keywords = ExtractKeywordToken(token, walker, false);
+            if (keywords.Count > 0)
             {
-                foreach (var item in ParseKeywordToken(token.Update(TokenType.Keyword), walker))
+                foreach (var item in keywords)
                     yield return item;
                 yield break;
             }
-            yield return new Node(token, NodeType.Depend);
+            else yield return new Node(token, NodeType.Depend);
         }
         protected override IEnumerable<Node> ParseSuffixToken(Token token, TokenWalker walker)
         {
-            var before = walker.PeekProcedure(-2);
-            var next = walker.PeekProcedure();
-            if ((before != null && before.Is(TokenType.Prefix, TokenType.ConcatenatorSymbol)) ||
-                (next != null && next.Is(TokenType.Suffix, TokenType.ConcatenatorSymbol))) {
-                foreach (var item in ParseKeywordToken(token.Update(TokenType.Keyword), walker))
+            var keywords = ExtractKeywordToken(token, walker);
+            if (keywords.Count > 0)
+            {
+                foreach (var item in keywords)
                     yield return item;
                 yield break;
             }
-            yield return new Node(token, NodeType.Append);
+            else yield return new Node(token, NodeType.Append);
         }
         protected override IEnumerable<Node> ParseEndToken(Token token, TokenWalker walker)
         {
             if (token.Is(TokenType.Scope))
-                if (token.IsMatch("}")) yield return new Node(token, NodeType.BlockStructure | NodeType.Line);
+                if (token.Is("}")) yield return new Node(token, NodeType.BlockStructure | NodeType.Line);
                 else yield return new Node(token, NodeType.BlockStructure);
             else yield return new Node(token, NodeType.Chunk | NodeType.Append);
         }

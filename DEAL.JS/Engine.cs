@@ -105,15 +105,15 @@ namespace MiMFa.Engine.DEAL.JS
         }
 
 
-        public virtual bool IsGlobalNeeder(Node node) => node != null && node.Has(n => n.Token.IsMatch("return", "yield", "{", "do", "begin", "end"));
+        public virtual bool IsGlobalNeeder(Node node) => node != null && node.Has(n => n.Token.Is("return", "yield", "{", "do", "begin", "end"));
         public virtual bool IsAcceptors(Node node) => IsAcceptors(node?.Token);
         public virtual bool IsAcceptors(Token token) => token != null && (token.Is(TokenType.FunctionKeyword) || (GetFunctionName(token.Value) ?? GetFunctionCommandName(token.Value) ?? null) != null);
 
 
         public virtual Node TrimSeparators(Node node)
         {
-            if (node.Is(NodeType.BlockStructure) && node.Token.IsMatch("{")) return node;
-            return node.Trim(n => n.Count <= 0 && n.Ancestor(p => p.Is(NodeType.BlockStructure))?.Token.IsMatch("{") != true && n.Token.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol));
+            if (node.Is(NodeType.BlockStructure) && node.Token.Is("{")) return node;
+            return node.Trim(n => n.Count <= 0 && n.Ancestor(p => p.Is(NodeType.BlockStructure))?.Token.Is("{") != true && n.Token.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol));
         }
 
         public virtual Node CreateNode(string value = "", params Node[] children) =>
@@ -146,7 +146,7 @@ namespace MiMFa.Engine.DEAL.JS
         }
         public virtual Node CreatePackNode(params Node[] children)
         {
-            if (children.Length == 1 && children[0].Is(NodeType.BlockStructure) && children[0].Token.IsMatch("(")) return children[0];
+            if (children.Length == 1 && children[0].Is(NodeType.BlockStructure) && children[0].Token.Is("(")) return children[0];
             return new Node(new Token(TokenType.Scope, "("), NodeType.BlockStructure, children);
         }
         public virtual Node CreateLineNode(Node node)
@@ -162,7 +162,7 @@ namespace MiMFa.Engine.DEAL.JS
         }
         public virtual Node CreateBlockNode(params Node[] children)
         {
-            if (children.Length == 1 && children[0].Is(NodeType.BlockStructure) && children[0].Token.IsMatch("{")) return children[0];
+            if (children.Length == 1 && children[0].Is(NodeType.BlockStructure) && children[0].Token.Is("{")) return children[0];
             return new Node(new Token(TokenType.Start | TokenType.Scope, "{"), NodeType.BlockStructure | NodeType.Region | NodeType.Line, children);
         }
         public virtual Node CreatePackOrBlockNode(params Node[] children)

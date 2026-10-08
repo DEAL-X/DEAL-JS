@@ -8,9 +8,9 @@
                           ▼          ▼
                       HUMAN ◄ ── ── ► MACHINE
 ```
-**DEAL** (Declarative and Extensible Abstract Language) is an **AI-generatable**, **human-readable**, and **machine-executable** programming language designed to provide a common communication layer between **human intent**, **artificial intelligence**, and **target programming language**.
+**DEAL** (Declarative and Extensible Abstract Language) is an **AI-generatable**, **human-readable**, and **machine-executable** programming language designed to provide a common and reliable communication layer between **human intent**, **artificial intelligence**, and **target programming language**.
 
-DEAL is a **declarative**, **user-friend**, **deterministic**, **explicit**, **hybrid**, **interoperable**, **modular**, **extensible**, **abstract** and **reusable** programming language. Its fundamental grammar remains stable while domain-specific vocabulary, instructions, and localized terminology can be introduced through modules.
+DEAL is a **declarative**, **abstract**, **deterministic**, **explicit**, **hybrid**, **interoperable**, **modular**, **extensible**, **consistent** and **reusable** programming language. Its fundamental grammar remains stable while domain-specific vocabulary, instructions, and localized terminology can be introduced through modules.
 
 **The generated target programming language code will be the executable truth.**
 
@@ -26,8 +26,73 @@ Also, you can find more examples and their parsed JS versions [here](Samples/).
 ## Main Principles
 DEAL does not attempt to turn unrestricted natural language into executable programs. Instead, it defines a constrained and extensible grammatical language whose declarative instructions have deterministic JavaScript translations, while allowing ordinary JavaScript to remain embedded in the same source.
 So DEAL has **five** main principles:
-1. **Declarative** and **User-friend**: Every DEAL instruction expresses computational intent in a form resembling natural language.
+1. **Declarative** and **Abstract**: Every DEAL instruction expresses computational intent in a form resembling natural language.
     * Its syntax is designed around constrained English-like grammatical structures.
+    * DEAL codes are readable as a simple Markdown document.
+    ```md
+    use deal;
+    # FillList
+    Begin,
+
+    ## ReadFile
+        Begin,
+            * MyFile = resource file open();
+            * Log subject "Process started!";
+            * If **MyFile** not be null, begin:
+                - The text be myFile content;
+                - The successful be true;
+                - end;
+            * Else, begin:
+                - The text be empty;
+                - The successful be false;
+                - end;
+        End;
+
+    ## UseFile
+        Try,
+            * The list = text split "\n";
+            * If list length be lesser than 1, do:
+                + ReadFile;
+                + UseFile;
+                + End;
+            * Else log success "Process finished successfully!";
+        Catch err,
+            * Log error "Could not finish the process because: " + err;
+        Finally,
+            * Log subject "Process finished!";
+
+    End;
+    ```
+    * It will compile to the pure JavaScript code below:
+    ```js
+    (FillList = (() => {
+        (ReadFile = (() => {
+            MyFile = resource.file.open();
+            Log.subject("Process started!");
+            if (MyFile != null) {
+                text = MyFile.content;
+                successful = true;
+            }  else {
+                text = "";
+                successful = false;
+            }
+        }))();
+        (UseFile = (() => {
+            try {
+                list = text.split("\n");
+                if (list.length < 1) {
+                    ReadFile();
+                    UseFile();
+                }
+                else Log.success("Process finished successfully!");
+            } catch (err) {
+                Log.error("Could not finish the process because: " + err);
+            } finally {
+                Log.subject("Process finished!");
+            }
+        }))();
+    }))();
+    ```
     * While retaining the precision required for deterministic compilation.
     * For example:
     ```ts
@@ -36,7 +101,7 @@ So DEAL has **five** main principles:
     ```
     * The written DEAL code can be read as a simple document.
 2. **Deterministic** and **Explicit**: Every DEAL instruction has a defined compilation into its destination language.
-    * So the previous instructions will convert to the pure JavaScript code below:
+    * So the previous instructions will compile to the pure JavaScript code below:
     ```js
     for(const url of list) load(url).then((data) => {
         handle(data);
@@ -77,8 +142,9 @@ So DEAL has **five** main principles:
     For each url of the lista, load the url, then append all h3#title, to the destino;
     otherwise log the error `¡No se pudo cargar ${url}!`;
     ```
-5. **Abstract** and **Reusable**: Every DEAL instruction can abstract and explain destination language code for future reuse.
+5. **Consistent** and **Reusable**: Every DEAL instruction can explain its target programming language code for consistent reuse.
     * DEAL.JS can represent complex JavaScript behavior through reusable, higher-level instructions.
+    * DEAL.JS can compile to the pure JavaScript code, for future reuse, everywhere the same.
     * Allowing implementations to be expressed once and reused through a human-readable vocabulary.
     * The generated JavaScript will be the executable truth.
 
@@ -90,7 +156,8 @@ In the DEAL:
     2. **Commands** perform actions and functions.
     3. **Reserves** represent all reserved-words or noise-words defined for DEAL.
     4. **Handlers** of the workspace represent the current execution context.
-* Using predefined structures and commands, you will be able to write your procedure more clearly, more human-readable, and more flexibly.
+* Predefined DEAL structures, commands, reserves and handlers allow for clearer, more human-readable, and more flexible procedures.
+* A DEAL document can also be read as a simple Markdown document.
 * Case statements of DEAL are very flexible (case-relieve), instead of being somewhere:
     * Case-insensitive:
         * All target programming language ordinary structures, such as IF, FUNCTION, LET, etc.
@@ -103,6 +170,8 @@ In the DEAL:
     * Case-sensitive:
         * All user-defined functions/variables/constants.
         * All objects' functions/variables/constants (almost everything is written after a dot('.')).
+* To display code clearly, use `+`, `-`, or `*`, with just one space, before each line, similar to Markdown lists.
+* Use single or double asterisks for highlighting in your code, similar to Markdown's italics or bolds.
 
 *Noice*: To keep your code more readable and avoid conflicts with DEAL, you should not use `"use strict";` phrase anywhere.
 * Because in the strict mode, using a variable without declaring it will not be allowed, then it makes it difficult for the DEAL code writer to use some instructions.
@@ -168,7 +237,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     ```
     Also you can use a modern approach:
     ```ts
-    #doingTask procedure; WHILE condition, doingTask;
+    # doingTask procedure; WHILE condition, doingTask;
     ```
     It will compile to:
     ```js
@@ -281,13 +350,17 @@ All commands represent executable operations.
     * They will have a special case-insensitive commandName.
     * They will call immediately after definition once.
     * Will be able to call again, just using the name without any parentesis.
-* The main syntax to define a special action commands:
+* To define a special action command, use 1-6 `#` signs followed by at least one space before the action `commandName`.
     ```ts
-    #commandName procedure;
+    # commandName procedure;
     ```
     or
     ```ts
-    #commandName: procedure;
+    ### commandName procedure;
+    ```
+    or
+    ```ts
+    ## commandName: procedure;
     ```
     They will compile to:
     ```js
@@ -383,27 +456,27 @@ All commands represent executable operations.
 * Every delegation command behaves like a simple JavaScript variable while following several conventions:
     * All delegation commands must be defined globally.
     * They will have a special case-insensitive commandName.
-    * All words, after being used only one time, a stuck acceptor sign `@` will convert to a delegation command.
+    * All words, after being used only one time, a stuck acceptor sign `#keyword`, or wrapping word between sticked single or double asterisks `*keyword*`, will convert to a delegation command.
     * They can convert everything (constant, variable, function, class, etc.), even after their definition.
     * They will not change the behavior of the converted thing. 
  * The main syntax to make then call a special delegation commands is:
     ```ts
-        var test1Var = "The test value #1";
+        var test1Var = "The test value number 1";
         console.log(test1Var); // You should use case-sensitively
-        console.log(@test1Var); // You should use case-sensitively (But made it case-insensitive after a sticked acceptor sign `@`)
+        console.log(**test1Var**); // You should use case-sensitively (But made it case-insensitive after a wrapping by sticked asterisks)
         console.log(TEST1var); // Its a delegation command and is case-insensitive now
             
-        var @test2Var = "The test value #2"; // You can define everything case-insensitive the first time using a sticked acceptor sign `@`
+        var #test2Var = "The test value number 2"; // You can define everything case-insensitive the first time using a sticked acceptor sign `#`
         console.log(Test2VAR); // Its a delegation command and is case-insensitive now
     ```
     It will compile to:
     ```js
-        var test1Var = "The test value #1";
+        var test1Var = "The test value number 1";
         console.log(test1Var);
         console.log(test1Var);
         console.log(test1Var);
             
-        var @test2Var = "The test value #2";
+        var test2Var = "The test value number 2";
         console.log(test2Var);
     ```
 

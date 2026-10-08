@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using MiMFa.Engine.Model;
 using MiMFa.Engine.Walker;
 
@@ -18,10 +19,22 @@ namespace MiMFa.Engine.DEAL.JS
 
         protected override IEnumerable<Node> ParseStatementToken(Token token, TokenWalker walker)
         {
+            var keywords = ExtractKeywordToken(token, walker, false);
+            if (keywords.Count > 0)
+            {
+                foreach (var item in keywords)
+                    yield return item;
+                yield break;
+            }
             var next = walker.PeekProcedure();
             switch (token.Value.ToLower())
             {
                 case "#":
+                case "##":
+                case "###":
+                case "####":
+                case "#####":
+                case "######":
                     yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Line);
                     yield break;
 
@@ -32,11 +45,11 @@ namespace MiMFa.Engine.DEAL.JS
                 case "do":
                 case "begin":
                 case "doing":
-                    if (token.IsMatch("do") && next?.IsMatch("{") == true) break;
-                    yield return new Node(token, NodeType.Structure | NodeType.Region | NodeType.Line);
+                    if (token.Is("do") && next?.Is("{") == true) break;
+                    yield return new Node(token, NodeType.BlockStructure | NodeType.Region | NodeType.Line);
                     yield break;
                 case "end":
-                    yield return new Node(token, NodeType.Structure | NodeType.Line);
+                    yield return new Node(token, NodeType.BlockStructure | NodeType.Line);
                     yield break;
             }
 
@@ -45,66 +58,135 @@ namespace MiMFa.Engine.DEAL.JS
         }
         protected override IEnumerable<Node> ParseSymbolToken(Token token, TokenWalker walker)
         {
-            var before = walker.PeekProcedure(-2);
             var next = walker.PeekProcedure();
             var next2 = walker.PeekProcedure(1);
             switch (token.Value.ToLower())
             {
                 case "be":
-                case "is":
-                    if (next?.IsMatch("not") == true)
+                    if (next?.Is("equals", "===") == true)
                     {
-                        if (next2?.IsMatch("equal", "equals", "be", "===") == true)
+                        walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "==="), walker);
+                    }
+                    else if (next?.Is("equal", "==", "=") == true)
+                    {
+                        walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "=="), walker);
+                    }
+                    else if (next?.Is("lesser", "less", "<") == true)
+                    {
+                        if (next2?.Is("than") == true) walker.MoveToProcedure();
+                        walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "<"), walker);
+                    }
+                    else if (next?.Is("greater", "great", ">") == true)
+                    {
+                        if (next2?.Is("than") == true) walker.MoveToProcedure();
+                        walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, ">"), walker);
+                    }
+                    else if (next?.Is(TokenType.StringData) == true && next?.Is("", "empty") == true)
+                    {
+                        walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Symbol, " = \"\"", null), walker);
+                    }
+                    else return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "="), walker);
+
+                case "is":
+                    if (next?.Is("not") == true)
+                    {
+                        if (next2?.Is("equal", "equals", "be", "===") == true)
                         {
                             walker.MoveToProcedure(); walker.MoveToProcedure();
                             return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "!=="), walker);
                         }
-                        else if (next2?.Is(TokenType.StringData) == true && next2?.IsMatch("", "empty") == true)
+                        else if (next2?.Is(TokenType.StringData) == true && next2?.Is("", "empty") == true)
                         {
                             walker.MoveToProcedure(); walker.MoveToProcedure();
                             return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "+ \"\" != \"\""), walker);
                         }
-                        else if (next?.IsMatch("==", "=") == true)
+                        else if (next?.Is("==", "=") == true)
                         {
                             walker.MoveToProcedure(); walker.MoveToProcedure();
                             return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "!="), walker);
                         }
-                        else { 
+                        else
+                        {
                             walker.MoveToProcedure();
                             return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "!="), walker);
                         }
                     }
-                    else if (next?.IsMatch("equal", "equals", "be", "===") == true)
+                    else if (next?.Is("equals", "be", "===") == true)
                     {
                         walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "==="), walker);
                     }
-                    else if (next?.Is(TokenType.StringData) == true && next?.IsMatch("", "empty") == true)
+                    else if (next?.Is("equal", "==", "=") == true)
+                    {
+                        walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "=="), walker);
+                    }
+                    else if (next?.Is("lesser", "less", "<") == true)
+                    {
+                        if (next2?.Is("than") == true) walker.MoveToProcedure();
+                        walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "<"), walker);
+                    }
+                    else if (next?.Is("greater", "great", ">") == true)
+                    {
+                        if (next2?.Is("than") == true) walker.MoveToProcedure();
+                        walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, ">"), walker);
+                    }
+                    else if (next?.Is(TokenType.StringData) == true && next?.Is("", "empty") == true)
                     {
                         walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "+ \"\" == \"\"", null), walker);
                     }
                     else return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "=="), walker);
 
                 case "equal":
+                    if (Engine.IsDelimiters(next))
+                    {
+                        walker.MoveToProcedure();
+                        return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "=="), walker);
+                    }
+                    else if (next?.Is("lesser", "less", "<") == true)
+                    {
+                        if (next2?.Is("than") == true) walker.MoveToProcedure();
+                        walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "<="), walker);
+                    }
+                    else if (next?.Is("greater", "great", ">") == true)
+                    {
+                        if (next2?.Is("than") == true) walker.MoveToProcedure();
+                        walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, ">="), walker);
+                    }
+                    else return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "=="), walker);
                 case "equals":
                     if (Engine.IsDelimiters(next))
                     {
                         walker.MoveToProcedure();
                         return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "==="), walker);
                     }
+                    else if (next?.Is("lesser", "less", "<") == true)
+                    {
+                        if (next2?.Is("than") == true) walker.MoveToProcedure();
+                        walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "<="), walker);
+                    }
+                    else if (next?.Is("greater", "great", ">") == true)
+                    {
+                        if (next2?.Is("than") == true) walker.MoveToProcedure();
+                        walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, ">="), walker);
+                    }
                     else return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "==="), walker);
 
                 case "not":
-                    if (next?.IsMatch("equal", "equals", "===") == true)
+                    if (next?.Is("equals", "===") == true)
                     {
                         walker.MoveToProcedure();
                         return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "!=="), walker);
                     }
-                    else if (next?.IsMatch("be", "==", "=") == true)
+                    else if(next?.Is("equal", "==", "=") == true)
                     {
                         walker.MoveToProcedure();
                         return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "!="), walker);
                     }
-                    else if (next?.Is(TokenType.StringData) == true && next?.IsMatch("", "empty") == true)
+                    else if (next?.Is("be", "==", "=") == true)
+                    {
+                        walker.MoveToProcedure();
+                        return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "!="), walker);
+                    }
+                    else if (next?.Is(TokenType.StringData) == true && next?.Is("", "empty") == true)
                     {
                         walker.MoveToProcedure();
                         return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "+ \"\" != \"\""), walker);
@@ -113,22 +195,7 @@ namespace MiMFa.Engine.DEAL.JS
                 default:
                     break;
             }
-
-            if (
-                (Engine.IsAcceptors(before) || Engine.IsDelimiters(before) || Engine.IsInitializers(before) || Engine.IsOrganizers(before)) &&
-                !Engine.IsSeparators(token) &&
-                (Engine.IsSeparators(next) || Engine.IsComplementors(next) || Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next))
-            )
-                return ParseDataToken(token.Clone(TokenType.StringData), walker);
-            else if (Engine.IsSeparators(token))
-            {
-                if (Engine.IsOrganizers(next))
-                    return new Node[] { new Node(token.Update(TokenType.TerminatorSymbol, ";"), NodeType.Chunk) };
-                else if (token.Is(TokenType.DelimiterSymbol))
-                    return new Node[] { new Node(token, NodeType.Depend) };
-                else if (token.Is(TokenType.TerminatorSymbol))
-                    return new Node[] { new Node(token, NodeType.Prepend) };
-            }
+           
             return base.ParseSymbolToken(token, walker);
         }
         protected override IEnumerable<Node> ParseStartToken(Token token, TokenWalker walker)
@@ -145,6 +212,14 @@ namespace MiMFa.Engine.DEAL.JS
         }
         protected override IEnumerable<Node> ParseMiddleToken(Token token, TokenWalker walker)
         {
+            var keywords = ExtractKeywordToken(token, walker, false);
+            if (keywords.Count > 0)
+            {
+                foreach (var item in keywords)
+                    yield return item;
+                yield break;
+            }
+
             switch (token.Value.ToLower())
             {
                 case "as":
@@ -157,8 +232,13 @@ namespace MiMFa.Engine.DEAL.JS
         }
         protected override IEnumerable<Node> ParseSuffixToken(Token token, TokenWalker walker)
         {
-            var before = walker.PeekProcedure(-2);
-            bool dot = before == null || before.Value != ".";
+            var keywords = ExtractKeywordToken(token, walker);
+            if (keywords.Count > 0)
+            {
+                foreach (var item in keywords)
+                    yield return item;
+                yield break;
+            }
 
             switch (token.Value.ToLower())
             {

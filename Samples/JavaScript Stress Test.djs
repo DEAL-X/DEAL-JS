@@ -1,6 +1,7 @@
+use deal;
 /*
  * ============================================================
- * MiMFa DaRQ JavaScript Compiler Stress Test
+ * MiMFa DEAL.JS Compiler Stress Test
  * ============================================================
  * This file intentionally contains many JavaScript structures.
  * It should remain semantically equivalent after compilation.
@@ -9,7 +10,7 @@
 // Constants and primitive values
 // ------------------------------------------------------------
 const VERSION = "4.0.0";
-const EMPTY = null;
+const EMPTYVALUE = null;
 const UNKNOWN = undefined;
 const ENABLED = true;
 const DISABLED = false;
@@ -20,12 +21,16 @@ const stringValues = ["simple", "single quoted", "escaped \"quote\"", "linenbrea
 // ------------------------------------------------------------
 // Basic expressions
 // ------------------------------------------------------------
-let arithmetic = 10 + 20 * 3 - 4 / 2 + (8 ** 2);
-let comparison = arithmetic >= 100 && arithmetic !== 0 && arithmetic <= 1000;
+let arithmetic = // Added comment to test
+10 + 20 * 3 - 4 / 2 + (8 ** 2);// Added comment to test
+let comparison = arithmetic >= 100 && // Added comment to test
+arithmetic !== 0 && // Added comment to test
+arithmetic <= 1000;// Added comment to test
 let logicalValue = ENABLED && !DISABLED || false;
 let nullableValue = UNKNOWN ?? "default value";
-let chainedValue = EMPTY?.property?.child?.value ?? "fallback";
-let conditionalValue = comparison ? "valid" : "invalid";
+let chainedValue = EMPTYVALUE?.property?.child?.value ?? "fallback";// Added comment to test
+let conditionalValue = // Added comment to test
+comparison ? "valid" : "invalid";
 // ------------------------------------------------------------
 // Object and nested object structures
 // ------------------------------------------------------------
@@ -70,7 +75,8 @@ const {
 // ------------------------------------------------------------
 const values = [10, 20, 30, 40, 50];
 const [first, second, ...remainingValues] = values;
-const [,, third] = values;
+const [third] = values;
+// NOTICE: Do not use multiple separator sequentialy
 // ------------------------------------------------------------
 // Spread and rest
 // ------------------------------------------------------------
@@ -83,28 +89,33 @@ const combinedConfiguration = {
 };
 function sum(...items) {
     return items.reduce((total, item) => total + item, 0);
-} const total = sum(...values, 100, 200);
+}
+const total = sum(...values, 100, 200);
 // ------------------------------------------------------------
 // Normal functions
 // ------------------------------------------------------------
-function calculateGrade(score, minimum = 0) {
+function calculateGrade(score, minVal = 0) {
     if (score == null) {
         return "unknown";
     }
+    
     if (score >= 19) {
         return "A+";
     }
+    
     if (score >= 17) {
         return "A";
     }
+    
     if (score >= 15) {
         return "B";
     }
-    if (score >= minimum) {
+    
+    if (score >= minVal) {
         return "C";
     }
     return "F";
-} 
+}
 // ------------------------------------------------------------
 // Arrow functions
 // ------------------------------------------------------------
@@ -126,8 +137,10 @@ const initialized = (() => {
     const initial = 10;
     const increment = 5;
     return initial + increment;
-})();(function () {
+})();
+(function () {
     counter++;
+    
     if (counter > 10) {
         counter = 0;
     }
@@ -137,11 +150,13 @@ const initialized = (() => {
 // ------------------------------------------------------------
 for (let i = 0; i < values.length; i++) {
     const value = values[i];
+    
     if (value === 30) {
-        continue;
+        continue ;
     }
+    
     if (value > 40) {
-        break;
+        break ;
     }
     counter += value;
 }
@@ -154,14 +169,15 @@ for (const index in configuration) {
 let whileCounter = 0;
 while (whileCounter < 5) {
     whileCounter++;
+    
     if (whileCounter === 3) {
-        continue;
+        continue ;
     }
 }
 let doCounter = 0;
 do {
     doCounter++;
-} while (doCounter < 3);
+}  while (doCounter < 3);
 // ------------------------------------------------------------
 // Nested conditions
 // ------------------------------------------------------------
@@ -169,18 +185,15 @@ function classify(value) {
     if (value == null) {
         return "empty";
     } else if (typeof value === "number") {
-        if (value > 100) {
-            return "large";
-        } else if (value > 50) {
+        if (value > 100) return "large";
+        else if (value > 50) {
             return "medium";
-        } else {
-            return "small";
-        }
+        } else return "small";
     } else if (typeof value === "string") {
         return value.length > 10 ? "long string" : "short string";
     }
     return "unknown";
-} 
+}
 // ------------------------------------------------------------
 // Switch
 // ------------------------------------------------------------
@@ -205,27 +218,30 @@ function getStatus(code) {
             return "server error";
         default :
             console.error(code);
-            break;
+            break ;
     }
     return "unknown";
-} 
+}
 // ------------------------------------------------------------
 // Try / catch / finally
 // ------------------------------------------------------------
 function parseConfiguration(text) {
     try {
         const data = JSON.parse(text);
+        
         if (!data || typeof data !== "object") {
             throw new TypeError("Invalid configuration");
         }
         return data;
-    } catch (error) {
+    } 
+    catch (error) {
         console.error("Could not parse configuration:", error);
         return null;
-    } finally {
+    } 
+    finally {
         console.log("Configuration parsing finished");
     }
-} 
+}
 // ------------------------------------------------------------
 // Custom errors
 // ------------------------------------------------------------
@@ -245,6 +261,7 @@ class ApplicationError extends Error {
         };
     }
 }
+
 // ------------------------------------------------------------
 // Base class
 // ------------------------------------------------------------
@@ -257,9 +274,11 @@ class Vehicle {
     }
     get speed() {
         return this.speed;
-    } set speed(value) {
+    }
+    set speed(value) {
         this.speed = Number(value) || 0;
-    } accelerate(amount = 10) {
+    }
+    accelerate(amount = 10) {
         this.speed += amount;
         return this.speed;
     }
@@ -274,6 +293,7 @@ class Vehicle {
         return new Vehicle("MiMFa", "Default");
     }
 }
+
 // ------------------------------------------------------------
 // Derived class
 // ------------------------------------------------------------
@@ -294,6 +314,7 @@ class Car extends Vehicle {
         return result;
     }
 }
+
 // ------------------------------------------------------------
 // Static class fields and computed members
 // ------------------------------------------------------------
@@ -307,35 +328,41 @@ class Calculator {
         return a * b;
     }
 }
+
 // ------------------------------------------------------------
 // Generator function
 // ------------------------------------------------------------
-function* numberGenerator(start, end) {
-    for (let value = start; value <= end; value++) {
+function* numberGenerator(startPoint, endPoint) {
+    for (let value = startPoint; value <= endPoint; value++) {
         yield value;
     }
-} const generatedNumbers = [];
-for (const number of numberGenerator(1, 5)) {
-    generatedNumbers.push(number);
-}// ------------------------------------------------------------
+}
+const generatedNumbers = [];
+for (const num of numberGenerator(1, 5)){
+    generatedNumbers.push(num);
+}
+// ------------------------------------------------------------
 // Async functions
 // ------------------------------------------------------------
 async function delay(milliseconds) {
     return new Promise(resolve => {
         setTimeout(() => resolve(true), milliseconds);
     });
-} async function loadData(url) {
+}
+async function loadData(url) {
     try {
         const response = await fetch(url);
+        
         if (!response.ok) {
             throw new ApplicationError("Request failed", response.status);
         }
         return await response.json();
-    } catch (error) {
+    } 
+    catch (error) {
         console.error("Loading failed:", error);
         throw error;
     }
-} 
+}
 // ------------------------------------------------------------
 // Promise chains
 // ------------------------------------------------------------
@@ -348,7 +375,7 @@ function processData(url) {
     }).then(data => {
         return data.items ?? [];
     }).filter;
-} 
+}
 // ------------------------------------------------------------
 // Promise.all / Promise.race
 // ------------------------------------------------------------
@@ -356,10 +383,11 @@ async function loadMultiple(urls) {
     const requests = urls.map(url => fetch(url).then(response => response.json()));
     const results = await Promise.all(requests);
     return results;
-} async function loadFirst(urls) {
+}
+async function loadFirst(urls) {
     const requests = urls.map(url => fetch(url));
     return await Promise.race(requests);
-} 
+}
 // ------------------------------------------------------------
 // Regular expressions
 // ------------------------------------------------------------
@@ -394,16 +422,18 @@ users.set("guest", {
     name: "Guest",
     level: 1
 });
-for (const [username, user] of users) {
+for (const [username, user] of users){
     console.log(username, user.name, user.level);
-}// ------------------------------------------------------------
+}
+// ------------------------------------------------------------
 // Set
 // ------------------------------------------------------------
 const uniqueNumbers = new Set([1, 2, 2, 3, 3, 4]);
 uniqueNumbers.add(5);
-if (uniqueNumbers.has(3)) {
+if (uniqueNumbers.has(3)){
     console.log("3 exists");
-}// ------------------------------------------------------------
+}
+// ------------------------------------------------------------
 // Higher-order functions
 // ------------------------------------------------------------
 const processedValues = values.filter(value => value > 20).map(value => value * 2).reduce((total, value) => total + value, 0);
@@ -414,10 +444,11 @@ function executePipeline(input, onSuccess, onError) {
     try {
         const result = input.map(value => value * 2).filter(value => value > 10);
         onSuccess(result);
-    } catch (error) {
+    } 
+    catch (error) {
         onError(error);
     }
-} 
+}
 // ------------------------------------------------------------
 // Optional chaining and nullish assignment
 // ------------------------------------------------------------
@@ -450,16 +481,18 @@ const hasBrand = "brand" in vehicle;
 // ------------------------------------------------------------
 // Labelled statement
 // ------------------------------------------------------------
-outerLoop: for (let i = 0; i < 10; i++) {
+outerLoop: for (let i = 0; i < 10; i++){
     innerLoop: for (let j = 0; j < 10; j++) {
         if (i === 5 && j === 5) {
-            breakouterLoop;
+            break outerLoop;
         }
+        
         if (j === 2) {
-            continueinnerLoop;
+            continue innerLoop;
         }
     }
-}// ------------------------------------------------------------
+}
+// ------------------------------------------------------------
 // Nested object with functions and expressions
 // ------------------------------------------------------------
 const applicationObject = {
@@ -471,7 +504,7 @@ const applicationObject = {
         running: false,
         count: 0
     },
-    start() {
+    startPoint() {
         this.state.running = true;
         return this;
     },
@@ -493,7 +526,7 @@ const applicationObject = {
 // ------------------------------------------------------------
 // Chained method calls
 // ------------------------------------------------------------
-const chainResult = applicationObject.start().increment(5);
+const chainResult = applicationObject.startPoint().increment(5);
 applicationObject.increment(10).increment(20).stop();
 // ------------------------------------------------------------
 // Computed access

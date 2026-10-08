@@ -42,14 +42,23 @@ namespace MiMFa.Engine.JavaScript
         protected virtual IEnumerable<Node> SectionAssembleNodes(NodeWalker walker)
         {
             foreach (var node in SequenceAssembleNodes(walker)) yield return node;
-            var next = walker.PeekProcedure();
+            var next = walker.Peek();
             if (next != null && !(Engine as Engine).IsFlag(next))
-                if (next.Is(NodeType.Append))
+            {
+                if (next.Is(NodeType.Append) && !(Engine as Engine).IsSeparators(next)) {
                     foreach (var node in SectionAssembleNodes(walker))
                         yield return node;
-                else if (next.Is(TokenType.TerminatorSymbol))
+                    yield break;
+                }
+                next = walker.PeekProcedure();
+                if (
+                    next != null &&
+                    !(Engine as Engine).IsFlag(next) &&
+                    next.Is(TokenType.TerminatorSymbol)
+                )
                     foreach (var node in SectionAssembleNodes(walker))
                         yield return node;
+            }
         }
 
         protected virtual Node SequenceAssembleNode(NodeWalker walker)
@@ -64,14 +73,23 @@ namespace MiMFa.Engine.JavaScript
         protected virtual IEnumerable<Node> SequenceAssembleNodes(NodeWalker walker)
         {
             foreach (var node in CompactAssembleNodes(walker)) yield return node;
-            var next = walker.PeekProcedure();
+            var next = walker.Peek();
             if (next != null && !(Engine as Engine).IsFlag(next))
-                if (next.Is(NodeType.Append))
+            {
+                if (next.Is(NodeType.Append) && !(Engine as Engine).IsSeparators(next)) {
                     foreach (var node in SequenceAssembleNodes(walker))
                         yield return node;
-                else if (next.Is(TokenType.DelimiterSymbol))
+                    yield break;
+                }
+                next = walker.PeekProcedure();
+                if (
+                    next != null &&
+                    !(Engine as Engine).IsFlag(next) &&
+                    next.Is(TokenType.DelimiterSymbol)
+                )
                     foreach (var node in SequenceAssembleNodes(walker))
                         yield return node;
+            }
         }
 
         protected virtual Node CompactAssembleNode(NodeWalker walker)
@@ -85,12 +103,19 @@ namespace MiMFa.Engine.JavaScript
         {
             var latest = AssembleNode(walker);
             yield return latest;
-            var next = walker.PeekProcedure();
+            var next = walker.Peek();
             if (next != null && !(Engine as Engine).IsFlag(next))
-                if (next.Is(NodeType.Append))
+            {
+                if (next.Is(NodeType.Append) && !(Engine as Engine).IsSeparators(next))
+                {
                     foreach (var node in CompactAssembleNodes(walker))
                         yield return node;
-                else if (
+                    yield break;
+                }
+                next = walker.PeekProcedure();
+                if (
+                    next != null &&
+                    !(Engine as Engine).IsFlag(next) &&
                     next.Is(
                         TokenType.ConcatenatorSymbol,
                         TokenType.Suffix,
@@ -98,15 +123,19 @@ namespace MiMFa.Engine.JavaScript
                         TokenType.End,
                         TokenType.Start | TokenType.Scope
                     ) &&
-                    !(Engine as Engine).IsSeparators(latest)
+                    (
+                        !(Engine as Engine).IsSeparators(latest.LastLeaf) ||
+                        (latest.LastLeaf.Parent != null && latest.LastLeaf.Ancestor(v=>v.Is(NodeType.BlockStructure)) != null)
+                    )
                 )
                     foreach (var node in CompactAssembleNodes(walker))
                         yield return node;
+            }
         }
 
         protected override Node AssembleNode(NodeWalker walker)
         {
-            if ((Engine as Engine).IsFlag(walker.Current)) return new Node();
+            //if ((Engine as Engine).IsFlag(walker.Current)) return new Node();
             var node = base.AssembleNode(walker.Walk(), walker).Update(location: Location);
             //if (walker.PeekProcedure()?.Is(NodeType.Append) == true)
             //    node.Add(AssembleNode(walker));
@@ -119,10 +148,10 @@ namespace MiMFa.Engine.JavaScript
             {
                 case "get":
                 case "set":
-                    return node.AddRange(AssembleNode(walker), AssembleNode(walker));
+                    return node.AddRange(CompactAssembleNode(walker));
                 case "function":
                     var fname = walker.PeekProcedure();
-                    if (fname != null && fname.IsMatch("*"))
+                    if (fname != null && fname.Is("*"))
                     {
                         node.Token.Value += walker.WalkProcedure().Value;
                         fname = walker.PeekProcedure();
@@ -132,10 +161,10 @@ namespace MiMFa.Engine.JavaScript
                         (Engine as Engine).SetKeyword(fname.Token.Update(TokenType.FunctionKeyword));
                         walker.Replace(fname);
                     }
-                    return node.AddRange(AssembleNode(walker), AssembleNode(walker));
+                    return node.AddRange(CompactAssembleNode(walker));
 
                 case "if":
-                    return node.AddRange(AssembleNode(walker), SectionAssembleNode(walker), (walker.PeekProcedure()?.Token?.IsMatch("else") == true) ? SectionAssembleNode(walker) : null);
+                    return new Node(null,NodeType.Chunk, node.AddRange(AssembleNode(walker), SectionAssembleNode(walker)), (walker.PeekProcedure()?.Token?.Is("else") == true) ? SectionAssembleNode(walker) : null);
                 case "else":
                     return node.AddRange(SectionAssembleNode(walker));
 
@@ -147,7 +176,7 @@ namespace MiMFa.Engine.JavaScript
                     else node.AddRange(walker.WalkProcedure().Update(NodeType.Chunk));
                     var items = walker.MapUntil(() =>
                             walker.Current == null ||
-                            walker.Current.IsMatch("case", "default") ||
+                            walker.Current.Is("case", "default") ||
                             walker.Current.Is(TokenType.End | TokenType.Scope),
                         () => SectionAssembleNode(walker)).ToArray();
                     if (items.Length > 0) return node.Add(new Node(null, NodeType.BlockStructure, items));
@@ -157,30 +186,27 @@ namespace MiMFa.Engine.JavaScript
                     return node.AddRange(AssembleNode(walker), SectionAssembleNode(walker));
 
                 case "while":
-                    return node.AddRange(AssembleNode(walker), AssembleNode(walker));
+                    return node.AddRange(AssembleNode(walker), SectionAssembleNode(walker));
 
                 case "do":
-                    return node.AddRange(AssembleNode(walker), walker.WalkProcedure().Add(SectionAssembleNode(walker)));
-
-                case "break":
-                    return node.Add(AssembleNode(walker));
-                case "continue":
-                    return node.Add(AssembleNode(walker));
+                    return node.AddRange(AssembleNode(walker), walker.WalkProcedure().Add(CompactAssembleNode(walker)));
 
                 case "try":
                     return node.AddRange(AssembleNode(walker), AssembleNode(walker));
                 case "catch":
                     return node.AddRange(
-                        walker.PeekProcedure()?.IsMatch("(") == true ? AssembleNode(walker) : null,
+                        walker.PeekProcedure()?.Is("(") == true ? AssembleNode(walker) : null,
                         AssembleNode(walker),
-                        walker.PeekProcedure()?.IsMatch("finally", "catch") == true ? AssembleNode(walker) : null
+                        walker.PeekProcedure()?.Is("finally", "catch") == true ? AssembleNode(walker) : null
                     );
                 case "finally":
                     return node.AddRange(
                         AssembleNode(walker),
-                        walker.PeekProcedure()?.IsMatch("finally", "catch") == true ? AssembleNode(walker) : null
+                        walker.PeekProcedure()?.Is("finally", "catch") == true ? AssembleNode(walker) : null
                         );
 
+                case "break":
+                case "continue":
                 case "return":
                 case "yield":
                 case "throw":
@@ -191,12 +217,12 @@ namespace MiMFa.Engine.JavaScript
                     return node.Add(SectionAssembleNode(walker));
 
                 case "void":
-                    return node.Add(AssembleNode(walker));
+                    return node.Add(CompactAssembleNode(walker));
 
                 case "var":
                 case "let":
                 case "const":
-                    return node.Add(SectionAssembleNode(walker));
+                    return node.Add(CompactAssembleNode(walker));
 
                 case "with":
                 case "debugger":
@@ -208,6 +234,7 @@ namespace MiMFa.Engine.JavaScript
                 case "await":
                 case "async":
                 case "new":
+                case "typeof":
                     return node.Add(CompactAssembleNode(walker));
 
                 case "private":
@@ -252,7 +279,7 @@ namespace MiMFa.Engine.JavaScript
                     return node.AddRange(AssembleNode(walker), AssembleNode(walker));
 
                 default:
-                    return node.AddRange(AssembleNode(walker));
+                    return node.AddRange(CompactAssembleNode(walker));
 
             }
         }
@@ -263,27 +290,33 @@ namespace MiMFa.Engine.JavaScript
                 var before = walker.PeekProcedure(-2);
                 if (before != null &&
                         !before.Is(TokenType.End, TokenType.Statement, TokenType.Keyword, TokenType.TerminatorSymbol, TokenType.ConcatenatorSymbol) &&
-                        !before.IsMatch("=>")
+                        !before.Is("=>")
                     )
-                    if (node.IsMatch("{"))
+                    if (node.Is("{"))
                         node.Token.Update(TokenType.ObjectData);
-                    else if (node.IsMatch("[")) node.Token.Update(TokenType.ArrayData);
+                    else if (node.Is("[")) node.Token.Update(TokenType.ArrayData);
                     else node.Token.Update(TokenType.Scope);
                 else node.Token.Update(TokenType.Scope);
 
-                bool noBreak = node.IsMatch("(");
+                bool noBreak = node.Is("(");
                 Location++;
                 while (walker.Current != null && !walker.Current.Is(TokenType.End | TokenType.Scope))
                 {
                     var n = CompactAssembleNode(walker);
-                    if (n != null && !n.Is(NodeType.None)) node.Add(noBreak?n.Update(n.Type & ~NodeType.Region & ~NodeType.Line):n);
+                    if (n != null && !n.Is(NodeType.None))
+                    {
+                        n = noBreak ? n.Update(n.Type & ~NodeType.Region & ~NodeType.Line) : n;
+                        if (n.Is(NodeType.Append))
+                            node.ForceLast.Add(n);
+                        else node.Add(n);
+                    }
                 }
-                if (node.IsMatch("{", "[", "(")) walker.Walk();
+                if (node.Is("{", "[", "(")) walker.Walk();
                 else node.Add(AssembleNode(walker));
                 Location--;
                 return node;
             }
-            else if (node.IsMatch("}", "]", ")"))
+            else if (node.Is("}", "]", ")"))
                 return new Node();
             else if (node.Is(TokenType.End | TokenType.Scope))
                 return node;
@@ -297,11 +330,11 @@ namespace MiMFa.Engine.JavaScript
         protected override Node AssembleSymbolNode(Node node, NodeWalker walker)
         {
             var next = walker.PeekProcedure();
-            if (node.IsMatch("="))
+            if (node.Token.Value.EndsWith("="))
                 return node.Add(CompactAssembleNode(walker));
-            if (node.IsMatch("?"))
+            if (node.Is("?"))
                 ConditionExpr.Push(Location);
-            if (node.IsMatch(":") && ConditionExpr.Count > 0 && ConditionExpr.Last() == Location)
+            if (node.Is(":") && ConditionExpr.Count > 0 && ConditionExpr.Last() == Location)
             {
                 node.Update(NodeType.Depend);
                 ConditionExpr.Pop();
@@ -316,7 +349,11 @@ namespace MiMFa.Engine.JavaScript
                 if ((Engine as Engine).IsComplementors(next) || (Engine as Engine).IsAppendent(next))
                     return node.Add(CompactAssembleNode(walker));
                 else return node;
-            return node.Add(AssembleNode(walker));
+            if (node.Is(TokenType.Prefix) || node.Is(NodeType.Prepend))
+                return node.Add(AssembleNode(walker));
+            else if (node.Is(TokenType.Suffix))
+                return node;
+            return node;
         }
         protected override Node AssembleKeywordNode(Node node, NodeWalker walker)
         {
@@ -324,8 +361,9 @@ namespace MiMFa.Engine.JavaScript
                 return node.Add(CompactAssembleNode(walker));
             else if (node.Is(TokenType.FunctionKeyword))
             {
-                 node.Add(AssembleNode(walker));
-                if (walker.PeekProcedure()?.IsMatch("{") == true)
+                if (walker.PeekProcedure()?.Is("(") == true)
+                    node.Add(AssembleNode(walker));
+                if (walker.PeekProcedure()?.Is("{") == true)
                     node.Update(NodeType.DefineStructure).Add(AssembleNode(walker));
             }
             return node;
@@ -336,29 +374,24 @@ namespace MiMFa.Engine.JavaScript
         }
         protected override Node AssembleStartNode(Node node, NodeWalker walker)
         {
-            Location++;
-            while (walker.Current != null && !walker.Current.Is(TokenType.End | TokenType.Scope))
-            {
-                var n = SectionAssembleNode(walker);
-                if (n != null && !n.Is(NodeType.None)) node.Add(n);
-            }
-            node.Add(AssembleNode(walker));
-            Location--;
-            return node;
+            var child = CompactAssembleNode(walker);
+            if ((Engine as Engine).IsPrependent(node) && (Engine as Engine).IsAppendent(child))
+                return node.Add(child);
+            else return new Node(new Token(), NodeType.Prepend, node, child);
         }
         protected override Node AssemblePrefixNode(Node node, NodeWalker walker)
         {
             var child = CompactAssembleNode(walker);
             if ((Engine as Engine).IsPrependent(node) && (Engine as Engine).IsAppendent(child))
                 return node.Add(child);
-            else return new Node(new Token(), NodeType.Region, node, child);
+            else return new Node(new Token(), NodeType.Prepend, node, child);
         }
         protected override Node AssembleMiddleNode(Node node, NodeWalker walker)
         {
             var child = CompactAssembleNode(walker);
             if ((Engine as Engine).IsPrependent(node) && (Engine as Engine).IsAppendent(child))
                 return node.Add(child);
-            else return new Node(new Token(), NodeType.Region, node, child);
+            else return new Node(new Token(), NodeType.Depend, node, child);
         }
         protected override Node AssembleSuffixNode(Node node, NodeWalker walker)
         {

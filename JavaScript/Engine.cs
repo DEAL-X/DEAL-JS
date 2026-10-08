@@ -38,6 +38,7 @@ namespace MiMFa.Engine.JavaScript
             if (Keywords.ContainsKey(name)) return name;
             return null;
         }
+        public virtual Token GetKeyword(Token token) => GetKeyword(token.Value);
         public virtual Token GetKeyword(string name)
         {
             if(Keywords.ContainsKey(name)) return Keywords[name];
@@ -55,7 +56,7 @@ namespace MiMFa.Engine.JavaScript
         public virtual bool IsInitializers(Node node) => IsInitializers(node?.Token);
         public virtual bool IsInitializers(Token token) => token != null && token.Is(TokenType.Start, TokenType.Prefix);
         public virtual bool IsConnectors(Node node) => node != null && (IsConnectors(node.Token) || (false && node.Is(TokenType.Comment) && node.Is(NodeType.Prepend)));
-        public virtual bool IsConnectors(Token token) => token != null && (token.IsMatch("[", "(") || token.Is(TokenType.Middle | TokenType.Symbol, TokenType.Suffix | TokenType.Symbol));
+        public virtual bool IsConnectors(Token token) => token != null && (token.Is("[", "(") || token.Is(TokenType.Middle | TokenType.Symbol, TokenType.Suffix | TokenType.Symbol));
         public virtual bool IsComplementors(Node node) => IsComplementors(node?.Token);
         public virtual bool IsComplementors(Token token) => token != null && token.Is(TokenType.Suffix, TokenType.ConcatenatorSymbol);
         public virtual bool IsMediators(Node node) => IsMediators(node?.Token);

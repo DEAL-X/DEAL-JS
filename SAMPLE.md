@@ -23,11 +23,11 @@
 	USE .\MyLib;						// Will attach a third-party library using a relative address to the JS engine
 
 	CONST Source = OPENFILE();																	// Using a command of the `deal\io\resource` library, which will show an open file dialog
-	CONST @Destination = SAVEFILE("results", "Comma Separated Values Files (*.csv)|*.csv");		// Using a command of the `deal\io\resource` library, which will show a save file dialog
+	CONST #Destination = SAVEFILE("results", "Comma Separated Values Files (*.csv)|*.csv");		// Using a command of the `deal\io\resource` library, which will show a save file dialog
 	/*
 		* All of the JS statements are accessible in a case-insensitive mode.
 		* All of your defined names are case-sensitive.
-			* If the name begins with `@` (delegation command sign), subsequent characters will be case-insensitive.
+			* If the name begins with `#` (delegation command sign), subsequent characters will be case-insensitive.
 	*/
 
 	const retries = parseInt(prompt("How many retry do you want to do, If it can not fetched?", 2));
@@ -37,7 +37,7 @@
 		* You can use a block of pure JS codes between curly-brackets { Pure JS Codes }
 	*/
 
-	#dailyChack	// Define a label to can do it again
+	# dailyChack	// Define a label to can do it again
 	/*
 		* All labelled procedures will parse as a function, that will execute immediately too:
 		`
@@ -59,7 +59,7 @@
 				* cells:		// You can get or set a flat array of all cells in the file
 		*/
 		BEGIN
-			#checkItem
+			## checkItem
 			DO
 				LET trying BE 0;
 				TRY	TO // Start a try block, you can write TRY instead.

@@ -1,6 +1,8 @@
-command get(url = null, data = null) {
+// To GET daa from a url
+command receive(url = null, data = null) {
     if (!url) return get;
 }
-command post(url = null, data = null) {
+// To POST data to a url
+command send(url = null, data = null) {
     if (!url) return post;
 }

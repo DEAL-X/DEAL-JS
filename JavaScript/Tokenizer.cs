@@ -8,21 +8,14 @@ namespace MiMFa.Engine.JavaScript
 {
     public class Tokenizer : MiMFa.Engine.Tokenizer.Tokenizer
     {
-        public TokenType? SpaceSwitch = null;
         protected override Token TokenizeCode(CodeWalker walker)
         {
-            if(SpaceSwitch != null)
-            {
-                var sw = SpaceSwitch;
-                SpaceSwitch = null;
-                return new Token(sw, walker.WalkToProcedure());
-            }
             walker.MoveToProcedure();
-            var location = walker.Location;
+            var location = walker.Position;
             var current = walker.Current;
             if (current == null) return new Token();
             var next = walker.Peek(1);
-            var word = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^A-Z0-9_$]", RegexOptions.IgnoreCase)).ToArray());
+            var word = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w0-9_$]", RegexOptions.CultureInvariant)).ToArray());
 
             switch (word)
             {
@@ -68,9 +61,6 @@ namespace MiMFa.Engine.JavaScript
                 case "with":
                 case "debugger":
                 case "delete":
-                case "await":
-                case "async":
-                case "new":
 
                 case "implements":
                 case "extends":
@@ -85,9 +75,16 @@ namespace MiMFa.Engine.JavaScript
                     walker.MoveToProcedure();
                     return new Token(TokenType.Statement, word, location);
 
+                case "await":
+                case "async":
+                case "new":
+                case "typeof":
+                    walker.Move(word.Length);
+                    walker.MoveToProcedure();
+                    return new Token(TokenType.Statement, word, location);
+
                 case "of":
                 case "in":
-                case "typeof":
                 case "instanceof":
                     walker.Move(word.Length);
                     walker.MoveToProcedure();
@@ -112,6 +109,7 @@ namespace MiMFa.Engine.JavaScript
                     walker.MoveToProcedure();
                     return new Token(TokenType.Statement, word, location);
             }
+        
             if (current == "/")
             {
                 if (next == "*") return TokenizeCommentBlock(walker, location);
@@ -119,16 +117,16 @@ namespace MiMFa.Engine.JavaScript
                 else if (!string.IsNullOrWhiteSpace(next)) return TokenizeRegExPath(walker, location);
             }
 
-            if (Regex.IsMatch(current.ToString(), "[A-Z_$#]", RegexOptions.IgnoreCase))
-                return TokenizeKeyword(walker, location);
-
             if (Regex.IsMatch(current.ToString(), @"[0-9]") || (Regex.IsMatch(current.ToString(), @"[\-\+]") && Regex.IsMatch(next.ToString(), @"[0-9\.]")))
                 return TokenizeNumber(walker, location);
+
+            if (Regex.IsMatch(current.ToString(), "[\\w_$#]", RegexOptions.CultureInvariant))
+                return TokenizeKeyword(walker, location);
 
             if (current == "\"" || current == "'" || current == "`")
                 return TokenizeString(walker, location);
 
-            if (Regex.IsMatch(current.ToString(), "[^\\w\\d\\s_$]", RegexOptions.IgnoreCase))
+            if (Regex.IsMatch(current.ToString(), "[^\\w\\d\\s_$]", RegexOptions.CultureInvariant))
                 return TokenizeOperator(walker, location);
 
             return new Token(TokenType.Unknown, walker.Walk().ToString(), location);
@@ -140,13 +138,13 @@ namespace MiMFa.Engine.JavaScript
             var value = string.Concat(chars);
             var type = TokenType.Keyword;
             walker.MoveToProcedure();
-            var sign = string.Concat(walker.PeekCount(2).ToArray());
-            if (sign == "++" || sign == "--")
-            {
-                value += sign;
-                type = TokenType.IdentifierKeyword;
-                walker.Move(2);
-            }
+            //var sign = string.Concat(walker.PeekCount(2).ToArray());
+            //if (sign == "++" || sign == "--")
+            //{
+            //    value += sign;
+            //    type = TokenType.IdentifierKeyword;
+            //    walker.Move(2);
+            //}
             return new Token(type, value, location);
         }
 
@@ -188,7 +186,7 @@ namespace MiMFa.Engine.JavaScript
 
         protected virtual Token TokenizeOperator(CodeWalker walker, Position location)
         {
-            var sign = string.Concat(walker.WalkUntil(ch => Regex.IsMatch(ch.ToString(), "[\\w\\d\\s_$]", RegexOptions.IgnoreCase)).ToArray());
+            var sign = string.Concat(walker.WalkUntil(ch => Regex.IsMatch(ch.ToString(), "[\\w\\d\\s_$]", RegexOptions.CultureInvariant)).ToArray());
             while (true)
             {
                 switch (sign)
@@ -202,7 +200,7 @@ namespace MiMFa.Engine.JavaScript
                     case "!": case "...":
                         return new Token(TokenType.Prefix | TokenType.Symbol, sign, location);
                     case "++": case "--":
-                        return new Token(TokenType.Prefix | TokenType.Suffix | TokenType.Symbol, sign, location);
+                        return new Token(Regex.IsMatch(walker.Current??"","\\b")? TokenType.Prefix | TokenType.Symbol: TokenType.Suffix | TokenType.Symbol, sign, location);
                     case ".": case "?.": case "!.":
                         return new Token(TokenType.ConcatenatorSymbol, sign, location);
                     case ",":

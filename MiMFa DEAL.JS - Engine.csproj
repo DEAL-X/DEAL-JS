@@ -14,11 +14,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="DEAL.JS\Parser.Legacy.cs" />
-    <Compile Remove="JavaScript\Parser.Legacy.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="Newtonsoft.Json.dll" />
   </ItemGroup>
 
@@ -32,8 +27,11 @@
     <None Include="LICENSE" />
     <None Include="README.md" />
     <None Include="SAMPLE.md" />
-    <None Include="Samples\DEAL.JS Tutorial-Example.djs" />
-    <None Include="Samples\DEAL.JS Tutorial-Example.js" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\MiMFa DEAL - Engine\MiMFa DEAL - Engine.csproj" />
   </ItemGroup>
 
 

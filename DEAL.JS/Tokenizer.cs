@@ -19,6 +19,7 @@ namespace MiMFa.Engine.DEAL.JS
 
         protected TokenType? SwitchToken { get; set; }
         protected bool SwitchNamespace { get; set; } = false;
+        protected bool SwitchParent { get; set; } = false;
 
         public Token LastToken = null;
 
@@ -28,6 +29,10 @@ namespace MiMFa.Engine.DEAL.JS
             return true;
         }
 
+        public override object Transform(object input, MiMFa.Engine.Engine compiler)
+        {
+            return base.Transform(Regex.Replace((string)input, @"(\n[\t ]*)[\*\+\-]([\t ])(?!\s)", "$1 $2"), compiler);
+        }
         public override IEnumerable<Token> Tokenize(CodeWalker walker, MiMFa.Engine.Engine engine = null)
         {
             foreach (var item in base.Tokenize(walker, engine))
@@ -36,20 +41,18 @@ namespace MiMFa.Engine.DEAL.JS
 
         protected override Token TokenizeCode(CodeWalker walker)
         {
-            if (SpaceSwitch != null)
+            if (SwitchParent)
             {
-                var type = SpaceSwitch.Value;
-                SpaceSwitch = null;
-                return GetAcceptedToken(type, walker.WalkToProcedure());
+                SwitchParent = false;
+                return base.TokenizeCode(walker);
             }
-
             walker.MoveToProcedure();
             if (this.SwitchToken != null)
-                if (!Regex.IsMatch(walker.Current, @"[{}\[\]()""'`,;]"))
+                if (!Regex.IsMatch(walker.Current, @"[{}\[\]()""'`,;]", RegexOptions.CultureInvariant))
                 {
                     var type = this.SwitchToken.Value;
                     this.SwitchToken = null;
-                    return GetAcceptedToken(type, string.Join("", walker.WalkWhile(c => !Regex.IsMatch(walker.Current, @"[,;\s]"))), walker.Location);
+                    return GetAcceptedToken(type, string.Join("", walker.WalkWhile(c => !Regex.IsMatch(walker.Current, @"[,;\s]", RegexOptions.CultureInvariant))), walker.Position);
                 }
                 else this.SwitchToken = null;
             var switchNameSpace = this.SwitchNamespace;
@@ -57,24 +60,27 @@ namespace MiMFa.Engine.DEAL.JS
             if (walker.Current == "." && !walker.PeekProcedure().StartsWith("...")) this.SwitchNamespace = true;
             else if (!switchNameSpace && walker.Current != null)
             {
-                var location = walker.Location;
-                var position = walker.Position;
+                var location = walker.Position;
+                var position = walker.Index;
 
-                if(walker.Current == "@")
+                if(walker.Current == "#")
                 {
-                    var w = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^A-Z0-9_$@|]", RegexOptions.IgnoreCase)).ToArray());
-                    var ws = w.Split(new string[] { "@"}, StringSplitOptions.None);
-                    var cmd = ws.Last();
-                    TokenType? acceptor = ws.Length > 2 ? TokenTypeFromName(ws[1]) : null;
-                    TokenType? dataAcceptor = ws.Length > 3? TokenTypeFromName(ws[2]):null;
-                    SetAcceptedType(ws.Last(), acceptor ?? TokenType.Keyword, dataAcceptor);
-                    walker.Remove(location.Index, w.Length);
-                    return new Token(dataAcceptor.HasValue?TokenType.FunctionKeyword: TokenType.Keyword, cmd, walker.Location);
+                    var w = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w0-9_$#\\*|]", RegexOptions.CultureInvariant)).ToArray());
+                    if (w.Trim('#').Length > 0)
+                    {
+                        var ws = w.TrimEnd('*').Split(new string[] { "#", "**", "*" }, StringSplitOptions.None);
+                        var cmd = ws.Last();
+                        TokenType? acceptor = ws.Length > 2 ? TokenTypeFromName(ws[1]) : null;
+                        TokenType? dataAcceptor = ws.Length > 3 ? TokenTypeFromName(ws[2]) : null;
+                        SetAcceptedType(cmd, acceptor ?? TokenType.Keyword, dataAcceptor);
+                        walker.Remove(location.Index, w.Length);
+                        return new Token(dataAcceptor.HasValue ? TokenType.FunctionKeyword : TokenType.Keyword, cmd, walker.Position);
+                    }
                 }
 
-                location = walker.Location;
-                position = walker.Position;
-                var word = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^A-Z0-9_$]", RegexOptions.IgnoreCase)).ToArray());
+                location = walker.Position;
+                position = walker.Index;
+                var word = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w0-9_$\\*]", RegexOptions.CultureInvariant)).ToArray());
                 var lword = word.ToLower();
 
                 switch (lword)
@@ -97,12 +103,12 @@ namespace MiMFa.Engine.DEAL.JS
                     case "reserve":
                         walker.Move(word.Length);
                         walker.MoveToProcedure();
-                        var key = string.Join("", walker.WalkUntil(c=> Regex.IsMatch(c,"[\\s=;,]")));
+                        var key = walker.Current == "#"? TokenizeCode(walker)?.Value : string.Join("", walker.WalkUntil(c=> Regex.IsMatch(c,"[\\s=;,]", RegexOptions.CultureInvariant)));
                         if (!string.IsNullOrEmpty(key))
                         {
                             walker.MoveToProcedure();
                             this.SwitchToken = TokenType.IdentifierKeyword;
-                            var m = Regex.IsMatch(walker.Current, "[,;\n]") ? walker.Walk() : TokenizeCode(walker)?.Value;
+                            var m = Regex.IsMatch(walker.Current, "[,;\n]", RegexOptions.CultureInvariant) ? walker.Walk() : TokenizeCode(walker)?.Value;
                             this.SwitchToken = null;
                             if (!string.IsNullOrEmpty(m))
                             {
@@ -131,24 +137,30 @@ namespace MiMFa.Engine.DEAL.JS
                         }
                         else walker.Reset(position);
                         break;
+
+                    case "new":
+                    case "instanceof":
+                    case "typeof":
+                        SwitchParent = true;
+                        break;
+
                     default:
+                        if (Regex.IsMatch(word, @"[\w0-9_$]") && word.StartsWith("*") && word.EndsWith("*"))
+                        {
+                            var cmd = word.Trim('*');
+                            SetAcceptedType(cmd, TokenType.Keyword);
+                            walker.Replace(location, word.Length, cmd.ToCharArray().Select(v => v.ToString()).ToArray());
+                            //return new Token(TokenType.Keyword, cmd, walker.Position);
+                        }
                         break;
                 }
 
                 var current = walker.Current;
                 if (current != null)
                 {
-                    location = walker.Location;
-                    word = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^A-Z0-9_$]", RegexOptions.IgnoreCase)).ToArray());
+                    location = walker.Position;
+                    word = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w0-9_$]", RegexOptions.CultureInvariant)).ToArray());
                     lword = word.ToLower();
-
-                    //string c = null;
-                    //try { c = this.Compiler?.GetFunctionCommand(word); } catch { }
-                    //if (c != null)
-                    //{
-                    //    walker.Move(word.Length);
-                    //    return GetAcceptedToken(TokenType.FunctionKeyword, c, location);
-                    //}
 
                     switch (lword)
                     {
@@ -209,24 +221,24 @@ namespace MiMFa.Engine.DEAL.JS
 
                     if (current == "#")
                     {
-                        walker.WalkWhile(w => w == "#").ToArray();
-                        return GetAcceptedToken(TokenType.Statement, current, location);
+                        word = string.Join("", walker.WalkWhile(w => w == "#"));
+                        if(word.Length <= 6) return GetAcceptedToken(TokenType.Statement, word, location);
                     }
 
                     //if (current == ":")
                     //    return GetAcceptedToken(TokenType.End | TokenType.Symbol, current, location);
 
                     var p = string.Concat(walker.PeekUntil(ch => string.IsNullOrWhiteSpace(ch)).ToArray());
-                    if (Regex.IsMatch(p, "^\\w+:\\/([\\/][^\\s\\[\\]\\{\\}\\/\\\\]+)+$"))
+                    if (Regex.IsMatch(p, "^\\w+:\\/([\\/][^\\s\\[\\]\\{\\}\\/\\\\]+)+$", RegexOptions.CultureInvariant))
                         return TokenizePath(walker, location);
                 }
             }
 
-            var wrd = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^A-Z0-9_$]", RegexOptions.IgnoreCase)).ToArray());
-            var tk = GetAcceptedToken(TokenType.Unknown, wrd, walker.Location);
+            var wrd = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w0-9_$]", RegexOptions.CultureInvariant)).ToArray());
+            var tk = GetAcceptedToken(TokenType.Unknown, wrd, walker.Position);
             if (tk.Value != wrd)
             {
-                walker.Replace(walker.Location, wrd.Length, tk.Value.ToCharArray().Select(v => v.ToString()).ToArray());
+                walker.Replace(walker.Position, wrd.Length, tk.Value.ToCharArray().Select(v => v.ToString()).ToArray());
                 var ntk = base.TokenizeCode(walker);
                 return ntk.Update(Type: ntk.Type | tk.Type);
             }
@@ -249,10 +261,10 @@ namespace MiMFa.Engine.DEAL.JS
         protected virtual int UsePath(string path)
         {
             if (string.IsNullOrWhiteSpace(path)) return 0;
-            if (Regex.IsMatch(path, "^\\w+:\\/\\/.+$")) return UseUrl(path);
+            if (Regex.IsMatch(path, "^\\w+:\\/\\/.+$", RegexOptions.CultureInvariant)) return UseUrl(path);
             var compiler = this.Engine as MiMFa.Engine.Engine;
             if (compiler == null) return 0;
-            var baseDirectory = Regex.IsMatch(path, "^\\.[\\/\\\\]") ?
+            var baseDirectory = Regex.IsMatch(path, "^\\.[\\/\\\\]", RegexOptions.CultureInvariant) ?
                 compiler?.ResourceProvider?.DirectoryName(compiler.Input?.Source ?? compiler.SourceDirectory+"index") :
                 compiler?.ResourceProvider?.DirectoryName(compiler.SourceDirectory + "index");
             var val = compiler?.ResourceProvider?.Resolve(path, baseDirectory);
@@ -402,7 +414,7 @@ namespace MiMFa.Engine.DEAL.JS
         {
             string lname = name.ToLower();
             bool iscommand = LastToken == null || (
-                !LastToken.IsMatch(".") &&
+                !LastToken.Is(".") &&
                 (type & TokenType.StringData) == 0 &&
                 (type & TokenType.Comment) == 0
             );
