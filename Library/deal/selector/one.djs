@@ -1,3 +1,3 @@
-command ##string#one(query = null, source = null) {
+command #one::string(query = null, source = null) {
     if (!query) return one;
 }

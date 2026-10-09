@@ -393,7 +393,7 @@ async function loadFirst(urls) {
 // ------------------------------------------------------------
 const emailPattern = /^[a-za-z0-9._%+-]+@[a-za-z0-9.-]+\.[a-za-z]{2,}$/i;
 const whitespacePattern = /\s+/g;
-const normalizedText = "  MiMFa   DaRQ  ".replace(whitespacePattern, " ").trim();
+const normalizedText = "  MiMFa   DEAL  ".replace(whitespacePattern, " ").trim();
 const isEmail = emailPattern.test("developer@mimfa.net");
 // ------------------------------------------------------------
 // Template literals

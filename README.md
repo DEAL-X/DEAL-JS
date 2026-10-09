@@ -28,6 +28,7 @@ DEAL does not attempt to turn unrestricted natural language into executable prog
 So DEAL has **five** main principles:
 1. **Declarative** and **Abstract**: Every DEAL instruction expresses computational intent in a form resembling natural language.
     * Its syntax is designed around constrained English-like grammatical structures.
+    * While retaining the precision required for deterministic compilation.
     * DEAL codes are readable as a simple Markdown document.
     ```md
     use deal;
@@ -39,7 +40,7 @@ So DEAL has **five** main principles:
             * MyFile = resource file open();
             * Log subject "Process started!";
             * If **MyFile** not be null, begin:
-                - The text be myFile content;
+                - The #Text be myFile content;
                 - The successful be true;
                 - end;
             * Else, begin:
@@ -65,6 +66,7 @@ So DEAL has **five** main principles:
     ```
     * It will compile to the pure JavaScript code below:
     ```js
+    // Used multiple libraries from "deal"
     (FillList = (() => {
         (ReadFile = (() => {
             MyFile = resource.file.open();
@@ -93,13 +95,12 @@ So DEAL has **five** main principles:
         }))();
     }))();
     ```
-    * While retaining the precision required for deterministic compilation.
+    * Also, the written DEAL code can be read as a simple document.
     * For example:
     ```ts
     For each url of the list, load the url, then append all h3#title, to the destination;
     otherwise log the error `Could not load the ${url}!`;
     ```
-    * The written DEAL code can be read as a simple document.
 2. **Deterministic** and **Explicit**: Every DEAL instruction has a defined compilation into its destination language.
     * So the previous instructions will compile to the pure JavaScript code below:
     ```js
@@ -128,6 +129,7 @@ So DEAL has **five** main principles:
     * Modules can also provide alternative vocabularies for different natural languages (Spanish, German, ...).
     * For example:
     ```ts
+    use deal;
     use Scraper; // All libraries needed to scrape the web
     use Spanish; // Contains all Spanish alternative reserved words.
     // ...
@@ -136,6 +138,7 @@ So DEAL has **five** main principles:
     ```
     * Then it will be exactly equal to the DEAL instructions below:
     ```ts
+    use deal;
     use Scraper; // All libraries needed to scrape the web
     use Spanish; // Contains all Spanish alternative reserved words.
     // ...
@@ -289,7 +292,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     ```ts
     WILL procedure THEN procedure; OTHERWISE procedure; ANYWAY procedure;
     ```
-    It will compile to:
+    It will compile to:7
     ```js
     new Promise(()=>js-procedure)
         .then((data)=>js-procedure)
@@ -383,21 +386,21 @@ All commands represent executable operations.
     * If the command has no returned output, it should return itself (specially when there is not inputted arguments). 
 * The main syntax to define a special function commands:
     ```ts
-        COMMAND commandName(input1=value1, ...) {	// All inputs of each command must have a default value
-            procedures
-            /*
-                // Should return one of the following
-                return output;
-                return commandName; // If you don't have any return value, you should return the command directly (usually when you do not have input arguments).
-                // It will be useful when  you want to send a callable version of the command to another one as an input
-            */
-        }
+    COMMAND commandName(input1=value1, ...) {	// All inputs of each command must have a default value
+        procedures
+        /*
+            // Should return one of the following
+            return output;
+            return commandName; // If you don't have any return value, you should return the command directly (usually when you do not have input arguments).
+            // It will be useful when  you want to send a callable version of the command to another one as an input
+        */
+    }
     ```
     It will compile to:
     ```js
-        function commandName(input1=value1, ...) {
-            js-procedures
-        }
+    function commandName(input1=value1, ...) {
+        js-procedures
+    }
     ```
 * Four ways to call a command:
     * Grammatical:			
@@ -428,19 +431,19 @@ All commands represent executable operations.
     * They will have a special case-insensitive commandName.
 * The main syntax to define a special definition commands:
     ```ts
-        COMMAND commandName = {
-            propertykey1 : propertyValue1,
-            propertykey2 : propertyValue2,
-            /* Exactly same to an object... */
-        };
+    COMMAND commandName = {
+        propertykey1 : propertyValue1,
+        propertykey2 : propertyValue2,
+        /* Exactly same to an object... */
+    };
     ```
     It will compile to:
     ```js
-        var commandName = {
-            js-propertykey1 : js-propertyValue1,
-            js-propertykey2 : js-propertyValue2,
-            /* Exactly same to an object... */
-        };
+    var commandName = {
+        js-propertykey1 : js-propertyValue1,
+        js-propertykey2 : js-propertyValue2,
+        /* Exactly same to an object... */
+    };
     ```
 * Then to use:
     ```ts
@@ -458,28 +461,58 @@ All commands represent executable operations.
     * They will have a special case-insensitive commandName.
     * All words, after being used only one time, a stuck acceptor sign `#keyword`, or wrapping word between sticked single or double asterisks `*keyword*`, will convert to a delegation command.
     * They can convert everything (constant, variable, function, class, etc.), even after their definition.
-    * They will not change the behavior of the converted thing. 
+    * They will not change the behavior of the converted thing.
  * The main syntax to make then call a special delegation commands is:
     ```ts
-        var test1Var = "The test value number 1";
-        console.log(test1Var); // You should use case-sensitively
-        console.log(**test1Var**); // You should use case-sensitively (But made it case-insensitive after a wrapping by sticked asterisks)
-        console.log(TEST1var); // Its a delegation command and is case-insensitive now
-            
-        var #test2Var = "The test value number 2"; // You can define everything case-insensitive the first time using a sticked acceptor sign `#`
-        console.log(Test2VAR); // Its a delegation command and is case-insensitive now
+    var test1Var = "The test value number 1";
+    console.log(test1Var); // You should use case-sensitively
+    console.log(#test1Var); // You should use case-sensitively (But made it case-insensitive after a wrapping by sticked asterisks)
+    console.log(TEST1var); // Its a delegation command and is case-insensitive now
+        
+    var #test2Var = "The test value number 2"; // You can define everything case-insensitive the first time using a sticked acceptor sign `#`
+    console.log(Test2VAR); // Its a delegation command and is case-insensitive now
     ```
     It will compile to:
     ```js
-        var test1Var = "The test value number 1";
-        console.log(test1Var);
-        console.log(test1Var);
-        console.log(test1Var);
-            
-        var test2Var = "The test value number 2";
-        console.log(test2Var);
+    var test1Var = "The test value number 1";
+    console.log(test1Var);
+    console.log(test1Var);
+    console.log(test1Var);
+        
+    var test2Var = "The test value number 2";
+    console.log(test2Var);
     ```
+* The type of each keyword can also be specified using `:commandType` next to use a delegation command, for instance:
+    ```ts
+    var #test1Var:string = "The test value number 1"; // Can define the identifier's type in the defination time
+    console.log(test1Var);
 
+    var test2Var = "The test value number 2";
+    console.log(#test2Var:string); // Can define the identifier's type everywhere if it does not define before
+    ```
+    It will compile to:
+    ```js
+    var test1Var = "The test value number 1";
+    console.log(test1Var);
+        
+    var test2Var = "The test value number 2";
+    console.log(test2Var);
+    ```
+* The force type of the subsequent word for each command can also be specified using `:commandType:nextType` or `::nextType` following a delegation command.
+    ```ts
+    var #test1Var:int:string = 4;
+    list insert test1Var, www.mimfa.net; // the test1Var subsequent word will convert to string
+
+    var #test2Var::string = 5;
+    list insert test2Var, www.deal.mimfa.net; // the test2Var subsequent word will convert to string
+    ```
+    It will compile to:
+    ```js
+    var test1Var = 4;
+    list.insert(test1Var, "www.mimfa.net"); // the test1Var subsequent word will convert to string
+    var test2Var = 5;
+    list.insert(test2Var, "www.deal.mimfa.net"); // the test2Var subsequent word will convert to string
+    ```
 ---
 
 ### Reserves:

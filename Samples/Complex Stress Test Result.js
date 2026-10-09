@@ -8,7 +8,7 @@
             
             for (const url/* The url of the website */ of list)LOAD(url).then((data) => {
                 handle(data);
-                APPEND.ALL(keys > table > h2,window.document.keys().toArray()),destination;
+                APPEND.all("keys>table>h2",window.document.keys().toArray()),destination;
                 log.success(`The ${url} is laded successfully`);
             }).catch((data) => {
                 handle(data);

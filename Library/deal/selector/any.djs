@@ -1,3 +1,3 @@
-command ##string#any(query = null, source = null) {
+command #any::string(query = null, source = null) {
     if (!query) return any;
 }

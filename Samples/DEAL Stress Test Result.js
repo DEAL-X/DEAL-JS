@@ -33,8 +33,12 @@ var testC = {
 function testD(val = " ") {
     return testC.tkey1(testA + val);
 }
-(loadDef = (() => (url != null  ? LOAD(url,"utf8") : LOAD("www.mimfa.net"))))();
-// Action Command
+(loadDef = (() => (url != null  ? load(url,"utf8") : load("www.mimfa.net"))))();
+var testE = 4;
+list.insert(testE,"www.mimfa.net");// the testE next word will convert to string
+var testF = 5;
+list.insert(testF,"www.deal.mimfa.net");
+// the testF next word will convert to string
 // ------------------------------------------------------------
 // Try / Catch / Finally blocks
 // ------------------------------------------------------------
@@ -65,6 +69,11 @@ finally {
     log.subject("The scoring finished!");
 }
 // ------------------------------------------------------------
+// Operations
+// ------------------------------------------------------------
+grade.convertTo(a++ + 1 * 2, ++b - 1, c++ * 2, 2 * 5 >> 5);
+let gradeNormal = grade[--a][--b][c--].trim(" ", "n", "r").toLowerCase();
+// ------------------------------------------------------------
 // Markdown like Code
 // ------------------------------------------------------------
 (FillList = (() => {
@@ -73,10 +82,10 @@ finally {
         Log.subject("Process started!");
         
         if (MyFile != null) {
-            Text = MyFile.content;
+            Txt = MyFile.content;
             successful = true;
         }  else {
-            Text = "";
+            Txt = "";
             successful = false;
         }
     }))();
@@ -84,7 +93,7 @@ finally {
     
     (UseFile = (() => {
         try {
-            list = Text.split("n");
+            list = Txt.split("n");
             
             if (list.length < 1) {
                 ReadFile();
@@ -104,9 +113,9 @@ finally {
         open(browser).then((data) => {
             handle(data);
             
-            for (const url/* The url of the website */ of list)LOAD(url).then((data) => {
+            for (const url/* The url of the website */ of list)load(url).then((data) => {
                 handle(data);
-                append(ALL(keys > table > h2,window.document.keys().toArray()),destination);
+                append(all("keys>table>h2",window.document.keys().toArray()),destination);
                 log.success(`The ${url} is laded successfully`);
             }).catch((data) => {
                 handle(data);
@@ -114,7 +123,7 @@ finally {
             }).finally((data) => {
                 handle(data);
                 log.message(`The ${url} process is finished!`);
-            })
+            });
         })
         log.subject(`The process of all ${list.length} urls are finished!`);
     } 

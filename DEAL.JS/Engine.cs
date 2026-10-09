@@ -113,7 +113,7 @@ namespace MiMFa.Engine.DEAL.JS
         public virtual Node TrimSeparators(Node node)
         {
             if (node.Is(NodeType.BlockStructure) && node.Token.Is("{")) return node;
-            return node.Trim(n => n.Count <= 0 && n.Ancestor(p => p.Is(NodeType.BlockStructure))?.Token.Is("{") != true && n.Token.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol));
+            return node.Trim(n => n.Count <= 0 && n.Ancestor(p => p.Is(NodeType.BlockStructure))?.Token.Is("{") != true && n.Token.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol, TokenType.Comment));
         }
 
         public virtual Node CreateNode(string value = "", params Node[] children) =>
@@ -164,6 +164,11 @@ namespace MiMFa.Engine.DEAL.JS
         {
             if (children.Length == 1 && children[0].Is(NodeType.BlockStructure) && children[0].Token.Is("{")) return children[0];
             return new Node(new Token(TokenType.Start | TokenType.Scope, "{"), NodeType.BlockStructure | NodeType.Region | NodeType.Line, children);
+        }
+        public virtual Node CreateReturnedBlockNode(Node child)
+        {
+            if (child.Is(NodeType.BlockStructure) && child.Token.Is("{")) return child;
+            return new Node(new Token(TokenType.Start | TokenType.Scope, "{"), NodeType.BlockStructure | NodeType.Region | NodeType.Line, CreateNode("return", TokenType.Statement, NodeType.Prepend).Add(child));
         }
         public virtual Node CreatePackOrBlockNode(params Node[] children)
         {

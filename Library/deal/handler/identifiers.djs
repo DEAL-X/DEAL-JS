@@ -5,6 +5,6 @@ reserve console as			"window.console";
 command handle(data = null){
     if (!data) {
         // Remove all sat handlers
-        return all;
+        return handle;
     }
 }

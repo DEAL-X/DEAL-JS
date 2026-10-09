@@ -32,6 +32,11 @@ command testD(val = " ") {  // Function command
 }
 # loadDef IF url is not null, LOAD url, "utf8", ELSE LOAD the "www.mimfa.net"; // Action Command
 
+var #testE:int:string = 4;
+list insert testE, www.mimfa.net; // the testE next word will convert to string
+var #testF::string = 5;
+list insert TestF, www.deal.mimfa.net; // the testF next word will convert to string
+
 // ------------------------------------------------------------
 // Try / Catch / Finally blocks
 // ------------------------------------------------------------
@@ -69,18 +74,18 @@ Begin,
         * MyFile = resource file open();
         * Log subject "Process started!";
         * If **MyFile** not be null, begin:
-            - The #Text be myFile content;
+            - The #Txt be myFile content;
             - The successful be true;
             - end;
         * Else, begin:
-            - The text be empty;
+            - The txt be empty;
             - The successful be false;
             - end;
     End;
 
 ## UseFile
     Try,
-        * The list = text split "\n";
+        * The list = txt split "\n";
         * If list length be lesser than 1, do:
             + ReadFile;
             + UseFile;

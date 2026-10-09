@@ -664,7 +664,7 @@ const whitespacePattern =
     /\s+/g;
 
 const normalizedText =
-    "  MiMFa   DaRQ  "
+    "  MiMFa   DEAL  "
         .replace(
             whitespacePattern,
             " "

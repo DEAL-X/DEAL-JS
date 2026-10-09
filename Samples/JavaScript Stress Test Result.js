@@ -95,7 +95,8 @@ const total = sum(...values, 100, 200);
 // ------------------------------------------------------------
 // Normal functions
 // ------------------------------------------------------------
-function calculateGrade(score, minVal = 0) {
+function calculateGrade(score, minVal = 0)
+{
     if (score == null) {
         return "unknown";
     }
@@ -128,17 +129,18 @@ const createUser = (name, age = 18) => ({
     active: true
 });
 const complexArrow = (value, index) => {
-    const result = value * index;
+    const result = value * index ;
     return result > 100 ? result : result + 100;
 };
 // ------------------------------------------------------------
 // Immediately invoked functions
 // ------------------------------------------------------------
 const initialized = (() => {
-    const initial = 10;
-    const increment = 5;
+    const initial = 10 ;
+    const increment = 5 ;
     return initial + increment;
-})();(function () {
+})();
+(function () {
     counter++;
     
     if (counter > 10) {
@@ -148,8 +150,8 @@ const initialized = (() => {
 // ------------------------------------------------------------
 // Loops
 // ------------------------------------------------------------
-for (let i = 0; i < values.length; i++) {
-    const value = values[i];
+for (let i = 0 ; i < values.length; i++) {
+    const value = values[i] ;
     
     if (value === 30) {
         continue ;
@@ -226,7 +228,7 @@ function getStatus(code) {
 // ------------------------------------------------------------
 function parseConfiguration(text) {
     try {
-        const data = JSON.parse(text);
+        const data = JSON.parse(text) ;
         
         if (!data || typeof data !== "object") {
             throw new TypeError("Invalid configuration");
@@ -307,7 +309,7 @@ class Car extends Vehicle {
             vehicle: this.describe(),
             distance,
             speed: this.speed
-        };
+        } ;
         return result;
     }
 }
@@ -327,8 +329,9 @@ class Calculator {
 // ------------------------------------------------------------
 // Generator function
 // ------------------------------------------------------------
-function* numberGenerator(startPoint, endPoint) {
-    for (let value = startPoint; value <= endPoint; value++) {
+function* numberGenerator(startPoint, endPoint)
+{
+    for (let value = startPoint ; value <= endPoint; value++) {
         yield value;
     }
 }
@@ -346,7 +349,7 @@ async function delay(milliseconds) {
 }
 async function loadData(url) {
     try {
-        const response = await fetch(url);
+        const response = await fetch(url) ;
         
         if (!response.ok) {
             throw new ApplicationError("Request failed", response.status);
@@ -375,12 +378,12 @@ function processData(url) {
 // Promise.all / Promise.race
 // ------------------------------------------------------------
 async function loadMultiple(urls) {
-    const requests = urls.map(url => fetch(url).then(response => response.json()));
-    const results = await Promise.all(requests);
+    const requests = urls.map(url => fetch(url).then(response => response.json())) ;
+    const results = await Promise.all(requests) ;
     return results;
 }
 async function loadFirst(urls) {
-    const requests = urls.map(url => fetch(url));
+    const requests = urls.map(url => fetch(url)) ;
     return await Promise.race(requests);
 }
 // ------------------------------------------------------------
@@ -388,7 +391,7 @@ async function loadFirst(urls) {
 // ------------------------------------------------------------
 const emailPattern = /^[a-za-z0-9._%+-]+@[a-za-z0-9.-]+\.[a-za-z]{2,}$/i;
 const whitespacePattern = /\s+/g;
-const normalizedText = "  MiMFa   DaRQ  ".replace(whitespacePattern, " ").trim();
+const normalizedText = "  MiMFa   DEAL  ".replace(whitespacePattern, " ").trim();
 const isEmail = emailPattern.test("developer@mimfa.net");
 // ------------------------------------------------------------
 // Template literals
@@ -435,9 +438,10 @@ const processedValues = values.filter(value => value > 20).map(value => value * 
 // ------------------------------------------------------------
 // Nested callbacks
 // ------------------------------------------------------------
-function executePipeline(input, onSuccess, onError) {
+function executePipeline(input, onSuccess, onError)
+{
     try {
-        const result = input.map(value => value * 2).filter(value => value > 10);
+        const result = input.map(value => value * 2).filter(value => value > 10) ;
         onSuccess(result);
     } 
     catch (error) {
@@ -476,8 +480,8 @@ const hasBrand = "brand" in vehicle;
 // ------------------------------------------------------------
 // Labelled statement
 // ------------------------------------------------------------
-outerLoop: for (let i = 0; i < 10; i++) {
-    innerLoop: for (let j = 0; j < 10; j++) {
+outerLoop: for (let i = 0 ; i < 10; i++) {
+    innerLoop: for (let j = 0 ; j < 10; j++) {
         if (i === 5 && j === 5) {
             break outerLoop;
         }
@@ -537,11 +541,11 @@ const finalResult = vehicle.speed > 100 ? "fast" : vehicle.speed > 50 ? "medium"
 // Nested async IIFE
 // ------------------------------------------------------------
 (async () => {
-    const car = new Car("MiMFa", "Scraper", 2026);
+    const car = new Car("MiMFa", "Scraper", 2026) ;
     car.speed = 60;
-    const before = car.speed;
+    const before = car.speed ;
     await delay(10);
-    const after = car.accelerate(20);
+    const after = car.accelerate(20) ;
     window.console.log(car.describe(), before, after);
 })();
 // ------------------------------------------------------------

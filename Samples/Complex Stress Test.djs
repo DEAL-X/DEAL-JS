@@ -1,4 +1,7 @@
 use deal;
+reserve the;
+reserve every = "for";
+
 # scrapeMap
     try to open browser, then
         EVERY url /* The url of the website */ OF list,
@@ -89,8 +92,7 @@ class Model extends Car {
     }
 }
 
-async function func1(inp) =>
-    return inp() > 0 ? true : false;
+async function func1(inp) => inp() > 0 ? true : false;
 
 const  #func2 = async (inp) => inp() is greater than 0 ? true : false;
 var func3 = async function (inp) {

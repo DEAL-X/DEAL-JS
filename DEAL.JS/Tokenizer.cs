@@ -48,13 +48,14 @@ namespace MiMFa.Engine.DEAL.JS
             }
             walker.MoveToProcedure();
             if (this.SwitchToken != null)
-                if (!Regex.IsMatch(walker.Current, @"[{}\[\]()""'`,;]", RegexOptions.CultureInvariant))
+                if (Regex.IsMatch(walker.Current, @"[{}\[\]()""'`;]", RegexOptions.CultureInvariant))
+                    this.SwitchToken = null;
+                else if (walker.Current != ",")
                 {
                     var type = this.SwitchToken.Value;
                     this.SwitchToken = null;
                     return GetAcceptedToken(type, string.Join("", walker.WalkWhile(c => !Regex.IsMatch(walker.Current, @"[,;\s]", RegexOptions.CultureInvariant))), walker.Position);
                 }
-                else this.SwitchToken = null;
             var switchNameSpace = this.SwitchNamespace;
             if (this.SwitchNamespace) this.SwitchNamespace = false;
             if (walker.Current == "." && !walker.PeekProcedure().StartsWith("...")) this.SwitchNamespace = true;
@@ -65,16 +66,17 @@ namespace MiMFa.Engine.DEAL.JS
 
                 if(walker.Current == "#")
                 {
-                    var w = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w0-9_$#\\*|]", RegexOptions.CultureInvariant)).ToArray());
-                    if (w.Trim('#').Length > 0)
+                    var w = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w0-9_$#\\s:|]", RegexOptions.CultureInvariant)).ToArray());
+                    w = Regex.Match(w, @"^#\w+(:\s*[\w|]*)*", RegexOptions.CultureInvariant).Value;
+                    if (!string.IsNullOrWhiteSpace(w))
                     {
-                        var ws = w.TrimEnd('*').Split(new string[] { "#", "**", "*" }, StringSplitOptions.None);
-                        var cmd = ws.Last();
-                        TokenType? acceptor = ws.Length > 2 ? TokenTypeFromName(ws[1]) : null;
-                        TokenType? dataAcceptor = ws.Length > 3 ? TokenTypeFromName(ws[2]) : null;
+                        var ws = w.Split(new string[] { "#", ":" }, StringSplitOptions.None);
+                        var cmd = ws[1];
+                        TokenType? acceptor = ws.Length > 2 ? TokenTypeFromName(ws[2].Trim()) : null;
+                        TokenType? dataAcceptor = ws.Length > 3 ? TokenTypeFromName(ws[3].Trim()) : null;
                         SetAcceptedType(cmd, acceptor ?? TokenType.Keyword, dataAcceptor);
                         walker.Remove(location.Index, w.Length);
-                        return new Token(dataAcceptor.HasValue ? TokenType.FunctionKeyword : TokenType.Keyword, cmd, walker.Position);
+                        return new Token(TokenType.Keyword, cmd, walker.Position);
                     }
                 }
 
@@ -407,7 +409,7 @@ namespace MiMFa.Engine.DEAL.JS
         {
             string lname = name.ToLower();
             if (acceptor.HasValue) Acceptors[lname] = acceptor.Value;
-            if (dataAcceptor.HasValue) DataAcceptors[name] = dataAcceptor.Value;
+            if (dataAcceptor.HasValue) DataAcceptors[lname] = dataAcceptor.Value;
             CaseAcceptors[lname] = name;
         }
         protected virtual Token GetAcceptedToken(TokenType type, string name, Position location = null)
