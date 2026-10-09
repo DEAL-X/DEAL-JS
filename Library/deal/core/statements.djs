@@ -53,7 +53,6 @@ reserve delete as			"delete";
 reserve typeof as			"typeof";
 reserve instanceof as		"instanceof";
 
-reserve with as				"with";
 reserve debugger as			"debugger";
 
 reserve get as				"get";

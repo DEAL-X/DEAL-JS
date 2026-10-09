@@ -154,7 +154,9 @@ namespace MiMFa.Engine.DEAL.JS
                 if (LastIndex != walker.Index) yield break;
             var latest = AssembleNode(walker);
             LastIndex = walker.Index;
-            yield return latest;
+            if(walker.PeekProcedure()?.Is("as") == true)
+                yield return Engine.CreateBlockNode(new KeyValuePair<Node,Node>(base.AssembleNode(walker.MoveToProcedure()), latest));
+            else yield return latest;
             if (BreakSequenceSwitch > 0)
                 yield break;
             if (BreakSectionSwitch > 0)
@@ -210,6 +212,11 @@ namespace MiMFa.Engine.DEAL.JS
                         }
                 }
             }
+        }
+
+        protected override Node AssembleNode(NodeWalker walker)
+        {
+            return base.AssembleNode(walker);
         }
 
         protected override Node AssembleStatementNode(Node node, NodeWalker walker)
@@ -480,96 +487,104 @@ namespace MiMFa.Engine.DEAL.JS
             var before = walker.PeekProcedure(-2);
             var next = walker.PeekProcedure();
             var next2 = walker.PeekProcedure(1);
-            var newNode = base.AssembleKeywordNode(node, walker);
 
-            if (newNode?.Is(NodeType.CallStructure) == true)
+            string fname = Engine?.GetFunctionName(node.Token.Value);
+            string iname = fname != null ? null : Engine?.GetKeywordName(node.Token.Value);
+            string fcname = Engine?.GetFunctionCommandName(node.Token.Value);
+            string dcname = Engine?.GetDefinitionCommandName(node.Token.Value);
+            string acname = Engine?.GetActionCommandName(node.Token.Value);
+            fname = fname ?? fcname;
+
+            if (node.Is(TokenType.NamespaceKeyword))
+                return node.Add(CompactAssembleNode(walker));
+            else if (node.Is(TokenType.FunctionKeyword))
             {
-                string fname = Engine?.GetFunctionName(newNode.Token.Value);
-                string iname = fname != null ? null : Engine?.GetKeywordName(newNode.Token.Value);
-                string fcname = Engine?.GetFunctionCommandName(newNode.Token.Value);
-                string dcname = Engine?.GetDefinitionCommandName(newNode.Token.Value);
-                string acname = Engine?.GetActionCommandName(newNode.Token.Value);
-                fname = fname ?? fcname;
-                if (newNode.Is(TokenType.FunctionKeyword))
+                if (next?.Is("(") == true)
                 {
-                    if (before?.Is(TokenType.ConcatenatorSymbol) == true) return newNode;
-                    else
-                    {
-                        newNode.Token.Update(TokenType.FunctionKeyword, acname ?? fname);
-                        if (!string.IsNullOrEmpty(acname) &&
-                                next != null &&
-                                next.Is(TokenType.Keyword)
-                            )
-                        {
-                            newNode.Token.Update(TokenType.NamespaceKeyword);
-                            return newNode
-                                .Update(NodeType.CallStructure)
-                                .AddRange(
-                                    Engine.IsComplementors(next) ? null : Engine.CreateDotNode(),
-                                    NormalCompactAssembleNode(walker)
-                                );
-                        }
-                    }
+                    node.Add(AssembleNode(walker));
+                    if (walker.PeekProcedure()?.Is("{") == true)
+                        return node.Update(NodeType.DefineStructure).Add(AssembleNode(walker));
+                    return node;
                 }
-                else if (!newNode.Is(TokenType.NamespaceKeyword) && before?.Is("class", "interface", "enum", "implements", "extends") != true)
+                else if (before?.Is(TokenType.ConcatenatorSymbol) == true) return node;
+                else if (next?.Is(TokenType.ConcatenatorSymbol) == true)
                 {
-                    if (acname != null) return Engine.CreateNode(acname, NodeType.Chunk, TokenType.Data);
-                    else
+                    node.Token.Type = TokenType.NamespaceKeyword;
+                    return node;
+                }
+                else
+                {
+                    node.Token.Value = acname ?? fname ?? node.Token.Value;
+                    if (!string.IsNullOrEmpty(acname) && next?.Is(TokenType.Keyword) == true)
                     {
-                        newNode.Token.Update(TokenType.IdentifierKeyword, fname ?? dcname ?? iname);
-                        if (
-                            !newNode.Is("this") &&
-                            iname == null &&
-                            next?.Is(TokenType.Keyword, TokenType.Data, TokenType.Start | TokenType.Scope) == true &&
-                            !Engine.IsSeparators(next) &&
-                            !Engine.IsMediators(next) &&
-                            !Engine.IsComplementors(next) &&
-                            !Engine.IsFinalizers(next) &&
-                            !Engine.IsOrganizers(next) &&
-                            (
-                                fname != null ||
-                                next.Is(TokenType.Data) ||
-                                next.Is("(", "...") ||
-                                Engine.IsSeparators(next2) ||
-                                Engine.IsMediators(next2) ||
-                                Engine.IsComplementors(next2) ||
-                                Engine.IsFinalizers(next2) ||
-                                Engine.IsOrganizers(next2)
-                            )
-                        )
-                        {
-                            newNode.Token.Update(TokenType.FunctionKeyword);
-                            return newNode.Update(NodeType.CallStructure)
-                                .Add(next.Is("(") ? AssembleNode(walker) : Engine.CreatePackNode(NormalSequenceAssembleNode(walker)));
-                        }
-                        else if (next?.Is(TokenType.Keyword) == true)
-                        {
-                            newNode.Token.Update(TokenType.NamespaceKeyword);
-                            return newNode.Update(NodeType.CallStructure).AddRange(
+                        node.Token.Update(TokenType.NamespaceKeyword);
+                        return node
+                            .Update(NodeType.CallStructure)
+                            .AddRange(
                                 Engine.IsComplementors(next) ? null : Engine.CreateDotNode(),
                                 NormalCompactAssembleNode(walker)
                             );
-                        }
-                        else if (fcname != null && (next == null || Engine.IsSeparators(next) || Engine.IsComplementors(next) || Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next)))
-                            return Engine.CreateCallFunctionNode(fcname);
-                        else if (Engine.IsDelimiters(next))
-                        {
-                            if (
-                                next2?.Is(TokenType.Keyword) == true ||
-                                Engine.IsConnectors(next2) ||
-                                Engine.IsComplementors(next2) ||
-                                Engine.IsMediators(next2) ||
-                                Engine.IsFinalizers(next2) ||
-                                Engine.IsOrganizers(next2)
-                            )
-                                return newNode.Update(NodeType.CallStructure);
-                        }
-
-                        return new Node(newNode.Token.Update(TokenType.IdentifierKeyword), NodeType.CallStructure);
                     }
+                    else node.Add(Engine.CreatePackNode(TrimmedSequenceAssembleNode(walker)));
                 }
             }
+            else if (before?.Is("class", "interface", "enum", "implements", "extends") != true)
+            {
+                if (acname != null) return Engine.CreateNode(acname, NodeType.Chunk, TokenType.Data);
+                else
+                {
+                    node.Token.Update(TokenType.IdentifierKeyword, fname ?? dcname ?? iname);
+                    if (
+                        !node.Is("this") &&
+                        iname == null &&
+                        next?.Is(TokenType.Keyword, TokenType.Data, TokenType.Start | TokenType.Scope) == true &&
+                        !Engine.IsSeparators(next) &&
+                        !Engine.IsMediators(next) &&
+                        !Engine.IsComplementors(next) &&
+                        !Engine.IsFinalizers(next) &&
+                        !Engine.IsOrganizers(next) &&
+                        (
+                            fname != null ||
+                            next.Is(TokenType.Data) ||
+                            next.Is("(", "...") ||
+                            Engine.IsSeparators(next2) ||
+                            Engine.IsMediators(next2) ||
+                            Engine.IsComplementors(next2) ||
+                            Engine.IsFinalizers(next2) ||
+                            Engine.IsOrganizers(next2)
+                        )
+                    )
+                    {
+                        node.Token.Update(TokenType.FunctionKeyword);
+                        return node.Update(NodeType.CallStructure)
+                            .Add(next.Is("(") ? AssembleNode(walker) : Engine.CreatePackNode(NormalSequenceAssembleNode(walker)));
+                    }
+                    else if (next?.Is(TokenType.Keyword) == true)
+                    {
+                        node.Token.Update(TokenType.NamespaceKeyword);
+                        return node.Update(NodeType.CallStructure).AddRange(
+                            Engine.IsComplementors(next) ? null : Engine.CreateDotNode(),
+                            NormalCompactAssembleNode(walker)
+                        );
+                    }
+                    else if (fcname != null && (next == null || Engine.IsSeparators(next) || Engine.IsComplementors(next) || Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next)))
+                        return Engine.CreateCallFunctionNode(fcname);
+                    else if (Engine.IsDelimiters(next))
+                    {
+                        if (
+                            next2?.Is(TokenType.Keyword) == true ||
+                            Engine.IsConnectors(next2) ||
+                            Engine.IsComplementors(next2) ||
+                            Engine.IsMediators(next2) ||
+                            Engine.IsFinalizers(next2) ||
+                            Engine.IsOrganizers(next2)
+                        )
+                            return node.Update(NodeType.CallStructure);
+                    }
 
+                    return new Node(node.Token.Update(TokenType.IdentifierKeyword), NodeType.CallStructure);
+                }
+            }
             return node;
         }
         protected override Node AssembleCommentNode(Node node, NodeWalker walker)
@@ -609,17 +624,6 @@ namespace MiMFa.Engine.DEAL.JS
                     }
             }
             return base.AssembleStartNode(node, walker);
-        }
-        protected override Node AssembleMiddleNode(Node node, NodeWalker walker)
-        {
-            switch (node.Token.Value.ToLower())
-            {
-                case "as":
-                    Assembled.Insert(Assembled.Length - 1, Engine.CreateOpenBlockNode(), AssembleNode(walker), Engine.CreateNode(":", TokenType.Symbol, NodeType.Depend));
-                    return Engine.CreateCloseBlockNode();
-            }
-
-            return base.AssembleMiddleNode(node, walker);
         }
         protected override Node AssembleSuffixNode(Node node, NodeWalker walker)
         {

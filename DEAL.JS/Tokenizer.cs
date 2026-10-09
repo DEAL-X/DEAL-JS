@@ -74,7 +74,7 @@ namespace MiMFa.Engine.DEAL.JS
                         var cmd = ws[1];
                         TokenType? acceptor = ws.Length > 2 ? TokenTypeFromName(ws[2].Trim()) : null;
                         TokenType? dataAcceptor = ws.Length > 3 ? TokenTypeFromName(ws[3].Trim()) : null;
-                        SetAcceptedType(cmd, acceptor ?? TokenType.Keyword, dataAcceptor);
+                        SetAcceptedType(cmd, acceptor ?? TokenType.Unknown, dataAcceptor);
                         walker.Remove(location.Index, w.Length);
                         return new Token(TokenType.Keyword, cmd, walker.Position);
                     }
@@ -147,10 +147,10 @@ namespace MiMFa.Engine.DEAL.JS
                         break;
 
                     default:
-                        if (Regex.IsMatch(word, @"[\w0-9_$]") && word.StartsWith("*") && word.EndsWith("*"))
+                        if (Regex.IsMatch(word, @"[\w0-9_$]", RegexOptions.CultureInvariant) && word.StartsWith("*") && word.EndsWith("*"))
                         {
                             var cmd = word.Trim('*');
-                            SetAcceptedType(cmd, TokenType.Keyword);
+                            SetAcceptedType(cmd);
                             walker.Replace(location, word.Length, cmd.ToCharArray().Select(v => v.ToString()).ToArray());
                             //return new Token(TokenType.Keyword, cmd, walker.Position);
                         }
@@ -175,6 +175,9 @@ namespace MiMFa.Engine.DEAL.JS
                             return GetAcceptedToken(TokenType.Statement, word, location);
                         
                         case "as":
+                            //ReservesScrubber(word);
+                            SwitchToken = TokenType.StringData;
+                            //walker.Replace(location, word.Length, ",");
                             ReservesScrubber(word);
                             walker.Move(word.Length);
                             return GetAcceptedToken(TokenType.Middle, word, location);
@@ -239,10 +242,10 @@ namespace MiMFa.Engine.DEAL.JS
             var wrd = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w0-9_$]", RegexOptions.CultureInvariant)).ToArray());
             var tk = GetAcceptedToken(TokenType.Unknown, wrd, walker.Position);
             if (tk.Value != wrd)
-            {
                 walker.Replace(walker.Position, wrd.Length, tk.Value.ToCharArray().Select(v => v.ToString()).ToArray());
+            if (tk.Type != TokenType.Unknown) {
                 var ntk = base.TokenizeCode(walker);
-                return ntk.Update(Type: ntk.Type | tk.Type);
+                return ntk.Update(ntk.Type | tk.Type);
             }
             else return base.TokenizeCode(walker);
         }
@@ -434,27 +437,27 @@ namespace MiMFa.Engine.DEAL.JS
         {
             try
             {
-                var reserves = Engine?.Reserves;
-                if (reserves != null)
+                var t = GetAcceptedToken(TokenType.Unknown, word);
+                bool setAcc = t.Type != TokenType.Unknown;
+                foreach (var reserve in Engine.Reserves)
                 {
-                    foreach (var reserve in reserves)
+                    if (word == reserve.Key)
                     {
-                        if (word == reserve.Key)
-                        {
-                            if (word == reserve.Value) SwitchNamespace = true;
-                            else walker.Replace(location.Index, word.Length, reserve.Value.ToCharArray().Select(v=>v.ToString()).ToArray());
-                            return true;
-                        }
+                        if (setAcc) SetAcceptedType(reserve.Value, t.Type);
+                        if (word == reserve.Value) SwitchNamespace = true;
+                        else walker.Replace(location.Index, word.Length, reserve.Value.ToCharArray().Select(v=>v.ToString()).ToArray());
+                        return true;
                     }
-                    var lw = word.ToLower();
-                    foreach (var reserve in reserves)
+                }
+                var lw = word.ToLower();
+                foreach (var reserve in Engine.Reserves)
+                {
+                    if (lw == reserve.Key.ToLower())
                     {
-                        if (lw == reserve.Key.ToLower())
-                        {
-                            if (word == reserve.Value) SwitchNamespace = true;
-                            else walker.Replace(location.Index, word.Length, reserve.Value.ToCharArray().Select(v => v.ToString()).ToArray());
-                            return true;
-                        }
+                        if (setAcc) SetAcceptedType(reserve.Value, t.Type);
+                        if (word == reserve.Value) SwitchNamespace = true;
+                        else walker.Replace(location.Index, word.Length, reserve.Value.ToCharArray().Select(v => v.ToString()).ToArray());
+                        return true;
                     }
                 }
             }

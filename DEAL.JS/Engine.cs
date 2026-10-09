@@ -160,6 +160,13 @@ namespace MiMFa.Engine.DEAL.JS
                 return node.Add(CreateNode(";", TokenType.TerminatorSymbol, NodeType.Append));
             return node.Update(node.Type | NodeType.Line);
         }
+        public virtual Node CreateBlockNode(params KeyValuePair<Node, Node>[] collection)
+        {
+            List<Node> children = new List<Node>();
+            foreach (var item in collection)
+                children.Add(CreateNode("key:", item.Key, CreateNode(",", TokenType.DelimiterSymbol, NodeType.Append | NodeType.Line), CreateNode("value:", item.Value)));
+            return new Node(new Token(TokenType.Start | TokenType.Scope, "{"), NodeType.BlockStructure | NodeType.Region | NodeType.Line, children.ToArray());
+        }
         public virtual Node CreateBlockNode(params Node[] children)
         {
             if (children.Length == 1 && children[0].Is(NodeType.BlockStructure) && children[0].Token.Is("{")) return children[0];

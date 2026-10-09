@@ -16,7 +16,7 @@ For each merchandise of file (source),
 			* For each item of response json(), append destination, item;
 		* Else load "www.market.com/search/merchandise=" + merchandise, then:
 			* If loaded, do
-				* For each item of all "div table>tbody>tr", append destination, item; 
+				* For each item of all ("div table>tbody>tr"), append destination, item; 
 				* Click any button#next-page;
 				* End;
 			* Else log warning, `Could not load the page for the ${merchandise}!`;

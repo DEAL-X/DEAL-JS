@@ -210,36 +210,9 @@ namespace MiMFa.Engine.DEAL.JS
             foreach (var node in base.ParseStartToken(token, walker))
                 yield return node;
         }
-        protected override IEnumerable<Node> ParseMiddleToken(Token token, TokenWalker walker)
-        {
-            var keywords = ExtractKeywordToken(token, walker, false);
-            if (keywords.Count > 0)
-            {
-                foreach (var item in keywords)
-                    yield return item;
-                yield break;
-            }
-
-            switch (token.Value.ToLower())
-            {
-                case "as":
-                    yield return new Node(token, NodeType.Depend | NodeType.Line);
-                    yield break;
-            }
-
-            foreach (var node in base.ParseMiddleToken(token, walker))
-                yield return node;
-        }
         protected override IEnumerable<Node> ParseSuffixToken(Token token, TokenWalker walker)
         {
-            var keywords = ExtractKeywordToken(token, walker, false);
-            if (keywords.Count > 0)
-            {
-                foreach (var item in keywords)
-                    yield return item;
-                yield break;
-            }
-
+            List<Node> keywords;
             switch (token.Value.ToLower())
             {
                 case "then":
@@ -249,8 +222,24 @@ namespace MiMFa.Engine.DEAL.JS
                 case "distinct":
                 case "limit":
                 case "order":
+                    keywords = ExtractKeywordToken(token, walker, false);
+                    if (keywords.Count > 0)
+                    {
+                        foreach (var item in keywords)
+                            yield return item;
+                        yield break;
+                    }
+                    yield return new Node(token, NodeType.CallStructure | NodeType.Line);
+                    yield break;
                 case "keys":
                 case "values":
+                    keywords = ExtractKeywordToken(token, walker);
+                    if (keywords.Count > 0)
+                    {
+                        foreach (var item in keywords)
+                            yield return item;
+                        yield break;
+                    }
                     yield return new Node(token, NodeType.CallStructure | NodeType.Line);
                     yield break;
 

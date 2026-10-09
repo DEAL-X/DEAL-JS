@@ -68,7 +68,7 @@
 						type: "json"
 					},
 					THEN // If the fetching promise finished
-						IF FETCHED	// If the data was received successfully
+						IF FETCHED,	// If the data was received successfully
 							FOR EACH item OF RESPONSE.json()	// Access to the RESPONSE object received in this workspace
 								APPEND destination,		// Store new line, row or object on the selected database or file
 									SELECT	// Collect all the cells of an object into a new object
@@ -80,8 +80,8 @@
 						ELSE
 							LOAD "www.market.com/search/merchandise="+row[5],
 							THEN	// If the loading promise finished
-								IF LOADED DO	// If the website document is loaded completely
-									FOR EACH item OF ALL "div table>tbody>tr",
+								IF LOADED, DO	// If the website document is loaded completely
+									FOR EACH item OF ALL ("div table>tbody>tr"),
 										APPEND 	// Store new row or line on the database
 											COLLECT	// Collect all the cells in an object, exactly like { name:value, ... }
 												"www.market.com" AS Reference,

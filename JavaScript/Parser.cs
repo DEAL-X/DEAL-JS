@@ -217,7 +217,7 @@ namespace MiMFa.Engine.JavaScript
         protected override IEnumerable<Node> ParseKeywordToken(Token token, TokenWalker walker)
         {
             var next = walker.PeekProcedure();
-            if (next != null)
+            if (next != null && token.Type == TokenType.Keyword)
                 if (next.Is(TokenType.Start | TokenType.Scope) && next.Is("("))
                     yield return new Node(token.Clone(TokenType.FunctionKeyword), NodeType.CallStructure | NodeType.Prepend);
                 else if (next.Is(TokenType.ConcatenatorSymbol))
@@ -262,7 +262,7 @@ namespace MiMFa.Engine.JavaScript
         }
         protected override IEnumerable<Node> ParseMiddleToken(Token token, TokenWalker walker)
         {
-            var keywords = ExtractKeywordToken(token, walker);
+            var keywords = ExtractKeywordToken(token, walker, false);
             if (keywords.Count > 0)
             {
                 foreach (var item in keywords)

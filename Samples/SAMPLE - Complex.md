@@ -25,7 +25,7 @@ For each row of file(source) rows, begin:
 					From item;
 		* Else load "www.market.com/search/merchandise=" + merchandise, then:
 			* If loaded, do
-				* For each item of all "div table>tbody>tr",
+				* For each item of all ("div table>tbody>tr"),
 					* Append destination, collect
 							"www.market.com" as reference,
 							normalize(concat(item[".company-title>*"], " ")) as company_name,
