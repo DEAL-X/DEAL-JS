@@ -589,7 +589,13 @@ namespace MiMFa.Engine.DEAL.JS
                 case "will":
                     node.Token.Update(TokenType.FunctionKeyword, "new Promise");
                     if (next == null) return new Node();
-                    else if (next.Is("("))
+                    if (Engine.IsDelimiters(next) || next?.Is(AssignSigns) == true)
+                    {
+                        walker.Walk();
+                        next = walker.PeekProcedure();
+                        next2 = walker.PeekProcedure(1);
+                    }
+                    if (next.Is("("))
                         return node.Update(NodeType.CallStructure).Add(AssembleNode(walker));
                     else if (next.Is(TokenType.Keyword) && (Engine.IsDelimiters(next2) || Engine.IsComplementors(next2) || Engine.IsOrganizers(next2)))
                         return node.Update(NodeType.CallStructure).Add(NormalCompactAssembleNode(walker));
@@ -621,7 +627,7 @@ namespace MiMFa.Engine.DEAL.JS
             var next = walker.PeekProcedure();
             var next2 = walker.PeekProcedure(1);
             string dot = before == null || before.Token.Value != "." ? "." : null;
-            if (next == null || !next.Is(TokenType.Symbol) || next.Is(TokenType.ConcatenatorSymbol) || Engine.IsDelimiters(next))
+            if (next == null || !next.Is(TokenType.Symbol) || next.Is(TokenType.ConcatenatorSymbol) || Engine.IsDelimiters(next) || next.Is(AssignSigns))
                 switch (node.Token.Value.ToLower())
                 {
                     case "then":
@@ -629,7 +635,13 @@ namespace MiMFa.Engine.DEAL.JS
                     case "anyway":
                         node.Token.Update(TokenType.FunctionKeyword, node.Token.Is("otherwise") ? $"{dot}catch" : node.Token.Is("anyway") ? $"{dot}finally" : $"{dot}then");
                         if (next == null) return new Node();
-                        else if (next.Is("("))
+                        if (Engine.IsDelimiters(next) || next.Is(AssignSigns))
+                        {
+                            walker.Walk();
+                            next = walker.PeekProcedure();
+                            next2 = walker.PeekProcedure(1);
+                        }
+                        if (next.Is("("))
                             return node.Update(NodeType.CallStructure).Add(AssembleNode(walker));
                         else if (next.Is(TokenType.Keyword) && (Engine.IsSeparators(next2) || Engine.IsComplementors(next2) || Engine.IsFinalizers(next2) || Engine.IsOrganizers(next2)))
                             return node.Update(NodeType.CallStructure).Add(NormalCompactAssembleNode(walker));
@@ -645,21 +657,43 @@ namespace MiMFa.Engine.DEAL.JS
                         }
 
                     case "where":
+                        if (Engine.IsDelimiters(next) || next?.Is(AssignSigns) == true)
+                        {
+                            walker.Walk();
+                            next = walker.PeekProcedure();
+                            next2 = walker.PeekProcedure(1);
+                        }
                         node.Token.Update(TokenType.FunctionKeyword, $"{dot}filter");
                         return node.Update(NodeType.CallStructure).Add(Engine.CreateCallableNode(TrimmedCompactAssembleNode(walker), Engine.CreateNode("data")));
 
                     case "distinct":
+                        if (Engine.IsDelimiters(next) || next?.Is(AssignSigns) == true)
+                        {
+                            walker.Walk();
+                            next = walker.PeekProcedure();
+                            next2 = walker.PeekProcedure(1);
+                        }
                         node.Token.Update(TokenType.FunctionKeyword, $"{dot}filter");
                         return node.Update(NodeType.CallStructure).Add(Engine.CreateCallableNode(Engine.CreateProceduresNode("", Engine.CreateNode("self.indexOf(data) === index"), Engine.CreateNode("data")), Engine.CreateNode("data")));
 
                     case "limit":
-                        if (Engine.IsDelimiters(next)) walker.Walk();
+                        if (Engine.IsDelimiters(next) || next?.Is(AssignSigns) == true)
+                        {
+                            walker.Walk();
+                            next = walker.PeekProcedure();
+                            next2 = walker.PeekProcedure(1);
+                        }
                         node.Token.Update(TokenType.FunctionKeyword, $"{dot}slice");
                         var nlimit = TrimmedSequenceAssembleNode(walker);
                         return node.Update(NodeType.CallStructure).AddRange(nlimit.Count > 1 ? nlimit.Children.ToArray() : new[] { Engine.CreateNode("0", NodeType.Chunk, TokenType.NumberData), nlimit });
 
                     case "order":
-                        if (Engine.IsDelimiters(next)) walker.Walk();
+                        if (Engine.IsDelimiters(next) || next?.Is(AssignSigns) == true)
+                        {
+                            walker.Walk();
+                            next = walker.PeekProcedure();
+                            next2 = walker.PeekProcedure(1);
+                        }
                         var norders = TrimmedSequenceAssembleNode(walker);
                         var orderItems = norders.Is(NodeType.BlockStructure) ? norders.Children : new List<Node> { norders };
                         var childrenOrder = new List<Node>();

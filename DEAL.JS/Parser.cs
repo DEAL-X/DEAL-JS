@@ -232,7 +232,7 @@ namespace MiMFa.Engine.DEAL.JS
         }
         protected override IEnumerable<Node> ParseSuffixToken(Token token, TokenWalker walker)
         {
-            var keywords = ExtractKeywordToken(token, walker);
+            var keywords = ExtractKeywordToken(token, walker, false);
             if (keywords.Count > 0)
             {
                 foreach (var item in keywords)

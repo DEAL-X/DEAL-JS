@@ -144,7 +144,6 @@ namespace MiMFa.Engine.JavaScript
                     yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend);
                     break;
 
-                case "with":
                 case "debugger":
                     yield return new Node(token, NodeType.Prepend);
                     break;
@@ -263,7 +262,7 @@ namespace MiMFa.Engine.JavaScript
         }
         protected override IEnumerable<Node> ParseMiddleToken(Token token, TokenWalker walker)
         {
-            var keywords = ExtractKeywordToken(token, walker, false);
+            var keywords = ExtractKeywordToken(token, walker);
             if (keywords.Count > 0)
             {
                 foreach (var item in keywords)

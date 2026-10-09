@@ -3,7 +3,7 @@
  
  You can find more examples and their parsed JS versions [here](Samples/).
 
-```js
+```ts
 	/*
 		* This is just a tutorial scenario and will not work
 	*/
@@ -22,8 +22,8 @@
 	USE "D:\My Libs\Text\Normalization";	// Will attach a third-party library using an absolute addressto the JS engine
 	USE .\MyLib;						// Will attach a third-party library using a relative address to the JS engine
 
-	CONST Source = OPENFILE();																	// Using a command of the `deal\io\resource` library, which will show an open file dialog
-	CONST #Destination = SAVEFILE("results", "Comma Separated Values Files (*.csv)|*.csv");		// Using a command of the `deal\io\resource` library, which will show a save file dialog
+	CONST Source = Resource.OPENFILE();																	// Using a command of the `deal\io\resource` library, which will show an open file dialog
+	CONST #Destination = Resource.SAVEFILE("results", "Comma Separated Values Files (*.csv)|*.csv");		// Using a command of the `deal\io\resource` library, which will show a save file dialog
 	/*
 		* All of the JS statements are accessible in a case-insensitive mode.
 		* All of your defined names are case-sensitive.
@@ -66,7 +66,7 @@
 					FETCH "api.market.com/search", { // To make a pure JS object, here you can not write DEAL
 						merchandise:row[5],	// The column index 5, you can use DEAL Selectors in the brackets too
 						type: "json"
-					}
+					},
 					THEN // If the fetching promise finished
 						IF FETCHED	// If the data was received successfully
 							FOR EACH item OF RESPONSE.json()	// Access to the RESPONSE object received in this workspace
@@ -78,7 +78,7 @@
 										(IF item Count IS 0 "absent" ELSE item.Count) AS Numbers
 										FROM item;
 						ELSE
-							LOAD "www.market.com/search/merchandise="+row[5]
+							LOAD "www.market.com/search/merchandise="+row[5],
 							THEN	// If the loading promise finished
 								IF LOADED DO	// If the website document is loaded completely
 									FOR EACH item OF ALL "div table>tbody>tr",
@@ -125,7 +125,7 @@
 	IF --days > 0,
 		WAIT (24 * 60 * 60 * 10000)
 		AND	// You can concatenate two procedures or commands using AND/OR commands for more clarity
-		DOING TRY dailyChack CATCH problem LOG ERROR problem; END()	// To make a callable block then call that
+		DOING TRY dailyChack CATCH problem, LOG ERROR problem; END()	// To make a callable block then call that
 	ELSE STOP BROWSER;	// To close the current BROWSER of this workspace
 	/*
 		* You can STOP some variables of the workspace too, using:

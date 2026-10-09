@@ -58,7 +58,6 @@ namespace MiMFa.Engine.JavaScript
                 case "const":
                 case "let":
                 case "var":
-                case "with":
                 case "debugger":
                 case "delete":
 

@@ -224,7 +224,6 @@ namespace MiMFa.Engine.JavaScript
                 case "const":
                     return node.Add(CompactAssembleNode(walker));
 
-                case "with":
                 case "debugger":
                     return node.Add(SectionAssembleNode(walker));
 
