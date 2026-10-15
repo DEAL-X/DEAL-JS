@@ -22,6 +22,13 @@
 // a noise word
 /* Reserved "every" as the "for" */
 // ------------------------------------------------------------
+// Definitions
+// ------------------------------------------------------------
+const constant = procedure;
+var variable = procedure;
+let letVariable = procedure;
+let directVariable = procedure;
+// ------------------------------------------------------------
 // Commands
 // ------------------------------------------------------------
 var testA = "A";// Definition command

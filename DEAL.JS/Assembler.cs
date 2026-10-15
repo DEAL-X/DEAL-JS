@@ -388,6 +388,28 @@ namespace MiMFa.Engine.DEAL.JS
                          NormalSectionAssembleNode(walker)
                      );
 
+                case "assume":
+                    if (next?.Is("const", "constant") == true)
+                    {
+                        node = walker.Walk();
+                        node.Token.Update(TokenType.Statement, "const");
+                    }
+                    else if(next?.Is("var", "variable") == true)
+                    {
+                        node = walker.Walk();
+                        node.Token.Update(TokenType.Statement, "var");
+                    }
+                    else if (next?.Is("let") == true)
+                    {
+                        node = walker.Walk();
+                        node.Token.Update(TokenType.Statement, "let");
+                    }
+                    else node.Token.Update(TokenType.Statement, "let");
+
+                    node.Add(AssembleNode(walker)); // Add the Name
+                    var mid = walker.Walk();
+                    return node.Add(Engine.CreateNode("=", TokenType.Symbol, NodeType.Depend, NormalSectionAssembleNode(walker)));
+
                 case "try":
                     if (next?.Is("{") == true) break;
                     if (Engine.IsDelimiters(next) || next?.Is(AssignSigns) == true) walker.Walk();

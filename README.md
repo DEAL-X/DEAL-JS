@@ -187,6 +187,23 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 * They define the grammar and cannot be overridden (IF, FOR, COMMAND, USE, RESERVE, WILL, BEGIN, DOING, etc.)
 * Multiple of the most important DEAL Structures are:
 
+#### Definition
+* To define constant or variables:
+    ```ts
+    ASSUME CONST constant IS procedure;
+    ASSUME VAR variable IS EQUAL procedure;
+    ASSUME LET letVariable BE procedure;
+    ASSUME directVariable EQUALS procedure;
+    ```
+    They will compile to:
+    ```js
+    const constant = js-procedure;
+    var variable = js-procedure;
+    let letVariable = js-procedure;
+    let directVariable = js-procedure;
+    ```
+* Pure JS definition structures are available as the same.
+
 #### Conditions
 * To work in a special conditions
     ```ts

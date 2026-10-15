@@ -170,6 +170,7 @@ namespace MiMFa.Engine.DEAL.JS
                         case "begin":
                         case "doing":
                         case "end":
+                        case "assume":
                             ReservesScrubber(word);
                             walker.Move(word.Length);
                             return GetAcceptedToken(TokenType.Statement, word, location);
@@ -283,7 +284,7 @@ namespace MiMFa.Engine.DEAL.JS
         }
         protected virtual int UseFolder(string folder)
         {
-            if (string.IsNullOrWhiteSpace(folder)) return 0;
+            if (string.IsNullOrWhiteSpace(folder) || folder.Split(System.IO.Path.DirectorySeparatorChar).Last().StartsWith("~")) return 0;
             folder = Regex.Replace(folder, "[\\/\\\\]$", "");
             int results = 0;
             try
@@ -308,7 +309,7 @@ namespace MiMFa.Engine.DEAL.JS
         }
         protected virtual int UseFile(string file)
         {
-            if (string.IsNullOrWhiteSpace(file)) return 0;
+            if (string.IsNullOrWhiteSpace(file) || file.Split(System.IO.Path.DirectorySeparatorChar).Last().StartsWith("~")) return 0;
             int num = 0;
             if (!Regex.IsMatch(file, "\\.(deal|djs|js)$", RegexOptions.IgnoreCase))
                 return (num = UseFile(file + ".deal")) > 0 ? num : (num = UseFile(file + ".djs")) > 0 ? num : UseFile(file + ".js");

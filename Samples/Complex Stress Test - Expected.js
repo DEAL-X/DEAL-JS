@@ -1,4 +1,4 @@
-// Used 15 libraries from "deal"
+// Used 19 libraries from "scraper"
 // Reserved "the" as a noise
 /* Reserved "every" as the "for" */
 (scrapeMap = (() => {
@@ -8,7 +8,7 @@
 
             for (const url/* The url of the website */ of list) LOAD(url).then((data) => {
                 handle(data);
-                APPEND.all("keys>table>h2", window.document.keys().toArray()), destination;
+                append(all("keys>table>h2", window.document.keys().toArray()), destination);
                 log.success(`The ${url} is laded successfully`);
             }).catch((data) => {
                 handle(data);
@@ -38,8 +38,7 @@ const x = url + "?id=" + (index ?? grade[a][b][c].trim().toLowerCase());
 class Car {
     constructor(brand) {
         this.carname,
-            this.brand = brand
-            ;// definitions
+            this.brand = brand;// definitions
 
         delete this.brand;
     }
@@ -78,7 +77,8 @@ class Model extends Car {
                         if (status && i % 2 === 0) {
                             window.console.info(`${i}`);
                             window.console.log("is even");
-                        } else if (i instanceof string || i > 0) window.console.info(`${i} is odd`); else throw "Error";
+                        } else if (i instanceof string || i > 0) window.console.info(`${i} is odd`);
+                        else throw "Error";
                 }
 
                 // The other test processes

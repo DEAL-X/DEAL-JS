@@ -11,9 +11,9 @@
 // ------------------------------------------------------------
 // Used 5 libraries from "deal/core"
 // Used "deal/data/local.djs" library
-// Used "deal/data/resource" library
+// Could not find the "deal/data/resource" library
 // Could not find the "deal/data/notExist" library
-// Used 14 libraries from "deal"
+// Used 12 libraries from "deal"
 // Used 4 libraries from "scraper"
 // ------------------------------------------------------------
 // Reserve and noise words
@@ -21,6 +21,13 @@
 // Reserved "the" as a noise
 // a noise word
 /* Reserved "every" as the "for" */
+// ------------------------------------------------------------
+// Definitions
+// ------------------------------------------------------------
+const constant  = procedure;
+var variable = procedure;
+let letVariable  = procedure;
+let directVariable  = procedure;
 // ------------------------------------------------------------
 // Commands
 // ------------------------------------------------------------

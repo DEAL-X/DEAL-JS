@@ -43,10 +43,37 @@
 
 
   <ItemGroup>
-    <None Update="Library\deal\data\local.djs">
+    <None Update="Library\ChainDoc\ChainedDocument.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\data\read.djs">
+    <None Update="Library\ChainDoc\ChainedDocumentCollection.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\ChainDoc\Connector\ConnectorBase.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\ChainDoc\Connector\ExcelFile.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\ChainDoc\Connector\PlainTextFile.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\ChainDoc\Filter\FilterCollection.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\ChainDoc\Filter\FilterItem.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\ChainDoc\Matrices\ForceMathMatrixDocument.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\ChainDoc\Matrices\MathMatrixDocument.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\ChainDoc\Matrices\TextMatrixDocument.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\ChainDoc\MatrixDocument.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Library\deal\core\statements.djs">
@@ -79,10 +106,43 @@
     <None Update="Library\deal\web\transfer.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\data\resource.djs">
+    <None Update="Library\deal\data\local.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Library\deal\convert\types.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\node\ChainDoc\ChainedDocument.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\node\ChainDoc\ChainedDocumentCollection.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\node\ChainDoc\Connector\ConnectorBase.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\node\ChainDoc\Connector\ExcelFile.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\node\ChainDoc\Connector\PlainTextFile.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\node\ChainDoc\Filter\FilterCollection.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\node\ChainDoc\Filter\FilterItem.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\node\ChainDoc\Matrices\ForceMathMatrixDocument.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\node\ChainDoc\Matrices\MathMatrixDocument.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\node\ChainDoc\Matrices\TextMatrixDocument.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Library\node\ChainDoc\MatrixDocument.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

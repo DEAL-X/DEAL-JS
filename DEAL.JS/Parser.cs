@@ -19,13 +19,7 @@ namespace MiMFa.Engine.DEAL.JS
 
         protected override IEnumerable<Node> ParseStatementToken(Token token, TokenWalker walker)
         {
-            var keywords = ExtractKeywordToken(token, walker, false);
-            if (keywords.Count > 0)
-            {
-                foreach (var item in keywords)
-                    yield return item;
-                yield break;
-            }
+            List<Node> keywords;
             var next = walker.PeekProcedure();
             switch (token.Value.ToLower())
             {
@@ -35,10 +29,35 @@ namespace MiMFa.Engine.DEAL.JS
                 case "####":
                 case "#####":
                 case "######":
+                    keywords = ExtractKeywordToken(token, walker);
+                    if (keywords.Count > 0)
+                    {
+                        foreach (var item in keywords)
+                            yield return item;
+                        yield break;
+                    }
                     yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Line);
                     yield break;
 
                 case "command":
+                    keywords = ExtractKeywordToken(token, walker);
+                    if (keywords.Count > 0)
+                    {
+                        foreach (var item in keywords)
+                            yield return item;
+                        yield break;
+                    }
+                    yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Line);
+                    yield break;
+               
+                case "assume":
+                    keywords = ExtractKeywordToken(token, walker);
+                    if (keywords.Count > 0)
+                    {
+                        foreach (var item in keywords)
+                            yield return item;
+                        yield break;
+                    }
                     yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Line);
                     yield break;
 
@@ -46,9 +65,23 @@ namespace MiMFa.Engine.DEAL.JS
                 case "begin":
                 case "doing":
                     if (token.Is("do") && next?.Is("{") == true) break;
+                    keywords = ExtractKeywordToken(token, walker, false);
+                    if (keywords.Count > 0)
+                    {
+                        foreach (var item in keywords)
+                            yield return item;
+                        yield break;
+                    }
                     yield return new Node(token, NodeType.BlockStructure | NodeType.Region | NodeType.Line);
                     yield break;
                 case "end":
+                    keywords = ExtractKeywordToken(token, walker, false);
+                    if (keywords.Count > 0)
+                    {
+                        foreach (var item in keywords)
+                            yield return item;
+                        yield break;
+                    }
                     yield return new Node(token, NodeType.BlockStructure | NodeType.Line);
                     yield break;
             }

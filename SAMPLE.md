@@ -22,7 +22,7 @@
 	USE "D:\My Libs\Text\Normalization";	// Will attach a third-party library using an absolute addressto the JS engine
 	USE .\MyLib;						// Will attach a third-party library using a relative address to the JS engine
 
-	CONST Source = Resource.OPENFILE();																	// Using a command of the `deal\io\resource` library, which will show an open file dialog
+	ASSUME CONST Source IS EQUALS Resource.OPENFILE();																	// Using a command of the `deal\io\resource` library, which will show an open file dialog
 	CONST #Destination = Resource.SAVEFILE("results", "Comma Separated Values Files (*.csv)|*.csv");		// Using a command of the `deal\io\resource` library, which will show a save file dialog
 	/*
 		* All of the JS statements are accessible in a case-insensitive mode.

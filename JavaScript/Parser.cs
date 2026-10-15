@@ -20,7 +20,8 @@ namespace MiMFa.Engine.JavaScript
                         (
                             strict &&
                             before.Is(TokenType.Statement, TokenType.Prefix, TokenType.Middle, TokenType.Symbol) &&
-                            !before.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol)
+                            !before.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol) &&
+                            !before.Is(":")
                         ) ||
                         (
                             !strict &&
@@ -62,15 +63,98 @@ namespace MiMFa.Engine.JavaScript
                 case "get":
                 case "set":
                     yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend);
-                    break;
+                    yield break;
                 case "function":
                     yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Line);
-                    break;
+                    yield break;
 
+                case "void":
+                    yield return new Node(token, NodeType.Prepend | NodeType.Line);
+                    yield break;
+
+                case "await":
+                    yield return new Node(token, NodeType.CallStructure | NodeType.Prepend);
+                    yield break;
+
+                case "async":
+                case "typeof":
+                    yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend);
+                    yield break;
+
+                case "new":
+                    yield return new Node(token, NodeType.CallStructure | NodeType.Prepend);
+                    yield break;
+
+                case "if":
+                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
+                    yield break;
+                case "else":
+                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
+                    yield break;
+
+                case "switch":
+                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
+                    yield break;
+                case "case":
+                    yield return new Node(token, NodeType.CallStructure | NodeType.Prepend);
+                    yield break;
+                case "default":
+                    yield return new Node(token, NodeType.CallStructure | NodeType.Chunk);
+                    yield break;
+
+                case "for":
+                    yield return new Node(token, NodeType.IterationStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
+                    yield break;
+
+                case "while":
+                    yield return new Node(token, NodeType.IterationStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
+                    yield break;
+
+                case "do":
+                    yield return new Node(token, NodeType.IterationStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
+                    yield break;
+
+                case "break":
+                case "continue":
+                case "return":
+                    yield return new Node(token, NodeType.Prepend);
+                    yield break;
+                case "yield":
+                case "throw":
+                    yield return new Node(token, NodeType.Prepend);
+                    yield break;
+
+                case "try":
+                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region | NodeType.Line);
+                    yield break;
+                case "catch":
+                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region | NodeType.Line);
+                    yield break;
+                case "finally":
+                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region | NodeType.Line);
+                    yield break;
+
+                case "var":
+                case "let":
+                case "const":
+                    yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend);
+                    yield break;
+
+            }
+
+            keywords = ExtractKeywordToken(token, walker);
+            if (keywords.Count > 0)
+            {
+                foreach (var item in keywords)
+                    yield return item;
+                yield break;
+            }
+            switch (token.Value)
+            {
                 case "implements":
                 case "extends":
                     yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Line);
-                    break;
+                yield break;
 
                 case "interface":
                 case "class":
@@ -78,89 +162,20 @@ namespace MiMFa.Engine.JavaScript
                 case "package":
                 default:
                     yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
-                    break;
-
-                case "if":
-                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
-                    break;
-                case "else":
-                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
-                    break;
-
-                case "switch":
-                    yield return new Node(token, NodeType.ConditionStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
-                    break;
-                case "case":
-                    yield return new Node(token, NodeType.CallStructure | NodeType.Prepend);
-                    break;
-                case "default":
-                    yield return new Node(token, NodeType.CallStructure | NodeType.Chunk);
-                    break;
-
-                case "for":
-                    yield return new Node(token, NodeType.IterationStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
-                    break;
-
-                case "while":
-                    yield return new Node(token, NodeType.IterationStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
-                    break;
-
-                case "do":
-                    yield return new Node(token, NodeType.IterationStructure | NodeType.Prepend | NodeType.Region | NodeType.Line);
-                    break;
-
-                case "break":
-                case "continue":
-                case "return":
-                    yield return new Node(token, NodeType.Prepend);
-                    break;
-                case "yield":
-                case "throw":
-                    yield return new Node(token, NodeType.Prepend);
-                    break;
-
-                case "try":
-                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region | NodeType.Line);
-                    break;
-                case "catch":
-                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region | NodeType.Line);
-                    break;
-                case "finally":
-                    yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region | NodeType.Line);
-                    break;
+                    yield break;
 
                 case "import":
                 case "export":
                     yield return new Node(token, NodeType.Structure | NodeType.Prepend | NodeType.Region | NodeType.Line);
-                    break;
-
-                case "void":
-                    yield return new Node(token, NodeType.Prepend | NodeType.Line);
-                    break;
-
-                case "var":
-                case "let":
-                case "const":
-                    yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend);
-                    break;
+                    yield break;
 
                 case "debugger":
                     yield return new Node(token, NodeType.Prepend);
-                    break;
+                    yield break;
 
                 case "delete":
                     yield return new Node(token, NodeType.Prepend);
-                    break;
-
-                case "await":
-                    yield return new Node(token, NodeType.CallStructure | NodeType.Prepend);
-                    break;
-                case "async":
-                    yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend);
-                    break;
-                case "new":
-                    yield return new Node(token, NodeType.CallStructure | NodeType.Prepend);
-                    break;
+                    yield break;
 
                 case "private":
                 case "protected":
@@ -168,7 +183,7 @@ namespace MiMFa.Engine.JavaScript
                 case "public":
                 case "static":
                     yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend);
-                    break;
+                    yield break;
             }
         }
         protected override IEnumerable<Node> ParseScopeToken(Token token, TokenWalker walker)

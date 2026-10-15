@@ -1,4 +1,4 @@
-// Used 15 libraries from "deal"
+// Used 16 libraries from "scraper"
 // Reserved "the" as a noise
 /* Reserved "every" as the "for" */
 (scrapeMap = (() => {
@@ -6,9 +6,9 @@
         open(browser).then((data) => {
             handle(data);
             
-            for (const url/* The url of the website */ of list)LOAD(url).then((data) => {
+            for (const url/* The url of the website */ of list)load(url).then((data) => {
                 handle(data);
-                APPEND.all("keys>table>h2",window.document.keys().toArray()),destination;
+                append(all("keys>table>h2",window.document.keys().toArray()),destination);
                 log.success(`The ${url} is laded successfully`);
             }).catch((data) => {
                 handle(data);

@@ -1,4 +1,4 @@
-// Used 15 libraries from "deal"
+// Used 12 libraries from "deal"
 /*
    ============================================================
    MiMFa DEAL.JS Compiler Stress Test
@@ -186,11 +186,16 @@ do {
 function classify(value) {
     if (value == null) {
         return "empty";
-    } else if (typeof value === "number") {
-        if (value > 100) return "large"; else if (value > 50) {
+    } else if(typeof value === "number") {
+        if (value > 100) return "large";
+        else if(value > 50) {
             return "medium";
-        } else return "small";
-    } else if (typeof value === "string") {
+        }
+        
+        else return("small");
+    }
+    
+    else if(typeof value === "string") {
         return value.length > 10 ? "long string" : "short string";
     }
     return "unknown";

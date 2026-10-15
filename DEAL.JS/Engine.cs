@@ -1,3 +1,4 @@
+﻿using MiMFa.Engine.Core;
 using MiMFa.Engine.Model;
 using MiMFa.Engine.Resource;
 using System;
@@ -23,6 +24,13 @@ namespace MiMFa.Engine.DEAL.JS
                     new Generator()
                 }, executeStage, options ?? new Options(), resourceProvider ?? new ResourceProvider())
         {
+        }
+
+        public override Output Compile(Input input)
+        {
+            if (!string.IsNullOrEmpty(input.Source) && input.Source.ToLower().EndsWith(".js"))
+                return new Output(input.Source, input.Content);
+            return base.Compile(input);
         }
 
         public virtual Node SetActionCommand(string name, Node node)

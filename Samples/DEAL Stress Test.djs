@@ -22,6 +22,14 @@ Reserve the; // a noise word
 Reserve every = "for";
 
 // ------------------------------------------------------------
+// Definitions
+// ------------------------------------------------------------
+ASSUME CONST constant IS procedure;
+ASSUME VARIABLE variable IS EQUAL procedure;
+ASSUME LET letVariable BE procedure;
+ASSUME directVariable EQUALS procedure;
+
+// ------------------------------------------------------------
 // Commands
 // ------------------------------------------------------------
 command testA = "A"; // Definition command
