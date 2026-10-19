@@ -589,7 +589,7 @@ DEAL allows optional readability words that improve the natural flow of the lang
 
 ### Handlers:
 There are multiple defined variables accessible globally, which users can interact with.
-* A very small set of them defined bult-in (APPLICATION, BROWSER, WINDOW, TAB, DOCUMENT, RESPONSE, ITS, ...)
+* A very small set of them defined bult-in (APPLICATION, BROWSER, WINDOW, DOCUMENT, RESPONSE, ITS, ...)
 * Some of the global variables that will update based on the current status are named Handler Identifiers, including:
     ```ts
     BROWSER 			    // The current browser used in this thread
@@ -598,7 +598,7 @@ There are multiple defined variables accessible globally, which users can intera
     APPLICATION 		    // The current application (MiMFa Scraper) used in this thread
     ```
     ```ts
-    WINDOW/TAB 		        // The current window/tab used in this thread
+    WINDOW   		        // The current window/tab used in this thread
     ```
     ```ts
     DOCUMENT 		        // The current loaded document in the window used in this thread
