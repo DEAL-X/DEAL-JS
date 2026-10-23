@@ -107,6 +107,8 @@ End;
 // ------------------------------------------------------------
 // Complex Code
 // ------------------------------------------------------------
+ASSUME VAR promiseTest WILL BE 18 ** 18, THEN log success its, OTHERWISE log error data;
+
 # scrapeMap
     try to open browser, then
         EVERY url /* The url of the website */ OF list,

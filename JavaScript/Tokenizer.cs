@@ -119,7 +119,7 @@ namespace MiMFa.Engine.JavaScript
             if (Regex.IsMatch(current.ToString(), @"[0-9]") || (Regex.IsMatch(current.ToString(), @"[\-\+]") && Regex.IsMatch(next.ToString(), @"[0-9\.]")))
                 return TokenizeNumber(walker, location);
 
-            if (Regex.IsMatch(current.ToString(), "[\\w_$#]", RegexOptions.CultureInvariant))
+            if (Regex.IsMatch(current.ToString(), "([^\\W\\d\\s]|[$#])", RegexOptions.CultureInvariant))
                 return TokenizeKeyword(walker, location);
 
             if (current == "\"" || current == "'" || current == "`")
@@ -133,18 +133,12 @@ namespace MiMFa.Engine.JavaScript
 
         protected virtual Token TokenizeKeyword(CodeWalker walker, Position location)
         {
-            var chars = (new string[] { walker.Walk() }).Concat(walker.WalkWhile(ch => Regex.IsMatch(ch.ToString(), "[A-Za-z0-9_$]"))).ToArray();
-            var value = string.Concat(chars);
-            var type = TokenType.Keyword;
-            walker.MoveToProcedure();
-            //var sign = string.Concat(walker.PeekCount(2).ToArray());
-            //if (sign == "++" || sign == "--")
-            //{
-            //    value += sign;
-            //    type = TokenType.IdentifierKeyword;
-            //    walker.Move(2);
-            //}
-            return new Token(type, value, location);
+            var value = "";
+            do {
+                value += string.Concat((new string[] { walker.Walk() }).Concat(walker.WalkWhile(ch => Regex.IsMatch(ch.ToString(), "[\\w_$\\.]", RegexOptions.ExplicitCapture))));
+                walker.MoveToProcedure();
+            } while (value.EndsWith("."));
+            return new Token(TokenType.Keyword, value, location);
         }
 
         protected virtual Token TokenizeNumber(CodeWalker walker, Position location)

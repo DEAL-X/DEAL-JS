@@ -13,7 +13,8 @@ namespace MiMFa.Engine.DEAL.JS
 
         public int BreakSectionSwitch { get; set; } = 0;
         public int BreakSequenceSwitch { get; set; } = 0;
-        public string[] AssignSigns => new string[] { "=", "=>", "->", ":" };
+        public string ArgumentName { get; set; } = "argument";
+        public string[] AssignSigns => new string[] { "=", "==", "===", "=>", "->", ":" };
 
         public override bool Initialize(MiMFa.Engine.Engine engine)
         {
@@ -155,7 +156,7 @@ namespace MiMFa.Engine.DEAL.JS
             var latest = AssembleNode(walker);
             LastIndex = walker.Index;
             if(walker.PeekProcedure()?.Is("as") == true)
-                yield return Engine.CreateBlockNode(new KeyValuePair<Node,Node>(base.AssembleNode(walker.MoveToProcedure()), latest));
+                yield return Engine.CreateBlockNode(new KeyValuePair<Node,Node>(AssembleNode(walker.MoveToProcedure()), latest));
             else yield return latest;
             if (BreakSequenceSwitch > 0)
                 yield break;
@@ -407,7 +408,8 @@ namespace MiMFa.Engine.DEAL.JS
                     else node.Token.Update(TokenType.Statement, "let");
 
                     node.Add(AssembleNode(walker)); // Add the Name
-                    var mid = walker.Walk();
+                    next = walker.PeekProcedure();
+                    if (Engine.IsDelimiters(next) || next?.Is(AssignSigns) == true) walker.Walk();
                     return node.Add(Engine.CreateNode("=", TokenType.Symbol, NodeType.Depend, NormalSectionAssembleNode(walker)));
 
                 case "try":
@@ -547,7 +549,7 @@ namespace MiMFa.Engine.DEAL.JS
                                 NormalCompactAssembleNode(walker)
                             );
                     }
-                    else node.Add(Engine.CreatePackNode(TrimmedSequenceAssembleNode(walker)));
+                    else if(next?.Is(TokenType.Symbol) != true) node.Add(Engine.CreatePackNode(TrimmedSequenceAssembleNode(walker)));
                 }
             }
             else if (before?.Is("class", "interface", "enum", "implements", "extends") != true)
@@ -558,7 +560,7 @@ namespace MiMFa.Engine.DEAL.JS
                     node.Token.Update(TokenType.IdentifierKeyword, fname ?? dcname ?? iname);
                     if (
                         !node.Is("this") &&
-                        iname == null &&
+                        (iname == null || before?.Is(TokenType.Keyword) == true) &&
                         next?.Is(TokenType.Keyword, TokenType.Data, TokenType.Start | TokenType.Scope) == true &&
                         !Engine.IsSeparators(next) &&
                         !Engine.IsMediators(next) &&
@@ -635,13 +637,20 @@ namespace MiMFa.Engine.DEAL.JS
                     if (next.Is("("))
                         return node.Update(NodeType.CallStructure).Add(AssembleNode(walker));
                     else if (next.Is(TokenType.Keyword) && (Engine.IsDelimiters(next2) || Engine.IsComplementors(next2) || Engine.IsOrganizers(next2)))
-                        return node.Update(NodeType.CallStructure).Add(NormalCompactAssembleNode(walker));
+                        return node.Update(NodeType.CallStructure).Add(Engine.CreatePackNode(NormalCompactAssembleNode(walker)));
                     else
                     {
                         var child = NormalCompactAssembleNode(walker);
                         if (child != null)
-                            if (child.Is(NodeType.BlockStructure)) child = Engine.CreateCallableNode(child);
-                            else if (!child.Is(NodeType.CallStructure) || child.Count > 0) child = Engine.CreateCallableNode(child);
+                            if (child.Is(NodeType.BlockStructure)) child = Engine.CreateCallableNode(child, Engine.CreateNode("resolve, reject", NodeType.Chunk));
+                            else if (!child.Is(NodeType.CallStructure) || child.Count > 0) 
+                                child = Engine.CreateCallableNode(
+                                    child.Value.ToLower().Contains("resolve") ||
+                                    child.Value.ToLower().Contains("reject") ? 
+                                        child :
+                                        Engine.CreateCallFunctionNode("resolve", child),
+                                        Engine.CreateNode("resolve, reject", NodeType.Chunk)
+                                );
                         return node.Update(NodeType.CallStructure).Add(child);
                     }
             }
@@ -659,7 +668,23 @@ namespace MiMFa.Engine.DEAL.JS
                     case "then":
                     case "otherwise":
                     case "anyway":
-                        node.Token.Update(TokenType.FunctionKeyword, node.Token.Is("otherwise") ? $"{dot}catch" : node.Token.Is("anyway") ? $"{dot}finally" : $"{dot}then");
+                        string handler = $"handle({ArgumentName});";
+                        if (node.Token.Is("otherwise"))
+                        {
+                            handler = $"handle({ArgumentName}, false);";
+                            node.Token.Update(TokenType.FunctionKeyword, $"{dot}catch");
+                        }
+                        else if (node.Token.Is("anyway"))
+                        {
+                            handler = $"handle({ArgumentName});";
+                            node.Token.Update(TokenType.FunctionKeyword, $"{dot}finally");
+                        }
+                        else
+                        {
+                            handler = $"handle({ArgumentName}, true);";
+                            node.Token.Update(TokenType.FunctionKeyword, $"{dot}then");
+                        }
+
                         if (next == null) return new Node();
                         if (Engine.IsDelimiters(next) || next.Is(AssignSigns))
                         {
@@ -670,15 +695,15 @@ namespace MiMFa.Engine.DEAL.JS
                         if (next.Is("("))
                             return node.Update(NodeType.CallStructure).Add(AssembleNode(walker));
                         else if (next.Is(TokenType.Keyword) && (Engine.IsSeparators(next2) || Engine.IsComplementors(next2) || Engine.IsFinalizers(next2) || Engine.IsOrganizers(next2)))
-                            return node.Update(NodeType.CallStructure).Add(NormalCompactAssembleNode(walker));
+                            return node.Update(NodeType.CallStructure).Add(Engine.CreatePackNode(NormalCompactAssembleNode(walker)));
                         else
                         {
                             var child = NormalCompactAssembleNode(walker);
                             if (child != null)
                                 if (child.Is(NodeType.BlockStructure))
-                                    child = Engine.CreateCallableNode(Engine.CreateLineNode(child.Insert(0, Engine.CreateNode("handle(data);"))), Engine.CreateNode("data", NodeType.Chunk, TokenType.Keyword));
+                                    child = Engine.CreateCallableNode(Engine.CreateLineNode(child.Insert(0, Engine.CreateNode(handler))), Engine.CreateNode(ArgumentName, NodeType.Chunk, TokenType.Keyword));
                                 else if (!child.Is(NodeType.CallStructure) || child.Count > 0)
-                                    child = Engine.CreateCallableNode(Engine.CreateBlockNode(Engine.CreateNode("handle(data);"), Engine.CreateLineNode(child)), Engine.CreateNode("data", NodeType.Chunk, TokenType.Keyword));
+                                    child = Engine.CreateCallableNode(Engine.CreateBlockNode(Engine.CreateNode(handler), Engine.CreateLineNode(child)), Engine.CreateNode(ArgumentName, NodeType.Chunk, TokenType.Keyword));
                             return node.Update(NodeType.CallStructure).Add(child);
                         }
 
@@ -690,7 +715,14 @@ namespace MiMFa.Engine.DEAL.JS
                             next2 = walker.PeekProcedure(1);
                         }
                         node.Token.Update(TokenType.FunctionKeyword, $"{dot}filter");
-                        return node.Update(NodeType.CallStructure).Add(Engine.CreateCallableNode(TrimmedCompactAssembleNode(walker), Engine.CreateNode("data")));
+                        return node.Update(NodeType.CallStructure).Add(
+                            Engine.CreatePackNode(
+                                Engine.CreateCallableNode(
+                                    TrimmedCompactAssembleNode(walker), 
+                                    Engine.CreateNode(ArgumentName)
+                                    )
+                                )
+                            );
 
                     case "distinct":
                         if (Engine.IsDelimiters(next) || next?.Is(AssignSigns) == true)
@@ -700,7 +732,15 @@ namespace MiMFa.Engine.DEAL.JS
                             next2 = walker.PeekProcedure(1);
                         }
                         node.Token.Update(TokenType.FunctionKeyword, $"{dot}filter");
-                        return node.Update(NodeType.CallStructure).Add(Engine.CreateCallableNode(Engine.CreateProceduresNode("", Engine.CreateNode("self.indexOf(data) === index"), Engine.CreateNode("data")), Engine.CreateNode("data")));
+                        return node.Update(NodeType.CallStructure).Add(
+                            Engine.CreatePackNode(
+                                Engine.CreateCallableNode(
+                                    Engine.CreateProceduresNode("", Engine.CreateNode($"self.indexOf({ArgumentName}) === index"), 
+                                    Engine.CreateNode(ArgumentName)),
+                                    Engine.CreateNode(ArgumentName)
+                                    )
+                                )
+                            );
 
                     case "limit":
                         if (Engine.IsDelimiters(next) || next?.Is(AssignSigns) == true)
@@ -711,7 +751,11 @@ namespace MiMFa.Engine.DEAL.JS
                         }
                         node.Token.Update(TokenType.FunctionKeyword, $"{dot}slice");
                         var nlimit = TrimmedSequenceAssembleNode(walker);
-                        return node.Update(NodeType.CallStructure).AddRange(nlimit.Count > 1 ? nlimit.Children.ToArray() : new[] { Engine.CreateNode("0", NodeType.Chunk, TokenType.NumberData), nlimit });
+                        return node.Update(NodeType.CallStructure).Add(
+                            Engine.CreatePackNode(
+                                nlimit.Count > 1 ? nlimit.Children.ToArray() : new[] { Engine.CreateNode("0", NodeType.Chunk, TokenType.NumberData), nlimit }
+                            )
+                            );
 
                     case "order":
                         if (Engine.IsDelimiters(next) || next?.Is(AssignSigns) == true)
@@ -743,7 +787,7 @@ namespace MiMFa.Engine.DEAL.JS
                             var keyExprB = KeyAccess(item, "b");
                             var comparator = $"(a,b)=>(a,b)=>{keyExprA}>{keyExprB}?1:{keyExprA}=={keyExprB}?0:-1";
                             var comparatorNode = Engine.CreateNode(comparator, NodeType.Chunk, TokenType.Unknown);
-                            childrenOrder.Add(Engine.CreateCallFunctionNode("sort", comparatorNode));
+                            childrenOrder.Add(Engine.CreatePackNode(Engine.CreateCallFunctionNode("sort", comparatorNode)));
                         }
 
                         return Engine.CreateNode(dot, NodeType.Prepend, TokenType.Unknown, childrenOrder.ToArray());

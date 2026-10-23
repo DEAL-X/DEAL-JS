@@ -304,14 +304,14 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     }
     ```
 
-#### Threadings
+#### Asynchronisings
 * To have a multi-thread program, you can make and manage promises
     ```ts
     WILL procedure THEN procedure; OTHERWISE procedure; ANYWAY procedure;
     ```
     It will compile to:7
     ```js
-    new Promise(()=>js-procedure)
+    new Promise((resolve, reject)=>js-procedure)
         .then((data)=>js-procedure)
         .catch((data)=>js-procedure)
         .finally((data)=>js-procedure)
@@ -592,66 +592,44 @@ There are multiple defined variables accessible globally, which users can intera
 * A very small set of them defined bult-in (APPLICATION, BROWSER, WINDOW, DOCUMENT, RESPONSE, ITS, ...)
 * Some of the global variables that will update based on the current status are named Handler Identifiers, including:
     ```ts
-    BROWSER 			    // The current browser used in this thread
+    APPLICATION 		    // The current application (MiMFa Scraper)
     ```
     ```ts
-    APPLICATION 		    // The current application (MiMFa Scraper) used in this thread
+    BROWSER 			    // The current browser
     ```
     ```ts
-    WINDOW   		        // The current window/tab used in this thread
+    WINDOW   		        // The current window/tab
     ```
     ```ts
-    DOCUMENT 		        // The current loaded document in the window used in this thread
+    NAVIGATOR			    // The current window/tab navigator
     ```
     ```ts
-    RESPONSE			    // The latest response received in this thread
+    HISTORY 			    // The current window/tab navigator history
     ```
     ```ts
-    LOADED				    // The current document used in this thread was loaded successfully or not
+    DOCUMENT 		        // The current loaded document in the window
     ```
     ```ts
-    FETCHED			        // The current response used in this thread was received successfully or not
+    RESPONSE			    // The latest response received
     ```
     ```ts
     DATA				    // The root of iterated objects
     ```
     ```ts
+    CURRENT     		    // The current navigated entry
+    ```
+    ```ts
+    BACK     			    // The previous navigated entry
+    ```
+    ```ts
+    NEXT     			    // The forward navigated entry
+    ```
+    ```ts
+    LOADED				    // The current document was loaded successfully or not
+    ```
+    ```ts
+    FETCHED			        // The current response was received successfully or not
+    ```
+    ```ts
     ITS				        // The current object or class will accessible through this one
     ```
-* Multiple structures will update in the current thread, based on the two commands FETCH/LOAD status.
-    * FETCH: To send a request to a server and receive its response, and update the handler identifiers based on that, using the syntax below:
-        ```ts
-        FETCH url, data, method		// To fetch data from a specified URL, then update the handler identifiers
-        ```
-    * LOAD: To open a website in the current window, and update the handler identifiers based on that, using the syntax below:
-        ```ts
-        LOAD url		// To load a website from a specified URL in the current window/tab, and then update the handler
-        ```
-        ```ts
-        LOAD NEXT		// To load a website from a specified URL in the current window/tab, and then update the handler
-        ```
-        ```ts
-        LOAD BACK		// To load a website from a specified URL in the current window/tab, and then update the handler
-        ```
-        ```ts
-        LOAD			// To update the Workspace handlers based on the current window/tab statements
-        ```
-* If you want to work in your browser, window, or so on, without changing the current handler structures, use the following commands:
-    * GET: To send a GET request to a server and receive its response, using the syntax below:
-        ```ts
-        GET url, data		// To fetch data from a specified URL
-        ```
-    * POST: To send a POST request to a server and receive its response, using the syntax below:
-        ```ts
-        POST url, data		// To fetch data from a specified URL
-        ```
-    * GO: To send a request to a server and receive its response, without changing the current handler identifiers, using the syntax below:
-        ```ts
-        GO url			// To load a website from a specified URL in a new window/tab
-        ```
-        ```ts
-        GO NEXT		    // To open the next window/tab, if it exists
-        ```
-        ```ts
-        GO BACK		    // To open the previous window/tab, if it exists 
-        ```

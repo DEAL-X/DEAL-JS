@@ -1,5 +1,6 @@
 using MiMFa.Engine.Model;
 using MiMFa.Engine.Resource;
+using MiMFa.Engine.Stage;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;

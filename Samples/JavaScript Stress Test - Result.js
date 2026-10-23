@@ -1,4 +1,4 @@
-// Used 12 libraries from "deal"
+// Used 18 libraries from "deal"
 /*
    ============================================================
    MiMFa DEAL.JS Compiler Stress Test
@@ -23,15 +23,15 @@ const stringValues = ["simple", "single quoted", "escaped \"quote\"", "linenbrea
 // Basic expressions
 // ------------------------------------------------------------
 let arithmetic = // Added comment to test
-10 + 20 * 3 - 4 / 2 + (8 ** 2);// Added comment to test
+    10 + 20 * 3 - 4 / 2 + (8 ** 2);// Added comment to test
 let comparison = arithmetic >= 100 && // Added comment to test
-arithmetic !== 0 && // Added comment to test
-arithmetic <= 1000;// Added comment to test
+    arithmetic !== 0 && // Added comment to test
+    arithmetic <= 1000;// Added comment to test
 let logicalValue = ENABLED && !DISABLED || false;
 let nullableValue = UNKNOWN ?? "default value";
 let chainedValue = EMPTYVALUE?.property?.child?.value ?? "fallback";// Added comment to test
 let conditionalValue = // Added comment to test
-comparison ? "valid" : "invalid";
+    comparison ? "valid" : "invalid";
 // ------------------------------------------------------------
 // Object and nested object structures
 // ------------------------------------------------------------
@@ -95,24 +95,23 @@ const total = sum(...values, 100, 200);
 // ------------------------------------------------------------
 // Normal functions
 // ------------------------------------------------------------
-function calculateGrade(score, minVal = 0)
-{
+function calculateGrade(score, minVal = 0) {
     if (score == null) {
         return "unknown";
     }
-    
+
     if (score >= 19) {
         return "A+";
     }
-    
+
     if (score >= 17) {
         return "A";
     }
-    
+
     if (score >= 15) {
         return "B";
     }
-    
+
     if (score >= minVal) {
         return "C";
     }
@@ -129,20 +128,20 @@ const createUser = (name, age = 18) => ({
     active: true
 });
 const complexArrow = (value, index) => {
-    const result = value * index ;
+    const result = value * index;
     return result > 100 ? result : result + 100;
 };
 // ------------------------------------------------------------
 // Immediately invoked functions
 // ------------------------------------------------------------
 const initialized = (() => {
-    const initial = 10 ;
-    const increment = 5 ;
+    const initial = 10;
+    const increment = 5;
     return initial + increment;
 })();
 (function () {
     counter++;
-    
+
     if (counter > 10) {
         counter = 0;
     }
@@ -150,15 +149,15 @@ const initialized = (() => {
 // ------------------------------------------------------------
 // Loops
 // ------------------------------------------------------------
-for (let i = 0 ; i < values.length; i++) {
-    const value = values[i] ;
-    
+for (let i = 0; i < values.length; i++) {
+    const value = values[i];
+
     if (value === 30) {
-        continue ;
+        continue;
     }
-    
+
     if (value > 40) {
-        break ;
+        break;
     }
     counter += value;
 }
@@ -171,31 +170,26 @@ for (const index in configuration) {
 let whileCounter = 0;
 while (whileCounter < 5) {
     whileCounter++;
-    
+
     if (whileCounter === 3) {
-        continue ;
+        continue;
     }
 }
 let doCounter = 0;
 do {
     doCounter++;
-}  while (doCounter < 3);
+} while (doCounter < 3);
 // ------------------------------------------------------------
 // Nested conditions
 // ------------------------------------------------------------
 function classify(value) {
     if (value == null) {
         return "empty";
-    } else if(typeof value === "number") {
-        if (value > 100) return "large";
-        else if(value > 50) {
+    } else if (typeof value === "number") {
+        if (value > 100) return "large"; else if (value > 50) {
             return "medium";
-        }
-        
-        else return("small");
-    }
-    
-    else if(typeof value === "string") {
+        } else return "small";
+    } else if (typeof value === "string") {
         return value.length > 10 ? "long string" : "short string";
     }
     return "unknown";
@@ -222,9 +216,9 @@ function getStatus(code) {
         case 503:
             window.console.error(code);
             return "server error";
-        default :
+        default:
             window.console.error(code);
-            break ;
+            break;
     }
     return "unknown";
 }
@@ -233,17 +227,17 @@ function getStatus(code) {
 // ------------------------------------------------------------
 function parseConfiguration(text) {
     try {
-        const data = JSON.parse(text) ;
-        
+        const data = JSON.parse(text);
+
         if (!data || typeof data !== "object") {
             throw new TypeError("Invalid configuration");
         }
         return data;
-    } 
+    }
     catch (error) {
         window.console.error("Could not parse configuration:", error);
         return null;
-    } 
+    }
     finally {
         window.console.log("Configuration parsing finished");
     }
@@ -314,7 +308,7 @@ class Car extends Vehicle {
             vehicle: this.describe(),
             distance,
             speed: this.speed
-        } ;
+        };
         return result;
     }
 }
@@ -334,9 +328,8 @@ class Calculator {
 // ------------------------------------------------------------
 // Generator function
 // ------------------------------------------------------------
-function* numberGenerator(startPoint, endPoint)
-{
-    for (let value = startPoint ; value <= endPoint; value++) {
+function* numberGenerator(startPoint, endPoint) {
+    for (let value = startPoint; value <= endPoint; value++) {
         yield value;
     }
 }
@@ -347,20 +340,22 @@ for (const num of numberGenerator(1, 5)) {
 // ------------------------------------------------------------
 // Async functions
 // ------------------------------------------------------------
-async function delay(milliseconds) {
+async
+function delay(milliseconds) {
     return new Promise(resolve => {
         setTimeout(() => resolve(true), milliseconds);
     });
 }
-async function loadData(url) {
+async
+function loadData(url) {
     try {
-        const response = await fetch(url) ;
-        
+        const response = await fetch(url);
+
         if (!response.ok) {
             throw new ApplicationError("Request failed", response.status);
         }
         return await response.json();
-    } 
+    }
     catch (error) {
         window.console.error("Loading failed:", error);
         throw error;
@@ -382,13 +377,15 @@ function processData(url) {
 // ------------------------------------------------------------
 // Promise.all / Promise.race
 // ------------------------------------------------------------
-async function loadMultiple(urls) {
-    const requests = urls.map(url => fetch(url).then(response => response.json())) ;
-    const results = await Promise.all(requests) ;
+async
+function loadMultiple(urls) {
+    const requests = urls.map(url => fetch(url).then(response => response.json()));
+    const results = await Promise.all(requests);
     return results;
 }
-async function loadFirst(urls) {
-    const requests = urls.map(url => fetch(url)) ;
+async
+function loadFirst(urls) {
+    const requests = urls.map(url => fetch(url));
     return await Promise.race(requests);
 }
 // ------------------------------------------------------------
@@ -409,10 +406,10 @@ const message = `
     Status: ${getStatus(200)}
 `;
 const dynamicMessage = `The result is ${sum(
-        10,
-        20,
-        30
-    )}.`;
+    10,
+    20,
+    30
+)}.`;
 // ------------------------------------------------------------
 // Map
 // ------------------------------------------------------------
@@ -443,12 +440,11 @@ const processedValues = values.filter(value => value > 20).map(value => value * 
 // ------------------------------------------------------------
 // Nested callbacks
 // ------------------------------------------------------------
-function executePipeline(input, onSuccess, onError)
-{
+function executePipeline(input, onSuccess, onError) {
     try {
-        const result = input.map(value => value * 2).filter(value => value > 10) ;
+        const result = input.map(value => value * 2).filter(value => value > 10);
         onSuccess(result);
-    } 
+    }
     catch (error) {
         onError(error);
     }
@@ -485,12 +481,12 @@ const hasBrand = "brand" in vehicle;
 // ------------------------------------------------------------
 // Labelled statement
 // ------------------------------------------------------------
-outerLoop: for (let i = 0 ; i < 10; i++) {
-    innerLoop: for (let j = 0 ; j < 10; j++) {
+outerLoop: for (let i = 0; i < 10; i++) {
+    innerLoop: for (let j = 0; j < 10; j++) {
         if (i === 5 && j === 5) {
             break outerLoop;
         }
-        
+
         if (j === 2) {
             continue innerLoop;
         }
@@ -546,11 +542,11 @@ const finalResult = vehicle.speed > 100 ? "fast" : vehicle.speed > 50 ? "medium"
 // Nested async IIFE
 // ------------------------------------------------------------
 (async () => {
-    const car = new Car("MiMFa", "Scraper", 2026) ;
+    const car = new Car("MiMFa", "Scraper", 2026);
     car.speed = 60;
-    const before = car.speed ;
+    const before = car.speed;
     await delay(10);
-    const after = car.accelerate(20) ;
+    const after = car.accelerate(20);
     window.console.log(car.describe(), before, after);
 })();
 // ------------------------------------------------------------

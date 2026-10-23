@@ -78,7 +78,7 @@ class Model extends Car {
                     window.console.log "is even";
                     } else if (i instanceof string or i > 0) 
                         console.info(`${i} is odd`);
-                        else fault "Error";
+                        else throw "Error";
             }
             
             // The other test processes

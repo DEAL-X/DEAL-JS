@@ -1,6 +1,8 @@
 ﻿using MiMFa.Engine.Core;
 using MiMFa.Engine.Model;
+using MiMFa.Engine.Put;
 using MiMFa.Engine.Resource;
+using MiMFa.Engine.Stage;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,7 +31,7 @@ namespace MiMFa.Engine.DEAL.JS
         public override Output Compile(Input input)
         {
             if (!string.IsNullOrEmpty(input.Source) && input.Source.ToLower().EndsWith(".js"))
-                return new Output(input.Source, input.Content);
+                return new Output(input.Content, input.Source);
             return base.Compile(input);
         }
 

@@ -7,6 +7,7 @@ using MiMFa.Engine.Core;
 using MiMFa.Engine.Model;
 using MiMFa.Engine.Walker;
 using System.Collections.Generic;
+using MiMFa.Engine.Put;
 
 namespace MiMFa.Engine.DEAL.JS
 {
@@ -177,7 +178,7 @@ namespace MiMFa.Engine.DEAL.JS
                         
                         case "as":
                             //ReservesScrubber(word);
-                            SwitchToken = TokenType.StringData;
+                            //SwitchToken = TokenType.StringData;
                             //walker.Replace(location, word.Length, ",");
                             ReservesScrubber(word);
                             walker.Move(word.Length);
@@ -204,10 +205,17 @@ namespace MiMFa.Engine.DEAL.JS
                             walker.Move(word.Length);
                             return GetAcceptedToken(TokenType.Suffix, word, location);
 
-                        case "data":
+                        case "argument":
+                        case "arguments":
                             ReservesScrubber(word);
                             walker.Move(word.Length);
                             return GetAcceptedToken(TokenType.IdentifierKeyword, word, location);
+
+                        case "resolve":
+                        case "reject":
+                            ReservesScrubber(word);
+                            walker.Move(word.Length);
+                            return GetAcceptedToken(TokenType.FunctionKeyword, word, location);
 
                         case "is":
                         case "be":
