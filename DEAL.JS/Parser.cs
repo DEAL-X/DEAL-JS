@@ -50,7 +50,7 @@ namespace MiMFa.Engine.DEAL.JS
                     yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Line);
                     yield break;
                
-                case "assume":
+                case "consider":
                     keywords = ExtractKeywordToken(token, walker);
                     if (keywords.Count > 0)
                     {

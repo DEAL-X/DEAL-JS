@@ -190,10 +190,10 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 #### Definition
 * To define constant or variables:
     ```ts
-    ASSUME CONST constant IS procedure;
-    ASSUME VAR variable IS EQUAL procedure;
-    ASSUME LET letVariable BE procedure;
-    ASSUME directVariable EQUALS procedure;
+    CONSIDER CONST constant IS procedure;
+    CONSIDER VAR variable IS EQUAL procedure;
+    CONSIDER LET letVariable BE procedure;
+    CONSIDER directVariable EQUALS procedure;
     ```
     They will compile to:
     ```js

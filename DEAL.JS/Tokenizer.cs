@@ -171,7 +171,7 @@ namespace MiMFa.Engine.DEAL.JS
                         case "begin":
                         case "doing":
                         case "end":
-                        case "assume":
+                        case "consider":
                             ReservesScrubber(word);
                             walker.Move(word.Length);
                             return GetAcceptedToken(TokenType.Statement, word, location);

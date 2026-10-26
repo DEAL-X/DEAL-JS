@@ -389,7 +389,7 @@ namespace MiMFa.Engine.DEAL.JS
                          NormalSectionAssembleNode(walker)
                      );
 
-                case "assume":
+                case "consider":
                     if (next?.Is("const", "constant") == true)
                     {
                         node = walker.Walk();

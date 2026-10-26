@@ -24,10 +24,10 @@ Reserve every = "for";
 // ------------------------------------------------------------
 // Definitions
 // ------------------------------------------------------------
-ASSUME CONST constant IS procedure;
-ASSUME VARIABLE variable IS EQUAL procedure;
-ASSUME LET letVariable BE procedure;
-ASSUME directVariable EQUALS procedure;
+CONSIDER CONST constant IS procedure;
+CONSIDER VARIABLE variable IS EQUAL procedure;
+CONSIDER LET letVariable BE procedure;
+CONSIDER directVariable EQUALS procedure;
 
 // ------------------------------------------------------------
 // Commands
@@ -107,7 +107,7 @@ End;
 // ------------------------------------------------------------
 // Complex Code
 // ------------------------------------------------------------
-ASSUME VAR promiseTest WILL BE 18 ** 18, THEN log success its, OTHERWISE log error data;
+CONSIDER VAR promiseTest WILL BE 18 ** 18, THEN log success its, OTHERWISE log error data;
 
 # scrapeMap
     try to open browser, then
