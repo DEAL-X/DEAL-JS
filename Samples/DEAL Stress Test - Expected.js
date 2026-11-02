@@ -24,8 +24,8 @@
 // ------------------------------------------------------------
 // Definitions
 // ------------------------------------------------------------
-const constant = procedure;
-var variable = procedure;
+const myConstant = procedure;
+var myVariable = procedure;
 let letVariable = procedure;
 let directVariable = procedure;
 // ------------------------------------------------------------

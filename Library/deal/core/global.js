@@ -143,28 +143,6 @@ let where = function (arr, condition = (o, i) => true, func = null) {
 	return [];
 };
 
-let any = function (arr, condition = (o, i) => true, func = null) {
-	if (func === null) {
-		if (isArray(arr))
-			for (const item of arr)
-				if (condition(item, i++))
-					return item;
-				else if (condition(arr, 0)) return arr;
-	} else {
-		if (isArray(arr))
-			for (const item of arr)
-				if (condition(item, i))
-					return func(item, i++);
-				else i++;
-		else if (condition(arr, 0)) return func(arr, 0);
-	}
-};
-
-let select = function (arr, func = (o, i) => o) {
-	if (isArray(arr)) return each(arr, func);
-	else return eachIn(arr, func);
-};
-
 let loop = function (i, len = null, func = i => i) {
 	if (len == null) {
 		len = i;

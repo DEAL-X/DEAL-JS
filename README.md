@@ -119,9 +119,10 @@ So DEAL has **five** main principles:
     * DEAL.JS instructions and ordinary JavaScript coexist freely.
     * For example:
     ```ts
-    for(const url of list) load url, then(() => {
-        append(all("h3#title") to destination);
-    }) otherwise log the error `Could not load the ${url}!`;
+    for(const url of list)
+        load url,
+        then append(all("h3#title") to destination),
+        otherwise log the error `Could not load the ${url}!`;
     ```
     * Without any conflict.
 4. **Modular** and **Extensible**: Every DEAL instruction can be extended through modules while its fundamental grammar remains stable.

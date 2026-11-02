@@ -91,6 +91,7 @@ namespace MiMFa.Engine.DEAL.JS
         }
         protected override IEnumerable<Node> ParseSymbolToken(Token token, TokenWalker walker)
         {
+            var before = walker.PeekProcedure(-2);
             var next = walker.PeekProcedure();
             var next2 = walker.PeekProcedure(1);
             switch (token.Value.ToLower())
@@ -162,7 +163,7 @@ namespace MiMFa.Engine.DEAL.JS
                         if (next2?.Is("than") == true) walker.MoveToProcedure();
                         walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, ">"), walker);
                     }
-                    else if (next?.Is(TokenType.StringData) == true && next?.Is("", "empty") == true)
+                    else if (before?.Is(TokenType.StringData) != true && next?.Is("", "empty") == true)
                     {
                         walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "+ \"\" == \"\"", null), walker);
                     }

@@ -174,8 +174,12 @@ namespace MiMFa.Engine.DEAL.JS
         {
             List<Node> children = new List<Node>();
             foreach (var item in collection)
-                children.Add(CreateNode("key:", item.Key, CreateNode(",", TokenType.DelimiterSymbol, NodeType.Append | NodeType.Line), CreateNode("value:", item.Value)));
+                children.Add(CreateNode("key:", item.Key.Is(TokenType.StringData)? item.Key : item.Key.Update(item.Key.Type, item.Key.Token.Update(TokenType.StringData, $"\"{item.Key.Value}\"")), CreateNode(",", TokenType.DelimiterSymbol, NodeType.Append | NodeType.Line), CreateNode("value:", item.Value)));
             return new Node(new Token(TokenType.Start | TokenType.Scope, "{"), NodeType.BlockStructure | NodeType.Region | NodeType.Line, children.ToArray());
+        }
+        public virtual Node CreatePairBlockNode(Node key, Node value)
+        {
+            return CreateBlockNode(new KeyValuePair<Node, Node>(key, value));
         }
         public virtual Node CreateBlockNode(params Node[] children)
         {

@@ -1,45 +1,58 @@
+use deal/make/string;
+
 // All resource related commands
-command Local = {
-	folder : function (path = null, recursive = false) {
-		if(!path) return this.folder;
-		return engine.ResourceProvider.GetFolderContents(path, recursive);
-	},
-	file : function (path = null, encoding = null) {
-		if(!path) return this.file;
-		return engine.ResourceProvider.GetFileContents(path, encoding);
-	},
-	content : function (path = null, recursive = false, encoding = null) {
-		if(!path) return this.content;
-		return engine.ResourceProvider.GetContents(path, recursive, encoding);
-	},
-	read : function (path = null, recursive = false, encoding = null) {
-		if(!path) return this.read;
-		let ent = engine.ResourceProvider.Entity(path)
-		if(ent.IsFile) return engine.ResourceProvider.GetFileContents(path, encoding);
-		else if(ent.IsFolder) return engine.ResourceProvider.GetFolderContents(path, recursive);
-	},
-	write : function (path = null, object = null) {
-		if(!path) return this.write;
-		return engine.ResourceProvider.SetFileContents(path, object);
-	},
-	prepend : function (path = null, object = null) {
-		if(!path) return this.prepend;
-		return engine.ResourceProvider.PrependFileContents(path, object);
-	},
-	append : function (path = null, object = null) {
-		if(!path) return this.append;
-		return engine.ResourceProvider.AppendFileContents(path, object);
-	},
-	delete : function (path = null) {
-		if(!path) return this.delete;
-		return engine.ResourceProvider.Delete(path);
-	},
-	entity : function (path = null) {
-		if(!path) return this.entity;
-		return engine.ResourceProvider.Entity(path);
-	},
-	exists : function (path = null) {
-		if(!path) return this.exists;
-		return engine.ResourceProvider.Exists(path);
-	}
+command Local = {};
+
+Local.folder = function (path = null, recursive = false) {
+	if(!path) return null;
+	return engine.ResourceProvider.GetFolderContents(path, recursive);
+};
+Local.file = function (path = null, encoding = null) {
+	if(!path) return null;
+	return engine.ResourceProvider.GetFileContents(path, encoding);
+};
+Local.content = function (path = null, recursive = false, encoding = null) {
+	if(!path) return null;
+	return engine.ResourceProvider.GetContents(path, recursive, encoding);
+};
+Local.create = function (path = null, object = "") {
+	if(!path) return false;
+	if(!engine.ResourceProvider.Exists(path)) engine.ResourceProvider.SetFileContents(path, Make.string(object));
+	return engine.ResourceProvider.Exists(path);
+};
+Local.name = function (path = null) {
+	if(!path) return null;
+	let ent = engine.ResourceProvider.Entity(path)
+	if(ent.IsFile) return engine.ResourceProvider.FileName(path);
+	else if(ent.IsFolder) return engine.ResourceProvider.FolderName(path);
+};
+Local.read = function (path = null, recursive = false, encoding = null) {
+	if(!path) return null;
+	let ent = engine.ResourceProvider.Entity(path)
+	if(ent.IsFile) return engine.ResourceProvider.GetFileContents(path, encoding);
+	else if(ent.IsFolder) return engine.ResourceProvider.GetFolderContents(path, recursive);
+};
+Local.write = function (path = null, object = null) {
+	if(!path) return false;
+	return engine.ResourceProvider.SetFileContents(path, Make.string(object));
+};
+Local.prepend = function (path = null, object = null) {
+	if(!path) return false;
+	return engine.ResourceProvider.PrependFileContents(path, Make.string(object));
+};
+Local.append = function (path = null, object = null) {
+	if(!path) return false;
+	return engine.ResourceProvider.AppendFileContents(path, Make.string(object));
+};
+Local.delete = function (path = null) {
+	if(!path) return false;
+	return engine.ResourceProvider.Delete(path);
+};
+Local.entity = function (path = null) {
+	if(!path) return null;
+	return engine.ResourceProvider.Entity(path);
+};
+Local.exists = function (path = null) {
+	if(!path) return false;
+	return engine.ResourceProvider.Exists(path);
 };

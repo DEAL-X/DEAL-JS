@@ -24,8 +24,8 @@
 // ------------------------------------------------------------
 // Definitions
 // ------------------------------------------------------------
-const constant = procedure;
-var variable = procedure;
+const myConstant = procedure;
+var myVariable = procedure;
 let letVariable = procedure;
 let directVariable = procedure;
 // ------------------------------------------------------------
@@ -65,14 +65,13 @@ try {
             else window.console.log("C");
         }
         catch (msg) {
-            log.error.msg;
+            log.error(msg);
         }
     }
 }
 catch (msg) {
-    log.error
+    log.error("A problem is occured!n" + msg);
 }
-"A problem is occured!n" + msg;
 finally {
     log.subject("The scoring finished!");
 }
@@ -106,15 +105,12 @@ let gradeNormal = grade[--a][--b][c--].trim(" ", "n", "r").toLowerCase();
             if (list.length < 1) {
                 ReadFile();
                 UseFile();
-            } else log.success;
-            "Process finished successfully!";
+            } else log.success("Process finished successfully!");
         }
         catch (err) {
-            Log.error
+            Log.error("Could not finish the process because: " + err);
         }
     }))();
-
-    "Could not finish the process because: " + err;
 }))();
 // ------------------------------------------------------------
 // Complex Code
@@ -127,22 +123,19 @@ let gradeNormal = grade[--a][--b][c--].trim(" ", "n", "r").toLowerCase();
             for (const url/* The url of the website */ of list) load(url).then((argument) => {
                 handle(argument, true);
                 append(all("keys>table>h2", window.document.keys().toArray()), destination);
-                log.success
-                    `The ${url} is laded successfully`;
+                log.success(`The ${url} is laded successfully`);
             }).catch((argument) => {
                 handle(argument, false);
-                log.error;
+                log.error(`Could not load ${url}`);
             })
-        })
-            `Could not load ${url}`.finally((argument) => {
+        }).finally((argument) => {
                 handle(argument);
-                log.message;
-            })
-            `The ${url} process is finished!`;
+                log.message(`The ${url} process is finished!`);
+            });
         log.subject(`The process of all ${list.length} urls are finished!`);
     }
     catch (msg) {
-        log.error.msg;
+        log.error(msg);
     }
     finally {
         log.subject("The process finished!");

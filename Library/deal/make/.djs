@@ -1,1 +1,3 @@
-command #make:namespace = {};
+use deal/core;
+
+command #Make:namespace = {};

@@ -24,8 +24,8 @@ Reserve every = "for";
 // ------------------------------------------------------------
 // Definitions
 // ------------------------------------------------------------
-CONSIDER CONST constant IS procedure;
-CONSIDER VARIABLE variable IS EQUAL procedure;
+CONSIDER myConstant CONSTANT IS procedure;
+CONSIDER myVariable VARIABLE IS EQUAL procedure;
 CONSIDER LET letVariable BE procedure;
 CONSIDER directVariable EQUALS procedure;
 
@@ -44,6 +44,15 @@ var #testE:int:string = 4;
 list insert testE, www.mimfa.net; // the testE next word will convert to string
 var #testF::string = 5;
 list insert TestF, www.deal.mimfa.net; // the testF next word will convert to string
+
+Command normalized (value = "") is:
+    * make string (value)
+    * normalize ("nfkc")
+    * replace (/\s+/gu   to the " ")
+    * trim it
+
+Consider title const is equal:
+    Normalized "  alpha   study ";
 
 // ------------------------------------------------------------
 // Try / Catch / Finally blocks

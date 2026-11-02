@@ -1,3 +1,5 @@
+use deal/core;
+
 command #number:function = Number;
 
 command #array:identifier = Array;

@@ -8,6 +8,7 @@ using MiMFa.Engine.Model;
 using MiMFa.Engine.Walker;
 using System.Collections.Generic;
 using MiMFa.Engine.Put;
+using System.IO;
 
 namespace MiMFa.Engine.DEAL.JS
 {
@@ -279,8 +280,8 @@ namespace MiMFa.Engine.DEAL.JS
             var compiler = this.Engine as MiMFa.Engine.Engine;
             if (compiler == null) return 0;
             var baseDirectory = Regex.IsMatch(path, "^\\.[\\/\\\\]", RegexOptions.CultureInvariant) ?
-                compiler?.ResourceProvider?.DirectoryName(compiler.Input?.Source ?? compiler.SourceDirectory+"index") :
-                compiler?.ResourceProvider?.DirectoryName(compiler.SourceDirectory + "index");
+                compiler?.ResourceProvider?.ParentDirectory(compiler.Input?.Source ?? compiler.SourceDirectory+"index") :
+                compiler?.ResourceProvider?.ParentDirectory(compiler.SourceDirectory + "index");
             var val = compiler?.ResourceProvider?.Resolve(path, baseDirectory);
             if (!string.IsNullOrEmpty(val) && val.EndsWith("\\")) return UseFolder(val);
             int num;
@@ -329,7 +330,7 @@ namespace MiMFa.Engine.DEAL.JS
                 if ((compiler as Engine).HasDependency(file)) return 1;
                 if (rp != null && rp.Exists(file))
                 {
-                    int c = (compiler as Engine).Dependencies.Count;
+                    int c = (compiler as Engine).Dependencies.Count + (Regex.IsMatch(file, @"[\\/]\.(deal|djs|js)$", RegexOptions.IgnoreCase)?0:UseFile(rp.ParentDirectory(file).TrimEnd('/','\\')+Path.DirectorySeparatorChar));
                     (compiler as Engine).UseDependency(
                         new Input(rp.GetFileContents(file, System.Text.Encoding.UTF8), file)
                     );
