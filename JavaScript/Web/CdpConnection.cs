@@ -2,6 +2,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -69,17 +70,24 @@ namespace MiMFa.Engine.JavaScript.Web
             {
                 while (!_shutdown.IsCancellationRequested && _socket.State == WebSocketState.Open)
                 {
-                    var builder = new StringBuilder();
-                    WebSocketReceiveResult part;
-                    do
+                    JObject message;
+                    using (var stream = new MemoryStream())
                     {
-                        part = await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), _shutdown.Token)
-                            .ConfigureAwait(false);
-                        if (part.MessageType == WebSocketMessageType.Close) return;
-                        builder.Append(Encoding.UTF8.GetString(buffer, 0, part.Count));
-                    } while (!part.EndOfMessage);
+                        WebSocketReceiveResult part;
+                        do
+                        {
+                            part = await _socket.ReceiveAsync(new ArraySegment<byte>(buffer), _shutdown.Token)
+                                .ConfigureAwait(false);
+                            if (part.MessageType == WebSocketMessageType.Close) return;
+                            if (part.MessageType != WebSocketMessageType.Text)
+                                throw new WebSocketException("Unexpected binary message from the DevTools protocol.");
+                            stream.Write(buffer, 0, part.Count);
+                        } while (!part.EndOfMessage);
 
-                    JObject message = JObject.Parse(builder.ToString());
+                        // Decode only after the complete WebSocket message has
+                        // been assembled; UTF-8 characters may span fragments.
+                        message = JObject.Parse(Encoding.UTF8.GetString(stream.ToArray()));
+                    }
                     if (message["id"] != null)
                     {
                         int id = (int)message["id"];
