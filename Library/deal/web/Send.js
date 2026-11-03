@@ -45,8 +45,11 @@ static _prepare(method, url, data) {
 
     if (!standard.includes(method)) {
         if (formData) data.append("__METHOD", method);
-        else if (data && typeof data === "object") data.__METHOD = method;
-        else if (data != null) data = String(data) + "&__METHOD=" + encodeURIComponent(method);
+        else if (data && typeof data === "object") data = Object.assign({}, data, { __METHOD: method });
+        else if (data != null) {
+            const value = String(data).replace(/^\\?/, "");
+            data = value + (value ? "&" : "") + "__METHOD=" + encodeURIComponent(method);
+        }
         else data = { __METHOD: method };
         method = "POST";
     }
@@ -138,6 +141,8 @@ static request(method = "POST", url = null, data = null, selector = "body",
 
     // ClearScript and other non-browser hosts use the Fetch-compatible transport.
     if (typeof XMLHttpRequest === "undefined") {
+        if (isForm)
+            throw new TypeError("FormData uploads require XMLHttpRequest in this runtime; the ClearScript host transport accepts byte or text bodies.");
         if (typeof fetch !== "function")
             throw new Error("Neither XMLHttpRequest nor fetch is available in this runtime.");
         const headers = {};
@@ -241,8 +246,10 @@ static withRetry(method = "POST", url = null, data = null, selector = "body",
             if (resolve) resolve(result);
         };
         const errorOnce = (result, status, transport) => {
+            const code = Number(status);
             const transient = status === 0 || status === "timeout" ||
-                status === "abort" || /network|timeout|ERR_NETWORK_CHANGED/i.test(String(result || ""));
+                status === "abort" || code === 408 || code === 425 || code === 429 || code >= 500 ||
+                /network|timeout|ERR_NETWORK_CHANGED/i.test(String(result || ""));
             if (transient && attempt <= retries) {
                 setTimeout(() => run(resolve, reject), backoff * Math.pow(2, attempt - 1));
                 return;
