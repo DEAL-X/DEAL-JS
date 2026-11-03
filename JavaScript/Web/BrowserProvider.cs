@@ -1,5 +1,6 @@
 using Newtonsoft.Json.Linq;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -11,20 +12,43 @@ namespace MiMFa.Engine.JavaScript.Web
     /// Connects to a Chromium instance started with
     /// Default --remote-debugging-port=9222. It creates a new tab in that instance.
     /// </summary>
-    public sealed class BrowserProvider
+    public sealed class BrowserProvider : IDisposable
     {
+        private Process Process;
+
         private readonly HttpClient _http = new HttpClient();
 
-        public string Platform { get; set; } = "chrome";
+        public string DriverPath { get; set; } = @"ProgramFiles\Google\Chrome\Application\chrome.exe";
         public string Host { get; set; } = "http://127.0.0.1";
         public int Port { get; set; } = 9222;
         public string Endpoint => Host + ":" + Port;
+        public bool IsDisposed => Process == null || Process.HasExited;
 
-        public BrowserProvider(string host = "http://127.0.0.1", int port = 9222, string platform = "chrome")
+        public BrowserProvider(string host = "http://127.0.0.1", int port = 9222, string driverPath = @"ProgramFiles\Google\Chrome\Application\chrome.exe")
         {
             Host = host;
             Port = port;
-            Platform = platform;
+            DriverPath = driverPath;
+        }
+
+        public void Dispose()
+        {
+            if (!IsDisposed)
+            {
+                Process.CloseMainWindow();
+
+                if (!Process.WaitForExit(3000))
+                    Process.Kill();
+            }
+        }
+
+        public void Initial()
+        {
+            Process = System.Diagnostics.Process.Start("powershell", $@"& ""$env:{DriverPath}"" --remote-debugging-port={Port} --user-data-dir=""$env:LOCALAPPDATA\DEAL\ChromeProfile""");
+        }
+        public void Final()
+        {
+            Dispose();
         }
 
         public async Task<bool> IsAvailableAsync()
@@ -52,7 +76,7 @@ namespace MiMFa.Engine.JavaScript.Web
                 string id = (string)target["id"];
                 string ws = (string)target["webSocketDebuggerUrl"];
                 if (string.IsNullOrWhiteSpace(id) || !Uri.TryCreate(ws, UriKind.Absolute, out Uri wsUri))
-                    throw new InvalidOperationException($"The {Platform} returned an invalid page target.");
+                    throw new InvalidOperationException($"Browser returned an invalid page target.");
 
                 var connection = new CdpConnection();
                 try
@@ -71,13 +95,5 @@ namespace MiMFa.Engine.JavaScript.Web
             }
         }
 
-        public void Initial()
-        {
-            System.Diagnostics.Process.Start("powershell", $@"""$env:{Platform}"" --remote-debugging-port={Port} --user-data-dir=""$env:LOCALAPPDATA\DEAL\ChromeProfile""");
-        }
-        public void Final()
-        {
-            //  Can remove the debugging port
-        }
     }
 }

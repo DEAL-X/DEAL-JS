@@ -3,9 +3,9 @@
 // because the actual Window and Document live in the browser process.
 async command #load:start (url = null, timeout = 60000) {
     if (url == null) return load;
-    if (typeof engine.BrowserProvider === "undefined" || !engine.BrowserProvider)
-        throw new Error("The DEAL browser provider was not injected.");
-    return await engine.BrowserProvider.LoadAsync(String(url), Number(timeout));
+    if (application.Engine.BrowserProvider.IsDisposed)
+        application.Engine.BrowserProvider.Initial();
+    return await application.Engine.BrowserProvider.LoadAsync(String(url), Number(timeout));
 }
 
 async command #reload:start (page = null) {

@@ -1,7 +1,7 @@
 (function (root) {
     "use strict";
 
-    if (!engine.FetchTransport || typeof engine.FetchTransport.SendAsync !== "function")
+    if (!application.Engine.FetchTransport || typeof application.Engine.FetchTransport.SendAsync !== "function")
         throw new Error("DEAL Fetch transport was not injected into this V8 environment.");
 
     const NativePromise = Promise;
@@ -167,11 +167,11 @@
 
         let abortListener;
         if (request.signal && typeof request.signal.addEventListener === "function") {
-            abortListener = () => engine.FetchTransport.Abort(id);
+            abortListener = () => application.Engine.FetchTransport.Abort(id);
             request.signal.addEventListener("abort", abortListener, { once: true });
         }
 
-        return NativePromise.resolve(engine.FetchTransport.SendAsync(JSON.stringify(descriptor)))
+        return NativePromise.resolve(application.Engine.FetchTransport.SendAsync(JSON.stringify(descriptor)))
             .then(raw => {
                 const result = JSON.parse(raw);
                 return new Response(fromBase64(result.bodyBase64), {

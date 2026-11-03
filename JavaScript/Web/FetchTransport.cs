@@ -20,14 +20,41 @@ namespace MiMFa.Engine.JavaScript.Web
     /// </summary>
     public sealed class FetchTransport : IDisposable
     {
-        private readonly HttpClient _client;
+        private HttpClient _client;
 
         private readonly ConcurrentDictionary<string, CancellationTokenSource>
             _requests = new ConcurrentDictionary<string, CancellationTokenSource>();
 
-        private bool _disposed;
+
+        public bool IsDisposed = false;
 
         public FetchTransport()
+        {
+        }
+
+        public void Dispose()
+        {
+            if (IsDisposed)
+                return;
+
+            IsDisposed = true;
+
+            foreach (var request in _requests.Values)
+            {
+                try
+                {
+                    request.Cancel();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // The request completed concurrently.
+                }
+            }
+
+            _client.Dispose();
+        }
+
+        public void Initial()
         {
             var cookies = new CookieContainer();
 
@@ -47,32 +74,7 @@ namespace MiMFa.Engine.JavaScript.Web
             {
                 Timeout = Timeout.InfiniteTimeSpan
             };
-        }
-
-        public void Dispose()
-        {
-            if (_disposed)
-                return;
-
-            _disposed = true;
-
-            foreach (var request in _requests.Values)
-            {
-                try
-                {
-                    request.Cancel();
-                }
-                catch (ObjectDisposedException)
-                {
-                    // The request completed concurrently.
-                }
-            }
-
-            _client.Dispose();
-        }
-
-        public void Initial()
-        {
+            IsDisposed = false;
         }
         public void Final()
         {
@@ -111,7 +113,7 @@ namespace MiMFa.Engine.JavaScript.Web
         /// </summary>
         public async Task<string> SendAsync(string requestJson)
         {
-            ThrowIfDisposed();
+            if (IsDisposed) throw new ObjectDisposedException(nameof(FetchTransport));
 
             if (string.IsNullOrWhiteSpace(requestJson))
                 throw new ArgumentException("A request descriptor is required.", nameof(requestJson));
@@ -274,12 +276,5 @@ namespace MiMFa.Engine.JavaScript.Web
                 UriFormat.SafeUnescaped,
                 StringComparison.OrdinalIgnoreCase) == 0;
         }
-
-        private void ThrowIfDisposed()
-        {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(FetchTransport));
-        }
-
     }
 }

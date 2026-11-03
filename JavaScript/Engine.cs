@@ -12,8 +12,38 @@ namespace MiMFa.Engine.JavaScript
     {
         public Dictionary<string, Token> Keywords { get; } = new Dictionary<string, Token>();
 
-        public static FetchTransport FetchTransport;
-        public static BrowserProvider BrowserProvider;
+        public FetchTransport FetchTransport {
+            get { if (_FetchTransport == null || _FetchTransport.IsDisposed)
+                {
+                    _FetchTransport = new FetchTransport();
+                    _FetchTransport.Initial();
+                }
+                return _FetchTransport;
+            }
+            set
+            {
+                _FetchTransport = value;
+            }
+        }
+        private FetchTransport _FetchTransport = new FetchTransport();
+        public BrowserProvider BrowserProvider
+        {
+            get
+            {
+                if (_BrowserProvider == null || _BrowserProvider.IsDisposed)
+                {
+                    _BrowserProvider = new BrowserProvider();
+                    _BrowserProvider.Initial();
+                }
+                return _BrowserProvider;
+            }
+            set
+            {
+                _BrowserProvider = value;
+            }
+        }
+        private BrowserProvider _BrowserProvider = new BrowserProvider();
+
 
         public Engine(StageBase[] compileStages = null, StageBase executeStage = null, Options options = null, ResourceProvider resourceProvider = null)
             : base(compileStages ?? new StageBase[] {
@@ -24,15 +54,11 @@ namespace MiMFa.Engine.JavaScript
                     new Generator()
                 }, executeStage, options ?? new Options(), resourceProvider??new ResourceProvider())
         {
-            FetchTransport = new FetchTransport();
-            BrowserProvider = new BrowserProvider();
-            BrowserProvider.Initial();
-            FetchTransport.Initial();
         }
         public override void Dispose()
         {
-            BrowserProvider.Final();
-            FetchTransport.Final();
+            BrowserProvider?.Final();
+            FetchTransport?.Final();
             base.Dispose();
         }
 
