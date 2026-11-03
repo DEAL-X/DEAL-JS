@@ -1,204 +1,426 @@
-(function (root) {
-    "use strict";
 
-    if (!application.Engine.FetchTransport || typeof application.Engine.FetchTransport.SendAsync !== "function")
-        throw new Error("DEAL Fetch transport was not injected into this V8 environment.");
+if (!application.Engine.FetchTransport.IsAlive)
+    application.Engine.FetchTransport.Initial();
 
-    const NativePromise = Promise;
-    const encoder = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
-    const decoder = typeof TextDecoder !== "undefined" ? new TextDecoder() : null;
+const NativePromise = Promise;
 
-    function toBytes(value) {
-        if (value == null) return new Uint8Array(0);
-        if (value instanceof Uint8Array) return value;
-        if (value instanceof ArrayBuffer) return new Uint8Array(value);
-        if (typeof value === "string") {
-            if (encoder) return encoder.encode(value);
-            const escaped = unescape(encodeURIComponent(value));
-            return Uint8Array.from(escaped, c => c.charCodeAt(0));
-        }
-        return encoder ? encoder.encode(String(value)) : Uint8Array.from(String(value), c => c.charCodeAt(0));
-    }
+function abortError() {
+    const error = new Error("The operation was aborted.");
+    error.name = "AbortError";
+    return error;
+}
 
-    function base64(bytes) {
-        let binary = "";
-        for (let i = 0; i < bytes.length; i += 0x8000)
-            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-        return btoa(binary);
-    }
+// ------------------------------------------------------------
+// Headers
+// ------------------------------------------------------------
 
-    function fromBase64(value) {
-        const binary = atob(value || "");
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-        return bytes;
-    }
+class Headers {
+    constructor(init) {
+        this._items = new Map();
 
-    class Headers {
-        constructor(init) {
-            this._items = new Map();
-            if (init instanceof Headers) init.forEach((v, k) => this.append(k, v));
-            else if (Array.isArray(init)) init.forEach(pair => this.append(pair[0], pair[1]));
-            else if (init && typeof init.forEach === "function") init.forEach((v, k) => this.append(k, v));
-            else if (init && typeof init === "object") Object.keys(init).forEach(k => this.append(k, init[k]));
+        if (init instanceof Headers) {
+            init.forEach((v, k) => this.append(k, v));
         }
-        append(name, value) {
-            const key = String(name).toLowerCase();
-            const val = String(value).trim();
-            this._items.set(key, this._items.has(key) ? this._items.get(key) + ", " + val : val);
+        else if (Array.isArray(init)) {
+            init.forEach(pair => this.append(pair[0], pair[1]));
         }
-        set(name, value) { this._items.set(String(name).toLowerCase(), String(value).trim()); }
-        get(name) { return this._items.get(String(name).toLowerCase()) ?? null; }
-        has(name) { return this._items.has(String(name).toLowerCase()); }
-        delete(name) { this._items.delete(String(name).toLowerCase()); }
-        forEach(callback, thisArg) { this._items.forEach((v, k) => callback.call(thisArg, v, k, this)); }
-        *entries() { yield* this._items.entries(); }
-        *keys() { yield* this._items.keys(); }
-        *values() { yield* this._items.values(); }
-        [Symbol.iterator]() { return this.entries(); }
-    }
-
-    class Body {
-        constructor(bytes, bodyUsed) {
-            this._bytes = bytes || new Uint8Array(0);
-            this.bodyUsed = !!bodyUsed;
+        else if (init && typeof init.forEach === "function") {
+            init.forEach((v, k) => this.append(k, v));
         }
-        _consume() {
-            if (this.bodyUsed) return NativePromise.reject(new TypeError("Body has already been consumed."));
-            this.bodyUsed = true;
-            return NativePromise.resolve(this._bytes);
-        }
-        arrayBuffer() {
-            return this._consume().then(bytes => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
-        }
-        text() {
-            return this._consume().then(bytes => decoder ? decoder.decode(bytes) :
-                decodeURIComponent(escape(String.fromCharCode.apply(null, bytes))));
-        }
-        json() { return this.text().then(text => JSON.parse(text)); }
-        blob() {
-            return this._consume().then(bytes => new Blob([bytes], { type: this.headers?.get("content-type") || "" }));
-        }
-        formData() {
-            return this.text().then(text => {
-                const params = new URLSearchParams(text), data = new FormData();
-                for (const [key, value] of params) data.append(key, value);
-                return data;
-            });
-        }
-        clone() {
-            if (this.bodyUsed) throw new TypeError("Body has already been consumed.");
-            return new Body(this._bytes.slice(), false);
+        else if (init && typeof init === "object") {
+            Object.keys(init).forEach(k => this.append(k, init[k]));
         }
     }
 
-    class Request extends Body {
-        constructor(input, init) {
-            init = init || {};
-            const source = input instanceof Request ? input : null;
-            const url = source ? source.url : String(input);
-            super(source ? source._bytes.slice() : toBytes(init.body), false);
-            this.url = url;
-            this.method = String(init.method || (source && source.method) || "GET").toUpperCase();
-            this.headers = new Headers(init.headers || (source && source.headers));
-            this.credentials = init.credentials || (source && source.credentials) || "same-origin";
-            this.cache = init.cache || (source && source.cache) || "default";
-            this.mode = init.mode || (source && source.mode) || "cors";
-            this.redirect = init.redirect || (source && source.redirect) || "follow";
-            this.referrer = init.referrer || (source && source.referrer) || "";
-            this.integrity = init.integrity || (source && source.integrity) || "";
-            this.keepalive = !!init.keepalive;
-            this.signal = init.signal || (source && source.signal) || null;
-            if ((this.method === "GET" || this.method === "HEAD") && this._bytes.length)
-                throw new TypeError("Request with GET or HEAD method cannot have a body.");
-        }
-        clone() { return new Request(this); }
+    append(name, value) {
+        const key = String(name).toLowerCase();
+        const val = String(value).trim();
+
+        this._items.set(
+            key,
+            this._items.has(key)
+                ? this._items.get(key) + ", " + val
+                : val
+        );
     }
 
-    class Response extends Body {
-        constructor(body, init) {
-            init = init || {};
-            const bytes = body instanceof Uint8Array ? body : toBytes(body);
-            super(bytes, false);
-            this.status = init.status === undefined ? 200 : init.status;
-            this.statusText = init.statusText || "";
-            this.headers = new Headers(init.headers);
-            this.url = init.url || "";
-            this.redirected = !!init.redirected;
-            this.type = init.type || "default";
-            this.ok = this.status >= 200 && this.status <= 299;
+    set(name, value) {
+        this._items.set(
+            String(name).toLowerCase(),
+            String(value).trim()
+        );
+    }
+
+    get(name) {
+        return this._items.get(String(name).toLowerCase()) ?? null;
+    }
+
+    has(name) {
+        return this._items.has(String(name).toLowerCase());
+    }
+
+    delete(name) {
+        this._items.delete(String(name).toLowerCase());
+    }
+
+    forEach(callback, thisArg) {
+        this._items.forEach((v, k) =>
+            callback.call(thisArg, v, k, this)
+        );
+    }
+
+    *entries() { yield* this._items.entries(); }
+    *keys() { yield* this._items.keys(); }
+    *values() { yield* this._items.values(); }
+
+    [Symbol.iterator]() {
+        return this.entries();
+    }
+}
+
+// ------------------------------------------------------------
+// Body
+// ------------------------------------------------------------
+
+class Body {
+    constructor(bytes, bodyUsed) {
+        this._bytes = bytes || new Uint8Array(0);
+        this.bodyUsed = !!bodyUsed;
+    }
+
+    _consume() {
+        if (this.bodyUsed) {
+            return NativePromise.reject(
+                new TypeError("Body has already been consumed.")
+            );
         }
-        clone() { return new Response(this._bytes.slice(), this); }
-        static error() { return new Response(null, { status: 0, type: "error" }); }
-        static redirect(url, status) {
-            if (![301, 302, 303, 307, 308].includes(status || 302))
-                throw new RangeError("Invalid redirect status.");
-            return new Response(null, { status: status || 302, headers: { Location: String(url) } });
-        }
-        static json(data, init) {
-            const options = Object.assign({}, init || {});
-            const headers = new Headers(options.headers);
-            if (!headers.has("content-type")) headers.set("content-type", "application/json");
-            options.headers = headers;
-            return new Response(JSON.stringify(data), options);
+
+        this.bodyUsed = true;
+        return NativePromise.resolve(this._bytes);
+    }
+
+    arrayBuffer() {
+        return this._consume().then(bytes =>
+            bytes.buffer.slice(
+                bytes.byteOffset,
+                bytes.byteOffset + bytes.byteLength
+            )
+        );
+    }
+
+    text() {
+        return this._consume().then(Make.textFromBytes);
+    }
+
+    json() {
+        return this.text().then(text => JSON.parse(text));
+    }
+
+    blob() {
+        return this._consume().then(bytes =>
+            new Blob([bytes], {
+                type: this.headers?.get("content-type") || ""
+            })
+        );
+    }
+
+    formData() {
+        return this.text().then(text => {
+            const params = new URLSearchParams(text);
+            const data = new FormData();
+
+            for (const [key, value] of params)
+                data.append(key, value);
+
+            return data;
+        });
+    }
+
+    clone() {
+        if (this.bodyUsed)
+            throw new TypeError("Body has already been consumed.");
+
+        return new Body(this._bytes.slice(), false);
+    }
+}
+
+// ------------------------------------------------------------
+// Request
+// ------------------------------------------------------------
+
+class Request extends Body {
+    constructor(input, init) {
+        init = init || {};
+
+        const source = input instanceof Request ? input : null;
+        const url = source ? source.url : String(input);
+
+        const body = Object.prototype.hasOwnProperty.call(init, "body")
+            ? Make.uint8Array(init.body)
+            : source
+                ? source._bytes.slice()
+                : new Uint8Array(0);
+
+        super(body, false);
+
+        this.url = url;
+
+        this.method = String(
+            init.method || (source && source.method) || "GET"
+        ).toUpperCase();
+
+        this.headers = new Headers(
+            init.headers !== undefined
+                ? init.headers
+                : source && source.headers
+        );
+
+        this.credentials = init.credentials ||
+            (source && source.credentials) || "same-origin";
+
+        this.cache = init.cache ||
+            (source && source.cache) || "default";
+
+        this.mode = init.mode ||
+            (source && source.mode) || "cors";
+
+        this.redirect = init.redirect ||
+            (source && source.redirect) || "follow";
+
+        this.referrer = init.referrer ||
+            (source && source.referrer) || "";
+
+        this.integrity = init.integrity ||
+            (source && source.integrity) || "";
+
+        this.keepalive = !!init.keepalive;
+
+        this.signal = init.signal ||
+            (source && source.signal) || null;
+
+        this.timeout = init.timeout !== undefined
+            ? init.timeout
+            : source && source.timeout !== undefined
+                ? source.timeout
+                : 30000;
+
+        if (
+            (this.method === "GET" || this.method === "HEAD") &&
+            this._bytes.length
+        ) {
+            throw new TypeError(
+                "Request with GET or HEAD method cannot have a body."
+            );
         }
     }
 
-    function fetch(input, init) {
-        let request;
-        try { request = input instanceof Request && init === undefined ? input.clone() : new Request(input, init); }
-        catch (error) { return NativePromise.reject(error); }
+    clone() {
+        return new Request(this);
+    }
+}
 
-        if (request.signal && request.signal.aborted)
-            return NativePromise.reject(abortError());
+// ------------------------------------------------------------
+// Response
+// ------------------------------------------------------------
 
-        const id = "fetch-" + Date.now() + "-" + Math.random().toString(36).slice(2);
-        const bytes = request._bytes;
-        const descriptor = {
+class Response extends Body {
+    constructor(body, init) {
+        init = init || {};
+
+        const bytes = body instanceof Uint8Array
+            ? body
+            : Make.uint8Array(body);
+
+        super(bytes, false);
+
+        this.status = init.status === undefined ? 200 : init.status;
+        this.statusText = init.statusText || "";
+        this.headers = new Headers(init.headers);
+        this.url = init.url || "";
+        this.redirected = !!init.redirected;
+        this.type = init.type || "default";
+
+        this.ok = this.status >= 200 && this.status <= 299;
+    }
+
+    clone() {
+        if (this.bodyUsed)
+            throw new TypeError("Body has already been consumed.");
+
+        return new Response(this._bytes.slice(), this);
+    }
+
+    static error() {
+        return new Response(null, {
+            status: 0,
+            type: "error"
+        });
+    }
+
+    static redirect(url, status) {
+        status = status || 302;
+
+        if (![301, 302, 303, 307, 308].includes(status))
+            throw new RangeError("Invalid redirect status.");
+
+        return new Response(null, {
+            status,
+            headers: {
+                Location: String(url)
+            }
+        });
+    }
+
+    static json(data, init) {
+        const options = Object.assign({}, init || {});
+        const headers = new Headers(options.headers);
+
+        if (!headers.has("content-type"))
+            headers.set("content-type", "application/json");
+
+        options.headers = headers;
+
+        return new Response(
+            JSON.stringify(data),
+            options
+        );
+    }
+}
+
+// ------------------------------------------------------------
+// C# integration
+// ------------------------------------------------------------
+
+function createNativeHeaders(headers) {
+    const json = JSON.stringify(
+        Object.fromEntries(headers.entries())
+    );
+
+    return Core.Newtonsoft.Json.Linq.JObject.Parse(json);
+}
+
+function fetch(input, init) {
+    let request;
+
+    try {
+        request = input instanceof Request && init === undefined
+            ? input.clone()
+            : new Request(input, init);
+    }
+    catch (error) {
+        return NativePromise.reject(error);
+    }
+
+    if (request.signal && request.signal.aborted)
+        return NativePromise.reject(abortError());
+
+    const transport = application.Engine.FetchTransport;
+
+    const id = "fetch-" +
+        Date.now() + "-" +
+        Math.random().toString(36).slice(2);
+
+    // Always send the request body as Base64.
+    // This preserves binary data without text conversion.
+    const bodyBase64 = request._bytes.length
+        ? Make.base64FromBytes(request._bytes)
+        : null;
+
+    const headers = createNativeHeaders(request.headers);
+
+    let abortListener = null;
+
+    if (
+        request.signal &&
+        typeof request.signal.addEventListener === "function"
+    ) {
+        abortListener = () => transport.Abort(id);
+
+        request.signal.addEventListener(
+            "abort",
+            abortListener,
+            { once: true }
+        );
+    }
+
+    let operation;
+
+    try {
+        // FetchTransport.FetchAsync:
+        //
+        // FetchAsync(
+        //     method,
+        //     url,
+        //     data,
+        //     contentType,
+        //     timeout,
+        //     headers,
+        //     id,
+        //     bodyBase64
+        // )
+        //
+        // data = null because the body is transported through Base64.
+
+        operation = transport.FetchAsync(
+            request.method,
+            request.url,
+            null,
+            null,
+            request.timeout,
+            headers,
             id,
-            url: request.url,
-            method: request.method,
-            headers: Array.from(request.headers.entries()),
-            bodyBase64: bytes.length ? base64(bytes) : null,
-            contentType: request.headers.get("content-type"),
-            referrer: request.referrer,
-            timeout: init && init.timeout
-        };
+            bodyBase64
+        );
+    }
+    catch (error) {
+        if (abortListener)
+            request.signal.removeEventListener("abort", abortListener);
 
-        let abortListener;
-        if (request.signal && typeof request.signal.addEventListener === "function") {
-            abortListener = () => application.Engine.FetchTransport.Abort(id);
-            request.signal.addEventListener("abort", abortListener, { once: true });
-        }
+        return NativePromise.reject(error);
+    }
 
-        return NativePromise.resolve(application.Engine.FetchTransport.SendAsync(JSON.stringify(descriptor)))
-            .then(raw => {
-                const result = JSON.parse(raw);
-                return new Response(fromBase64(result.bodyBase64), {
+    return NativePromise.resolve(operation)
+        .then(nativeResult => {
+            if (request.signal && request.signal.aborted)
+                throw abortError();
+
+            // FetchAsync returns a Newtonsoft JObject.
+            // Its byte[] data property is serialized as Base64.
+            const result = JSON.parse(nativeResult.ToString());
+
+            return new Response(
+                Make.bytesFromBase64(result.data),
+                {
                     status: result.status,
                     statusText: result.statusText,
                     headers: result.headers,
                     url: result.url,
-                    redirected: result.redirected
-                });
-            })
-            .catch(error => {
-                if (request.signal && request.signal.aborted) throw abortError();
-                throw error;
-            })
-            .finally(() => {
-                if (abortListener) request.signal.removeEventListener("abort", abortListener);
-            });
-    }
+                    redirected: result.redirected,
+                    type: result.type || "basic"
+                }
+            );
+        })
+        .catch(error => {
+            if (request.signal && request.signal.aborted)
+                throw abortError();
 
-    function abortError() {
-        const error = new Error("The operation was aborted.");
-        error.name = "AbortError";
-        return error;
-    }
+            throw error;
+        })
+        .finally(() => {
+            if (abortListener) {
+                request.signal.removeEventListener(
+                    "abort",
+                    abortListener
+                );
+            }
+        });
+}
 
-    if (!root.Headers) root.Headers = Headers;
-    if (!root.Request) root.Request = Request;
-    if (!root.Response) root.Response = Response;
-    root.fetch = fetch;
-})(typeof globalThis !== "undefined" ? globalThis : this);
+// ------------------------------------------------------------
+// Global exports
+// ------------------------------------------------------------
+
+globalThis.Headers = Headers;
+globalThis.Request = Request;
+globalThis.Response = Response;
+globalThis.fetch = fetch;

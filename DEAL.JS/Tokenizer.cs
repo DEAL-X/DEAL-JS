@@ -89,7 +89,9 @@ namespace MiMFa.Engine.DEAL.JS
 
                 switch (lword)
                 {
+                    case "reuse":
                     case "use":
+                        bool force = lword == "reuse";
                         walker.Move(word.Length);
                         walker.MoveToProcedure();
                         SwitchToken = TokenType.StringData;
@@ -97,7 +99,7 @@ namespace MiMFa.Engine.DEAL.JS
                         if (!string.IsNullOrEmpty(src))
                         {
                             src = src.TrimEnd(';', ',');
-                            int libs = UsePath(src);
+                            int libs = UsePath(src, force);
                             if (walker.PeekProcedure() == ";" ) walker.WalkProcedure();
                             //walker.Replace(location.Index, p == ";"? walker.MoveToProcedure().Location.Index - location.Index : walker.Location.Index - location.Index, res.ToCharArray().Select(c => c.ToString()).ToArray());
                             return GetAcceptedToken(TokenType.Comment, libs<=0? $"// Could not find the {Newtonsoft.Json.JsonConvert.ToString(src)} library" : (libs > 1 ? $"// Used {libs} libraries from {Newtonsoft.Json.JsonConvert.ToString(src)}" : $"// Used {Newtonsoft.Json.JsonConvert.ToString(src)} library"), location);
@@ -273,25 +275,31 @@ namespace MiMFa.Engine.DEAL.JS
             return GetAcceptedToken(TokenType.StringData, value, location);
         }
 
-        protected virtual int UsePath(string path)
+        protected virtual int UsePath(string path, bool force = false)
         {
             if (string.IsNullOrWhiteSpace(path)) return 0;
-            if (Regex.IsMatch(path, "^\\w+:\\/\\/.+$", RegexOptions.CultureInvariant)) return UseUrl(path);
+            if (Regex.IsMatch(path, "^\\w+:\\/\\/.+$", RegexOptions.CultureInvariant)) return UseUrl(path, force);
             var compiler = this.Engine as MiMFa.Engine.Engine;
             if (compiler == null) return 0;
             var baseDirectory = Regex.IsMatch(path, "^\\.[\\/\\\\]", RegexOptions.CultureInvariant) ?
                 compiler?.ResourceProvider?.ParentDirectory(compiler.Input?.Source ?? compiler.SourceDirectory+"index") :
                 compiler?.ResourceProvider?.ParentDirectory(compiler.SourceDirectory + "index");
             var val = compiler?.ResourceProvider?.Resolve(path, baseDirectory);
-            if (!string.IsNullOrEmpty(val) && val.EndsWith("\\")) return UseFolder(val);
+            if (!string.IsNullOrEmpty(val) && val.EndsWith("\\")) return UseFolder(val, force);
             int num;
-            return (num = UseFile(val)) > 0 ? num : UseFolder(val);
+            return (num = UseFile(val, force)) > 0 ? num : UseFolder(val, force);
         }
-        protected virtual int UseUrl(string url)
+        protected virtual int UseUrl(string url, bool force = false)
         {
-            return 0;
+            if (!Engine.FetchTransport.IsAlive) Engine.FetchTransport.Initial();
+            var path = Engine.SourceDirectory + url.GetHashCode()+(Regex.Match(url, "\\.[a-z]$").Value??".djs");
+            if(Engine.ResourceProvider.Exists(path)) return UsePath(path, force);
+            var resp = Engine.FetchTransport.Get(url);
+            if(!resp.Value<bool>("ok")) return 0;
+            Engine.ResourceProvider.SetFileContents(path, resp.Value<string>("data"));
+            return UsePath(path, force);
         }
-        protected virtual int UseFolder(string folder)
+        protected virtual int UseFolder(string folder, bool force = false)
         {
             if (string.IsNullOrWhiteSpace(folder) || folder.Split(System.IO.Path.DirectorySeparatorChar).Last().StartsWith("~")) return 0;
             folder = Regex.Replace(folder, "[\\/\\\\]$", "");
@@ -301,14 +309,14 @@ namespace MiMFa.Engine.DEAL.JS
                 var rp = Engine.ResourceProvider;
                 if (rp != null && rp.Exists(folder))
                 {
-                    var res = UseFile(folder + "\\index");
+                    var res = UseFile(folder + "\\index", force);
                     if (res > 0) return res;
                     else
                     {
                         foreach (var adrs in rp.GetFolderContents(folder))
                         {
-                            if (adrs.IsFile) results += UseFile(adrs.Path);
-                            else if (adrs.IsFolder) results += UseFolder(adrs.Path);
+                            if (adrs.IsFile) results += UseFile(adrs.Path, force);
+                            else if (adrs.IsFolder) results += UseFolder(adrs.Path, force);
                         }
                     }
                 }
@@ -316,12 +324,12 @@ namespace MiMFa.Engine.DEAL.JS
             catch { }
             return results;
         }
-        protected virtual int UseFile(string file)
+        protected virtual int UseFile(string file, bool force = false)
         {
             if (string.IsNullOrWhiteSpace(file) || file.Split(System.IO.Path.DirectorySeparatorChar).Last().StartsWith("~")) return 0;
             int num = 0;
             if (!Regex.IsMatch(file, "\\.(deal|djs|js)$", RegexOptions.IgnoreCase))
-                return (num = UseFile(file + ".deal")) > 0 ? num : (num = UseFile(file + ".djs")) > 0 ? num : UseFile(file + ".js");
+                return (num = UseFile(file + ".deal", force)) > 0 ? num : (num = UseFile(file + ".djs", force)) > 0 ? num : UseFile(file + ".js", force);
             file = System.IO.Path.GetFullPath(file);
             try
             {
@@ -332,7 +340,8 @@ namespace MiMFa.Engine.DEAL.JS
                 {
                     int c = (compiler as Engine).Dependencies.Count + (Regex.IsMatch(file, @"[\\/]\.(deal|djs|js)$", RegexOptions.IgnoreCase)?0:UseFile(rp.ParentDirectory(file).TrimEnd('/','\\')+Path.DirectorySeparatorChar));
                     (compiler as Engine).UseDependency(
-                        new Input(rp.GetFileContents(file, System.Text.Encoding.UTF8), file)
+                        new Input(rp.GetFileContents(file, System.Text.Encoding.UTF8), file), 
+                        force
                     );
                     return (compiler as Engine).Dependencies.Count - c;
                 }

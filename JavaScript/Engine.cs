@@ -12,37 +12,8 @@ namespace MiMFa.Engine.JavaScript
     {
         public Dictionary<string, Token> Keywords { get; } = new Dictionary<string, Token>();
 
-        public FetchTransport FetchTransport {
-            get { if (_FetchTransport == null || _FetchTransport.IsDisposed)
-                {
-                    _FetchTransport = new FetchTransport();
-                    _FetchTransport.Initial();
-                }
-                return _FetchTransport;
-            }
-            set
-            {
-                _FetchTransport = value;
-            }
-        }
-        private FetchTransport _FetchTransport = new FetchTransport();
-        public BrowserProvider BrowserProvider
-        {
-            get
-            {
-                if (_BrowserProvider == null || _BrowserProvider.IsDisposed)
-                {
-                    _BrowserProvider = new BrowserProvider();
-                    _BrowserProvider.Initial();
-                }
-                return _BrowserProvider;
-            }
-            set
-            {
-                _BrowserProvider = value;
-            }
-        }
-        private BrowserProvider _BrowserProvider = new BrowserProvider();
+        public FetchTransport FetchTransport { get; set; }
+        public BrowserProvider BrowserProvider { get; set; }
 
 
         public Engine(StageBase[] compileStages = null, StageBase executeStage = null, Options options = null, ResourceProvider resourceProvider = null)
@@ -52,8 +23,10 @@ namespace MiMFa.Engine.JavaScript
                     new Parser(),
                     new Assembler(),
                     new Generator()
-                }, executeStage, options ?? new Options(), resourceProvider??new ResourceProvider())
+                }, executeStage, options ?? new Options(), resourceProvider ?? new ResourceProvider())
         {
+            FetchTransport = new FetchTransport();
+            BrowserProvider = new BrowserProvider();
         }
         public override void Dispose()
         {

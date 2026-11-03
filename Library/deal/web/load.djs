@@ -3,7 +3,7 @@
 // because the actual Window and Document live in the browser process.
 async command #load:start (url = null, timeout = 60000) {
     if (url == null) return load;
-    if (application.Engine.BrowserProvider.IsDisposed)
+    if (!application.Engine.BrowserProvider.IsAlive)
         application.Engine.BrowserProvider.Initial();
     return await application.Engine.BrowserProvider.LoadAsync(String(url), Number(timeout));
 }

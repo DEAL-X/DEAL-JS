@@ -1,6 +1,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -14,37 +15,109 @@ namespace MiMFa.Engine.JavaScript.Web
     /// </summary>
     public sealed class BrowserProvider : IDisposable
     {
-        private Process Process;
-
         private readonly HttpClient _http = new HttpClient();
 
-        public string DriverPath { get; set; } = @"ProgramFiles\Google\Chrome\Application\chrome.exe";
+        public Process Process;
+        public string DriverPath { get; set; }
         public string Host { get; set; } = "http://127.0.0.1";
-        public int Port { get; set; } = 9222;
+        public int Port { get; set; }
+        public bool RandomizedPort { get; set; } = false;
         public string Endpoint => Host + ":" + Port;
-        public bool IsDisposed => Process == null || Process.HasExited;
+        public int Timeout { get; set; } = 60000;
+        public bool IsAlive => Process != null && !Process.HasExited;
 
-        public BrowserProvider(string host = "http://127.0.0.1", int port = 9222, string driverPath = @"ProgramFiles\Google\Chrome\Application\chrome.exe")
+        public BrowserProvider(string host = null, int? port = null, string driverPath = null)
         {
-            Host = host;
-            Port = port;
+            Host = host ?? "http://127.0.0.1";
+            Port = port ?? 0;
             DriverPath = driverPath;
+            RandomizedPort = !port.HasValue;
         }
 
         public void Dispose()
         {
-            if (!IsDisposed)
+            if (Process != null)
             {
-                Process.CloseMainWindow();
+                try
+                {
+                    if (!Process.HasExited)
+                    {
+                        Process.CloseMainWindow();
 
-                if (!Process.WaitForExit(3000))
-                    Process.Kill();
+                        if (!Process.WaitForExit(3000))
+                            Process.Kill();
+
+                        Process.WaitForExit();
+                    }
+                }
+                finally
+                {
+                    Process.Dispose();
+                    Process = null;
+                }
             }
+
+            _http.Dispose();
         }
 
         public void Initial()
         {
-            Process = System.Diagnostics.Process.Start("powershell", $@"& ""$env:{DriverPath}"" --remote-debugging-port={Port} --user-data-dir=""$env:LOCALAPPDATA\DEAL\ChromeProfile""");
+            if (IsAlive)
+                return;
+
+            if (string.IsNullOrWhiteSpace(DriverPath))
+            {
+                string x86Path = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+                    "Google", "Chrome", "Application", "chrome.exe"
+                );
+
+                string x64Path = Path.Combine(
+                    Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)),
+                    "Program Files", "Google", "Chrome", "Application", "chrome.exe"
+                );
+
+                string localPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "Google", "Chrome", "Application", "chrome.exe"
+                );
+
+                if (File.Exists(x86Path))
+                    DriverPath = x86Path;
+                else if(File.Exists(x64Path))
+                    DriverPath = x64Path;
+                else if (File.Exists(localPath))
+                    DriverPath = localPath;
+                else
+                    throw new FileNotFoundException(
+                        "Browser executable was not found.",
+                        DriverPath
+                    );
+            }
+
+            string profilePath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Drivers",
+                Path.GetFileNameWithoutExtension(DriverPath),
+                "Profile"
+            );
+
+            Directory.CreateDirectory(profilePath);
+
+            if(RandomizedPort || Port <= 0) Port = (new Random()).Next(9000,99999);
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = DriverPath,
+                Arguments = $"--remote-debugging-port={Port} --user-data-dir=\"{profilePath}\"",
+                UseShellExecute = false,
+                CreateNoWindow = false
+            };
+
+            Process = Process.Start(startInfo);
+
+            if (Process == null)
+                throw new InvalidOperationException("Failed to start the browser.");
         }
         public void Final()
         {
@@ -62,13 +135,21 @@ namespace MiMFa.Engine.JavaScript.Web
             catch { return false; }
         }
 
-        public async Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = 60000)
+
+        public BrowserPage Load(string url)
         {
-            if (string.IsNullOrWhiteSpace(url))
-                throw new ArgumentException("A navigation URL is required.", nameof(url));
+            var r = LoadAsync(url);
+            r.Wait();
+            return r.Result;
+        }
+
+        public async Task<BrowserPage> LoadAsync(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) url = "about:blank";
 
             // /json/new is a DevTools endpoint and requires PUT on current Chromium builds.
-            string createUrl = Endpoint.TrimEnd('/') + "/json/new?about:blank";
+            string createUrl = Endpoint.TrimEnd('/') + "/json/new?" + Uri.EscapeDataString(url);
+
             using (var response = await _http.PutAsync(createUrl, null).ConfigureAwait(false))
             {
                 response.EnsureSuccessStatusCode();
@@ -84,7 +165,7 @@ namespace MiMFa.Engine.JavaScript.Web
                     await connection.ConnectAsync(wsUri, CancellationToken.None).ConfigureAwait(false);
                     var page = new BrowserPage(id, connection);
                     await page.InitializeAsync().ConfigureAwait(false);
-                    await page.NavigateAsync(url, timeoutMilliseconds).ConfigureAwait(false);
+                    await page.NavigateAsync(url, Timeout).ConfigureAwait(false);
                     return page;
                 }
                 catch

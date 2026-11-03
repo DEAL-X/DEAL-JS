@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -5,9 +6,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using Newtonsoft.Json;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace MiMFa.Engine.JavaScript.Web
@@ -15,7 +17,7 @@ namespace MiMFa.Engine.JavaScript.Web
     /// <summary>
     /// Provides the native HTTP transport for the JavaScript Fetch API.
     ///
-    /// JavaScript communicates with this class using JSON descriptors.
+    /// JavaScript communicates with this class through method arguments.
     /// Binary request and response bodies are transferred using Base64.
     /// </summary>
     public sealed class FetchTransport : IDisposable
@@ -25,37 +27,23 @@ namespace MiMFa.Engine.JavaScript.Web
         private readonly ConcurrentDictionary<string, CancellationTokenSource>
             _requests = new ConcurrentDictionary<string, CancellationTokenSource>();
 
+        public Encoding Encoding = Encoding.UTF8;
 
-        public bool IsDisposed = false;
+        public bool IsAlive { get; private set; } = false;
 
         public FetchTransport()
         {
         }
 
-        public void Dispose()
-        {
-            if (IsDisposed)
-                return;
-
-            IsDisposed = true;
-
-            foreach (var request in _requests.Values)
-            {
-                try
-                {
-                    request.Cancel();
-                }
-                catch (ObjectDisposedException)
-                {
-                    // The request completed concurrently.
-                }
-            }
-
-            _client.Dispose();
-        }
+        // ------------------------------------------------------------
+        // Lifecycle
+        // ------------------------------------------------------------
 
         public void Initial()
         {
+            if (IsAlive)
+                return;
+
             var cookies = new CookieContainer();
 
             var handler = new HttpClientHandler
@@ -74,54 +62,59 @@ namespace MiMFa.Engine.JavaScript.Web
             {
                 Timeout = Timeout.InfiniteTimeSpan
             };
-            IsDisposed = false;
+
+            IsAlive = true;
         }
+
         public void Final()
         {
             Dispose();
         }
 
+        public void Dispose()
+        {
+            IsAlive = false;
+
+            foreach (var request in _requests.Values)
+            {
+                try
+                {
+                    request.Cancel();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // The request completed concurrently.
+                }
+            }
+
+            _client?.Dispose();
+            _client = null;
+        }
+
+        // ------------------------------------------------------------
+        // Fetch
+        // ------------------------------------------------------------
+
         /// <summary>
         /// Sends an HTTP request.
         ///
-        /// Expected JSON:
-        ///
-        /// {
-        ///   "id": "request-1",
-        ///   "url": "https://example.com/",
-        ///   "method": "GET",
-        ///   "headers": {
-        ///     "Accept": "text/html"
-        ///   },
-        ///   "bodyBase64": "...",
-        ///   "contentType": "application/json",
-        ///   "timeout": 30000
-        /// }
-        ///
-        /// Returns:
-        ///
-        /// {
-        ///   "id": "request-1",
-        ///   "url": "https://example.com/",
-        ///   "status": 200,
-        ///   "statusText": "OK",
-        ///   "ok": true,
-        ///   "redirected": false,
-        ///   "headers": {},
-        ///   "bodyBase64": "..."
-        /// }
+        /// If bodyBase64 is supplied, it takes precedence over data.
+        /// This allows arbitrary binary request bodies.
         /// </summary>
-        public async Task<string> SendAsync(string requestJson)
+        public async Task<JObject> FetchAsync(
+            string method,
+            string url,
+            string data = null,
+            string contentType = "application/json",
+            int timeout = 30000,
+            JObject headers = null,
+            string id = null,
+            string bodyBase64 = null)
         {
-            if (IsDisposed) throw new ObjectDisposedException(nameof(FetchTransport));
+            if (!IsAlive || _client == null)
+                throw new ObjectDisposedException(nameof(FetchTransport));
 
-            if (string.IsNullOrWhiteSpace(requestJson))
-                throw new ArgumentException("A request descriptor is required.", nameof(requestJson));
-
-            var root = JObject.Parse(requestJson);
-
-            var id = root.Value<string>("id") ?? Guid.NewGuid().ToString("N");
-            var url = root.Value<string>("url");
+            id = id ?? Guid.NewGuid().ToString("N");
 
             if (string.IsNullOrWhiteSpace(url))
                 throw new ArgumentException("The request URL is missing.");
@@ -129,10 +122,14 @@ namespace MiMFa.Engine.JavaScript.Web
             if (!Uri.TryCreate(url, UriKind.Absolute, out var requestUri) ||
                 (requestUri.Scheme != Uri.UriSchemeHttp &&
                  requestUri.Scheme != Uri.UriSchemeHttps))
-                throw new ArgumentException("Only absolute HTTP and HTTPS URLs are supported.");
+            {
+                throw new ArgumentException(
+                    "Only absolute HTTP and HTTPS URLs are supported.");
+            }
 
-            var method = root.Value<string>("method") ?? "GET";
-            var timeout = root.Value<int?>("timeout") ?? 0;
+            method = string.IsNullOrWhiteSpace(method)
+                ? "GET"
+                : method.ToUpperInvariant();
 
             var cancellation = new CancellationTokenSource();
 
@@ -142,54 +139,75 @@ namespace MiMFa.Engine.JavaScript.Web
             if (!_requests.TryAdd(id, cancellation))
             {
                 cancellation.Dispose();
-                throw new InvalidOperationException("A request with this ID is already active: " + id);
+
+                throw new InvalidOperationException(
+                    "A request with this ID is already active: " + id);
             }
 
             try
             {
-                using (var request = new HttpRequestMessage(new HttpMethod(method), requestUri))
+                using (var request = new HttpRequestMessage(
+                    new HttpMethod(method),
+                    requestUri))
                 {
-                    AddHeaders(request, root);
-                    AddBody(request, root);
+                    // Create the body first. Content headers are applied
+                    // afterward so they are not lost when Content is assigned.
+                    AddBody(request, data, contentType, bodyBase64);
+
+                    if (headers != null)
+                        AddHeaders(request, headers);
 
                     using (var response = await _client.SendAsync(
                         request,
                         HttpCompletionOption.ResponseContentRead,
                         cancellation.Token).ConfigureAwait(false))
                     {
-                        var body = response.Content == null
+                        var responseBody = response.Content == null
                             ? Array.Empty<byte>()
-                            : await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+                            : await response.Content.ReadAsByteArrayAsync()
+                                .ConfigureAwait(false);
 
-                        var headers = new Dictionary<string, string>(
-                            StringComparer.OrdinalIgnoreCase);
+                        var responseHeaders =
+                            new Dictionary<string, string>(
+                                StringComparer.OrdinalIgnoreCase);
 
                         foreach (var header in response.Headers)
-                            headers[header.Key] = string.Join(", ", header.Value);
+                        {
+                            responseHeaders[header.Key] =
+                                string.Join(", ", header.Value);
+                        }
 
                         if (response.Content != null)
                         {
                             foreach (var header in response.Content.Headers)
-                                headers[header.Key] = string.Join(", ", header.Value);
+                            {
+                                responseHeaders[header.Key] =
+                                    string.Join(", ", header.Value);
+                            }
                         }
 
-                        var finalUrl = response.RequestMessage?.RequestUri?.ToString() ?? url;
+                        var finalUrl =
+                            response.RequestMessage?.RequestUri?.ToString()
+                            ?? url;
 
-                        var result = new
+                        return JObject.FromObject(new
                         {
-                            id,
+                            id = id,
                             type = "basic",
                             url = finalUrl,
                             status = (int)response.StatusCode,
                             statusText = response.ReasonPhrase ?? string.Empty,
+
                             ok = (int)response.StatusCode >= 200 &&
                                  (int)response.StatusCode <= 299,
-                            redirected = !UriEquals(finalUrl, requestUri),
-                            headers,
-                            bodyBase64 = Convert.ToBase64String(body)
-                        };
 
-                        return JsonConvert.SerializeObject(result);
+                            redirected = !UriEquals(finalUrl, requestUri),
+
+                            // Newtonsoft serializes byte[] as Base64.
+                            data = responseBody,
+
+                            headers = responseHeaders
+                        });
                     }
                 }
             }
@@ -200,9 +218,94 @@ namespace MiMFa.Engine.JavaScript.Web
             }
         }
 
-        /// <summary>
-        /// Cancels an active HTTP request.
-        /// </summary>
+        // ------------------------------------------------------------
+        // Synchronous methods
+        // ------------------------------------------------------------
+
+        public JObject Fetch(
+            string method,
+            string url,
+            string data = null,
+            string contentType = "application/json",
+            int timeout = 30000,
+            JObject headers = null,
+            string id = null,
+            string bodyBase64 = null)
+        {
+            return FetchAsync(
+                method,
+                url,
+                data,
+                contentType,
+                timeout,
+                headers,
+                id,
+                bodyBase64
+            ).GetAwaiter().GetResult();
+        }
+
+        public async Task<JObject> GetAsync(
+            string url,
+            string data = null,
+            string contentType = "application/json",
+            int timeout = 30000,
+            JObject headers = null,
+            string id = null,
+            string bodyBase64 = null)
+        {
+            return await FetchAsync(
+                "GET", url, data, contentType,
+                timeout, headers, id, bodyBase64);
+        }
+
+        public JObject Get(
+            string url,
+            string data = null,
+            string contentType = "application/json",
+            int timeout = 30000,
+            JObject headers = null,
+            string id = null,
+            string bodyBase64 = null)
+        {
+            return GetAsync(
+                url, data, contentType,
+                timeout, headers, id, bodyBase64
+            ).GetAwaiter().GetResult();
+        }
+
+        public async Task<JObject> PostAsync(
+            string url,
+            string data = null,
+            string contentType = "application/json",
+            int timeout = 30000,
+            JObject headers = null,
+            string id = null,
+            string bodyBase64 = null)
+        {
+            return await FetchAsync(
+                "POST", url, data, contentType,
+                timeout, headers, id, bodyBase64);
+        }
+
+        public JObject Post(
+            string url,
+            string data = null,
+            string contentType = "application/json",
+            int timeout = 30000,
+            JObject headers = null,
+            string id = null,
+            string bodyBase64 = null)
+        {
+            return PostAsync(
+                url, data, contentType,
+                timeout, headers, id, bodyBase64
+            ).GetAwaiter().GetResult();
+        }
+
+        // ------------------------------------------------------------
+        // Cancellation
+        // ------------------------------------------------------------
+
         public bool Abort(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -222,11 +325,14 @@ namespace MiMFa.Engine.JavaScript.Web
             }
         }
 
-        private static void AddHeaders(HttpRequestMessage request, JObject root)
-        {
-            if (!(root["headers"] is JObject headers))
-                return;
+        // ------------------------------------------------------------
+        // Request headers
+        // ------------------------------------------------------------
 
+        private void AddHeaders(
+            HttpRequestMessage request,
+            JObject headers)
+        {
             foreach (var header in headers.Properties())
             {
                 var value = header.Value.Type == JTokenType.String
@@ -236,35 +342,69 @@ namespace MiMFa.Engine.JavaScript.Web
                 if (string.IsNullOrEmpty(value))
                     continue;
 
-                if (!request.Headers.TryAddWithoutValidation(header.Name, value))
+                if (request.Headers.TryAddWithoutValidation(
+                    header.Name, value))
                 {
-                    if (request.Content == null)
-                        request.Content = new ByteArrayContent(Array.Empty<byte>());
-
-                    request.Content.Headers.TryAddWithoutValidation(header.Name, value);
+                    continue;
                 }
+
+                // Content headers require HttpContent.
+                if (request.Content == null)
+                {
+                    request.Content =
+                        new ByteArrayContent(Array.Empty<byte>());
+                }
+
+                // Replace existing values instead of accidentally
+                // appending duplicate Content-Type values.
+                request.Content.Headers.Remove(header.Name);
+
+                request.Content.Headers.TryAddWithoutValidation(
+                    header.Name, value);
             }
         }
 
-        private static void AddBody(HttpRequestMessage request, JObject root)
+        // ------------------------------------------------------------
+        // Request body
+        // ------------------------------------------------------------
+
+        private void AddBody(
+            HttpRequestMessage request,
+            string data,
+            string contentType = "application/json",
+            string bodyBase64 = null)
         {
-            var bodyBase64 = root.Value<string>("bodyBase64");
+            byte[] bytes;
 
-            if (string.IsNullOrEmpty(bodyBase64))
+            if (bodyBase64 != null)
+            {
+                // Binary-safe request body.
+                bytes = Convert.FromBase64String(bodyBase64);
+            }
+            else if (data != null)
+            {
+                // Text request body.
+                bytes = Encoding.GetBytes(data);
+            }
+            else
+            {
                 return;
-
-            var bytes = Convert.FromBase64String(bodyBase64);
+            }
 
             request.Content = new ByteArrayContent(bytes);
 
-            var contentType = root.Value<string>("contentType");
-
             if (!string.IsNullOrWhiteSpace(contentType))
+            {
                 request.Content.Headers.ContentType =
                     MediaTypeHeaderValue.Parse(contentType);
+            }
         }
 
-        private static bool UriEquals(string first, Uri second)
+        // ------------------------------------------------------------
+        // Utilities
+        // ------------------------------------------------------------
+
+        private bool UriEquals(string first, Uri second)
         {
             if (!Uri.TryCreate(first, UriKind.Absolute, out var firstUri))
                 return false;
