@@ -634,3 +634,44 @@ There are multiple defined variables accessible globally, which users can intera
     ```ts
     ITS				        // The current object or class will accessible through this one
     ```
+
+### Native web runtime (ClearScript)
+
+DEAL.JS separates HTTP transport from browser-page control so the same web library can be used in a browser environment or from the .NET ClearScript host.
+
+#### HTTP requests
+
+The ClearScript environment exposes `Engine.FetchTransport`. The JavaScript `fetch` compatibility layer converts request bodies to bytes, transfers binary data through Base64, and converts the native response into a JavaScript `Response`.
+
+```js
+const response = await fetch("https://example.com/data", {
+    method: "GET",
+    headers: { "Accept": "application/json" },
+    timeout: 15000
+});
+
+if (!response.ok)
+    throw new Error("HTTP " + response.status);
+
+const data = await response.json();
+```
+
+The host transport supports HTTP and HTTPS, common request methods, request and response headers, byte-safe request/response bodies, redirect following, request timeouts, cancellation, and a host cookie jar. `credentials: "omit"` disables cookie sending and storage for that request. Because the host has no browser-origin context, `same-origin` and `include` both use the host cookie jar.
+
+This is a host-side Fetch compatibility layer, not a complete browser Fetch implementation. It does not enforce browser CORS policy or implement service workers, browser cache modes, opaque `no-cors` responses, browser referrer policy, integrity checks, keepalive semantics, or streaming response bodies. Unsupported request options are rejected rather than silently ignored. URL-encoded `formData()` parsing is supported; multipart `FormData` uploads require a browser XHR runtime.
+
+The ClearScript V8 host must enable `V8ScriptEngineFlags.EnableTaskPromiseConversion` for .NET `Task` results to be awaitable from JavaScript.
+
+#### Chromium page control
+
+`BrowserProvider` connects to Chromium through the Chrome DevTools Protocol (CDP). It can start Chromium or connect to an explicitly configured debugging port. A `BrowserPage` is a remote page proxy: its DOM remains in Chromium and is not exposed as a local ClearScript `document` object.
+
+```js
+const page = await load("https://example.com/");
+const title = await page.EvaluateAsync("document.title");
+const html = await page.GetDocumentHtmlAsync();
+```
+
+`BrowserPage.EvaluateAsync` evaluates JavaScript inside the remote page and returns a serialized by-value result. It does not marshal live DOM nodes or arbitrary remote JavaScript objects into the ClearScript process. Use page methods such as `GetDocumentHtmlAsync`, `GetDocumentTextAsync`, or `EvaluateAsync` to work with page content.
+
+The native web smoke tests are in [Samples/Native-Web-Smoke-Test.js](Samples/Native-Web-Smoke-Test.js).
