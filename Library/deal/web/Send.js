@@ -165,7 +165,7 @@ static request(method = "POST", url = null, data = null, selector = "body",
             throw new Error("Neither XMLHttpRequest nor fetch is available in this runtime.");
         const headers = {};
         if (contentType) headers["Content-Type"] = contentType;
-        const options = { method, headers, timeout: timeout > 0 ? timeout : undefined };
+        const options = { method, headers, timeout: timeout == null ? 0 : Number(timeout) };
         if (data != null) options.body = data;
         if (timeout > 0 && typeof AbortController !== "undefined") {
             const controller = new AbortController();
