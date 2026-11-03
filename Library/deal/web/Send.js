@@ -47,7 +47,7 @@ static _prepare(method, url, data) {
         if (formData) data.append("__METHOD", method);
         else if (data && typeof data === "object") data = Object.assign({}, data, { __METHOD: method });
         else if (data != null) {
-            const value = String(data).replace(/^\\?/, "");
+            const value = String(data).replace(/^\?/, "");
             data = value + (value ? "&" : "") + "__METHOD=" + encodeURIComponent(method);
         }
         else data = { __METHOD: method };
@@ -60,7 +60,7 @@ static _prepare(method, url, data) {
             if (typeof URLSearchParams !== "undefined" && data instanceof URLSearchParams) {
                 query = data.toString();
             } else if (typeof data === "string") {
-                query = data.replace(/^\\?/, "");
+                query = data.replace(/^\?/, "");
             } else {
                 const entries = Array.isArray(data) ? data : Object.entries(data);
                 query = entries.map(entry => {
