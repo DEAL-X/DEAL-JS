@@ -40,7 +40,7 @@ namespace MiMFa.Engine.DEAL.JS
                     yield break;
 
                 case "command":
-                    keywords = ExtractKeywordToken(token, walker);
+                    keywords = ExtractKeywordToken(token, walker, false);
                     if (keywords.Count > 0)
                     {
                         foreach (var item in keywords)

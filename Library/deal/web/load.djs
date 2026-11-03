@@ -1,10 +1,15 @@
-command #load:start|function(url = null, target = null) {
+// Load a URL in a new tab of the already-running Chromium/Edge instance.
+// The returned BrowserPage is a host proxy. DOM access remains asynchronous
+// because the actual Window and Document live in the browser process.
+async command #load:start (url = null, timeout = 60000) {
     if (url == null) return load;
-    if(typeof NavigationHistoryEntry !== "undefined" && url instanceof NavigationHistoryEntry) url = url.url;
-	if (target === null) window.location.href = url ?? window.location.href;
-	else return window.open(url ?? window.location.href, target === true ? "_blank" : (target === false ? "_self" : target));
+    if (typeof engine.BrowserProvider === "undefined" || !engine.BrowserProvider)
+        throw new Error("The DEAL browser provider was not injected.");
+    return await engine.BrowserProvider.LoadAsync(String(url), Number(timeout));
 }
 
-command #reload:start|function() {
-	return window.location.reload();
+async command #reload:start (page = null) {
+    if (page == null) throw new TypeError("reload requires a loaded BrowserPage.");
+    await page.EvaluateAsync("location.reload()");
+    return page;
 }

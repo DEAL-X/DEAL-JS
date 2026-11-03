@@ -1,3 +1,4 @@
+using MiMFa.Engine.JavaScript.Web;
 using MiMFa.Engine.Model;
 using MiMFa.Engine.Resource;
 using MiMFa.Engine.Stage;
@@ -11,6 +12,9 @@ namespace MiMFa.Engine.JavaScript
     {
         public Dictionary<string, Token> Keywords { get; } = new Dictionary<string, Token>();
 
+        public static FetchTransport FetchTransport;
+        public static BrowserProvider BrowserProvider;
+
         public Engine(StageBase[] compileStages = null, StageBase executeStage = null, Options options = null, ResourceProvider resourceProvider = null)
             : base(compileStages ?? new StageBase[] {
                     new Tokenizer(),
@@ -20,6 +24,16 @@ namespace MiMFa.Engine.JavaScript
                     new Generator()
                 }, executeStage, options ?? new Options(), resourceProvider??new ResourceProvider())
         {
+            FetchTransport = new FetchTransport();
+            BrowserProvider = new BrowserProvider();
+            BrowserProvider.Initial();
+            FetchTransport.Initial();
+        }
+        public override void Dispose()
+        {
+            BrowserProvider.Final();
+            FetchTransport.Final();
+            base.Dispose();
         }
 
         public virtual Node SetKeyword(string name, Node node)
