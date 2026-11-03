@@ -210,6 +210,8 @@ function fetch(input, init) {
         return NativePromise.reject(new TypeError("The host transport does not emulate browser no-cors opaque responses."));
     if (request.credentials !== "omit" && request.credentials !== "same-origin" && request.credentials !== "include")
         return NativePromise.reject(new TypeError("Invalid credentials mode."));
+    // There is no browser-origin context in ClearScript. The host treats
+    // same-origin and include identically; omit is enforced by FetchTransport.
     if (request.mode !== "cors" && request.mode !== "same-origin" && request.mode !== "navigate")
         return NativePromise.reject(new TypeError("Invalid request mode."));
 
@@ -223,7 +225,7 @@ function fetch(input, init) {
             abortListener = () => transport.Abort(id);
             request.signal.addEventListener("abort", abortListener, { once: true });
         }
-        operation = transport.FetchAsync(request.method, request.url, null, null, request.timeout, headers, id, bodyBase64);
+        operation = transport.FetchAsync(request.method, request.url, null, null, request.timeout, headers, id, bodyBase64, request.credentials);
     } catch (error) {
         if (abortListener) request.signal.removeEventListener("abort", abortListener);
         return NativePromise.reject(error);
