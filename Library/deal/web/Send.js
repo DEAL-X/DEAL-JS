@@ -5,6 +5,13 @@ static _RECEIVED = null;
 static _isFormData(value) {
     return typeof FormData !== "undefined" && value instanceof FormData;
 }
+static _isBinary(value) {
+    return value != null && (
+        (typeof Blob !== "undefined" && value instanceof Blob) ||
+        (typeof ArrayBuffer !== "undefined" && value instanceof ArrayBuffer) ||
+        (typeof ArrayBuffer !== "undefined" && ArrayBuffer.isView(value))
+    );
+}
 
 static _notify(callback, result, error, transport) {
     if (typeof callback === "function") {
@@ -75,6 +82,7 @@ static _prepare(method, url, data) {
         contentType = null;
     }
     else if (formData) contentType = null;
+    else if (Send._isBinary(data)) contentType = data.type || null;
     else if (data != null && typeof data === "object") {
         data = JSON.stringify(data);
         contentType = "application/json; charset=utf-8";
@@ -300,7 +308,7 @@ static fileRequest(url = null, data = null, selector = "body", success = null, e
             const reader = new FileReader();
             reader.onload = () => resolve(Send.request("FILE", url, reader.result, selector, success, error, message, progress, timeout));
             reader.onerror = () => reject(reader.error || new Error("Could not read the selected file."));
-            reader.readAsDataURL(file);
+            reader.readAsArrayBuffer(file);
         }, { once: true });
         input.click();
     });
