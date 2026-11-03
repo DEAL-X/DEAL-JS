@@ -247,14 +247,18 @@ function fetch(input, init) {
     if (request.signal && request.signal.aborted) return NativePromise.reject(abortError());
     if (request.redirect !== "follow")
         return NativePromise.reject(new TypeError("The host transport currently supports redirect:'follow' only."));
-    if (request.mode === "no-cors")
-        return NativePromise.reject(new TypeError("The host transport does not emulate browser no-cors opaque responses."));
+    if (request.mode !== "cors")
+        return NativePromise.reject(new TypeError("The host Fetch transport supports mode:'cors' only; it does not emulate browser CORS or navigation modes."));
     if (request.credentials !== "omit" && request.credentials !== "same-origin" && request.credentials !== "include")
         return NativePromise.reject(new TypeError("Invalid credentials mode."));
     // There is no browser-origin context in ClearScript. The host treats
     // same-origin and include identically; omit is enforced by FetchTransport.
-    if (request.mode !== "cors" && request.mode !== "same-origin" && request.mode !== "navigate")
-        return NativePromise.reject(new TypeError("Invalid request mode."));
+    if (request.cache !== "default")
+        return NativePromise.reject(new TypeError("The host Fetch transport does not implement browser cache modes."));
+    if (request.integrity)
+        return NativePromise.reject(new TypeError("Subresource integrity is not implemented by the host Fetch transport."));
+    if (request.referrer)
+        return NativePromise.reject(new TypeError("Browser referrer policy is not implemented by the host Fetch transport."));
 
     let transport, id, abortListener, operation;
     try {
