@@ -82,7 +82,12 @@ static _prepare(method, url, data) {
                     return encodeURIComponent(key) + "=" + encodeURIComponent(value == null ? "" : value);
                 }).join("&");
             }
-            if (query) url += (url.includes("?") ? "&" : "?") + query;
+            if (query) {
+                const hashIndex = url.indexOf("#");
+                const fragment = hashIndex >= 0 ? url.slice(hashIndex) : "";
+                const baseUrl = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
+                url = baseUrl + (baseUrl.includes("?") ? "&" : "?") + query + fragment;
+            }
         }
         data = null;
         contentType = null;
