@@ -259,6 +259,8 @@ function fetch(input, init) {
         return NativePromise.reject(new TypeError("Subresource integrity is not implemented by the host Fetch transport."));
     if (request.referrer)
         return NativePromise.reject(new TypeError("Browser referrer policy is not implemented by the host Fetch transport."));
+    if (request.keepalive)
+        return NativePromise.reject(new TypeError("Browser keepalive semantics are not implemented by the host Fetch transport."));
 
     let transport, id, abortListener, operation;
     try {
