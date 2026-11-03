@@ -83,6 +83,7 @@ static request(method = "POST", url = null, data = null, selector = "body",
     const { contentType, isForm } = prepared;
     Send._SENT = data;
 
+    const hasErrorCallback = typeof error === "function";
     const onSuccess = success ?? ((result, err, transport) => {
         if (err) console.error(err);
         if (result != null && result !== "")
@@ -147,6 +148,7 @@ static request(method = "POST", url = null, data = null, selector = "body",
                 return response;
             }).catch(exception => {
                 Send._notify(onError, exception.message, exception, null);
+                if (hasErrorCallback) return null;
                 throw exception;
             }).finally(() => clearTimeout(timeoutId));
         }
@@ -159,8 +161,9 @@ static request(method = "POST", url = null, data = null, selector = "body",
             else Send._notify(onError, result, response.status, response);
             return response;
         }).catch(exception => {
-            Send._notify(onError, exception.message, exception, null);
-            throw exception;
+                Send._notify(onError, exception.message, exception, null);
+                if (hasErrorCallback) return null;
+                throw exception;
         });
     }
 
