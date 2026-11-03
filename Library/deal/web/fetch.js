@@ -50,8 +50,6 @@ class DealAbortController {
     constructor() { this.signal = new DealAbortSignal(); }
     abort(reason) { this.signal._abort(reason); }
 }
-const AbortControllerType = typeof AbortController !== "undefined" ? AbortController : DealAbortController;
-
 // ------------------------------------------------------------
 // Headers
 // ------------------------------------------------------------
@@ -177,6 +175,11 @@ class Request extends Body {
         this.integrity = init.integrity || (source && source.integrity) || "";
         this.keepalive = init.keepalive === undefined ? !!(source && source.keepalive) : !!init.keepalive;
         this.signal = init.signal || (source && source.signal) || null;
+        if (this.signal != null && (
+            typeof this.signal.aborted !== "boolean" ||
+            typeof this.signal.addEventListener !== "function" ||
+            typeof this.signal.removeEventListener !== "function"
+        )) throw new TypeError("Request.signal must be an AbortSignal.");
         this.timeout = init.timeout !== undefined ? Number(init.timeout) : source ? source.timeout : 30000;
         if (!Number.isFinite(this.timeout) || this.timeout < 0) throw new TypeError("Request timeout must be a non-negative number.");
         if ((this.method === "GET" || this.method === "HEAD") && this._bytes.length)
