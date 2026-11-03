@@ -131,7 +131,7 @@ namespace MiMFa.Engine.JavaScript.Web
                 CreateNoWindow = false
             };
 
-            Process = Process.Start(startInfo);
+            Process = System.Diagnostics.Process.Start(startInfo);
 
             if (Process == null)
                 throw new InvalidOperationException("Failed to start the browser.");
