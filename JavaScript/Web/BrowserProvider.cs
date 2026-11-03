@@ -37,10 +37,17 @@ namespace MiMFa.Engine.JavaScript.Web
             RandomizedPort = !port.HasValue;
         }
 
+        private void CloseCurrentPage()
+        {
+            if (CurrentPage == null) return;
+            try { CurrentPage.Close(); }
+            catch { CurrentPage.Dispose(); }
+            finally { CurrentPage = null; }
+        }
+
         public void Dispose()
         {
-            CurrentPage?.Dispose();
-            CurrentPage = null;
+            CloseCurrentPage();
             if (Process != null)
             {
                 try
@@ -199,7 +206,7 @@ namespace MiMFa.Engine.JavaScript.Web
                     var page = new BrowserPage(id, connection);
                     await page.InitializeAsync().ConfigureAwait(false);
                     await page.NavigateAsync(url, timeoutMilliseconds).ConfigureAwait(false);
-                    CurrentPage?.Dispose();
+                    CloseCurrentPage();
                     CurrentPage = page;
                     return page;
                 }
