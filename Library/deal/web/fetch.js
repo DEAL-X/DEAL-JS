@@ -1,7 +1,9 @@
 // DEAL Fetch compatibility layer for the ClearScript host.
-// This implements the useful Fetch request/response subset over FetchTransport.
+// This implements the supported Fetch request/response subset over FetchTransport.
+// The hosting V8ScriptEngine must enable EnableTaskPromiseConversion so the
+// .NET Task<JObject> returned by FetchAsync becomes awaitable by JavaScript.
 // Browser-only features (CORS enforcement, service workers, streaming bodies,
-// cache modes and browser credentials policy) are intentionally not simulated.
+// cache modes and browser-origin policy) are not simulated.
 
 const NativePromise = Promise;
 const NativeMap = Map;
