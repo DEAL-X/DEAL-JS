@@ -49,7 +49,8 @@ namespace MiMFa.Engine.JavaScript.Web
                 using (var timeout = CancellationTokenSource.CreateLinkedTokenSource(_shutdown.Token))
                 {
                     timeout.CancelAfter(timeoutMilliseconds);
-                    using (timeout.Token.Register(() => completion.TrySetCanceled()))
+                    using (timeout.Token.Register(() => completion.TrySetException(
+                        new TimeoutException("The DevTools command timed out: " + method))))
                     {
                         JObject result = await completion.Task.ConfigureAwait(false);
                         if (result["error"] != null)
@@ -88,21 +89,41 @@ namespace MiMFa.Engine.JavaScript.Web
                     else
                     {
                         string name = (string)message["method"];
-                        if (name != null) EventReceived?.Invoke(name, message["params"] as JObject ?? new JObject());
+                        if (name != null)
+                        {
+                            var handlers = EventReceived;
+                            if (handlers != null)
+                            {
+                                foreach (Action<string, JObject> handler in handlers.GetInvocationList())
+                                {
+                                    try { handler(name, message["params"] as JObject ?? new JObject()); }
+                                    catch { /* A consumer callback must not terminate the CDP receive loop. */ }
+                                }
+                            }
+                        }
                     }
                 }
             }
             catch (OperationCanceledException) { }
-            catch (WebSocketException ex)
+            catch (Exception ex)
             {
                 foreach (var item in _pending.Values)
                     item.TrySetException(ex);
+            }
+            finally
+            {
+                var closed = new WebSocketException("The DevTools WebSocket connection was closed.");
+                foreach (var item in _pending.Values)
+                    item.TrySetException(closed);
             }
         }
 
         public void Dispose()
         {
             _shutdown.Cancel();
+            var closed = new ObjectDisposedException(nameof(CdpConnection));
+            foreach (var item in _pending.Values)
+                item.TrySetException(closed);
             try
             {
                 if (_socket.State == WebSocketState.Open)
