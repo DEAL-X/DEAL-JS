@@ -150,6 +150,15 @@ namespace MiMFa.Engine.JavaScript.Web
         {
             if (string.IsNullOrWhiteSpace(url)) url = "about:blank";
 
+            // Chromium may take a moment to expose its DevTools endpoint after launch.
+            var deadline = DateTime.UtcNow.AddMilliseconds(Timeout);
+            while (!await IsAvailableAsync().ConfigureAwait(false))
+            {
+                if (DateTime.UtcNow >= deadline)
+                    throw new TimeoutException("The Chromium DevTools endpoint did not become available.");
+                await Task.Delay(100).ConfigureAwait(false);
+            }
+
             // /json/new is a DevTools endpoint and requires PUT on current Chromium builds.
             string createUrl = Endpoint.TrimEnd('/') + "/json/new?" + Uri.EscapeDataString(url);
 
