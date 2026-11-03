@@ -310,4 +310,5 @@ globalThis.Request = Request;
 globalThis.Response = Response;
 if (typeof globalThis.AbortController === "undefined") globalThis.AbortController = DealAbortController;
 if (typeof globalThis.AbortSignal === "undefined") globalThis.AbortSignal = DealAbortSignal;
+fetch.isDealFetch = true;
 globalThis.fetch = fetch;
