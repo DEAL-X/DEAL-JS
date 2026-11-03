@@ -134,6 +134,18 @@ namespace MiMFa.Engine.JavaScript.Web
                 ? "GET"
                 : method.ToUpperInvariant();
 
+            if (timeout < 0)
+                throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be zero (infinite) or a positive number.");
+
+            if (!string.Equals(credentials, "omit", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(credentials, "same-origin", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(credentials, "include", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Invalid Fetch credentials mode.", nameof(credentials));
+
+            if ((method == "GET" || method == "HEAD") &&
+                (data != null || bodyBase64 != null))
+                throw new InvalidOperationException("GET and HEAD requests cannot contain a body.");
+
             var cancellation = new CancellationTokenSource();
 
             if (timeout > 0)
@@ -182,7 +194,7 @@ namespace MiMFa.Engine.JavaScript.Web
                             {
                                 foreach (var setCookie in setCookies)
                                 {
-                                    try { _cookies.SetCookies(requestUri, setCookie); }
+                                    try { _cookies.SetCookies(response.RequestMessage?.RequestUri ?? requestUri, setCookie); }
                                     catch (CookieException) { /* Ignore malformed server cookie values. */ }
                                 }
                             }
