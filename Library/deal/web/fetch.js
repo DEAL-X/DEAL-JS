@@ -14,6 +14,44 @@ function createError(name, message) {
 function abortError() { return createError("AbortError", "The operation was aborted."); }
 function timeoutError() { return createError("TimeoutError", "The request timed out."); }
 
+// ClearScript does not provide AbortController by default. Supply the small
+// EventTarget subset required by Request.signal and FetchTransport.Abort().
+class DealAbortSignal {
+    constructor() {
+        this.aborted = false;
+        this.reason = undefined;
+        this.onabort = null;
+        this._listeners = new Set();
+    }
+    addEventListener(type, callback) {
+        if (type === "abort" && typeof callback === "function") this._listeners.add(callback);
+    }
+    removeEventListener(type, callback) {
+        if (type === "abort") this._listeners.delete(callback);
+    }
+    throwIfAborted() {
+        if (this.aborted) throw this.reason || abortError();
+    }
+    _abort(reason) {
+        if (this.aborted) return;
+        this.aborted = true;
+        this.reason = reason || abortError();
+        const event = { type: "abort", target: this };
+        this._listeners.forEach(callback => {
+            try { callback.call(this, event); } catch (error) { console.error(error); }
+        });
+        this._listeners.clear();
+        if (typeof this.onabort === "function") {
+            try { this.onabort.call(this, event); } catch (error) { console.error(error); }
+        }
+    }
+}
+class DealAbortController {
+    constructor() { this.signal = new DealAbortSignal(); }
+    abort(reason) { this.signal._abort(reason); }
+}
+const AbortControllerType = typeof AbortController !== "undefined" ? AbortController : DealAbortController;
+
 // ------------------------------------------------------------
 // Headers
 // ------------------------------------------------------------
@@ -245,8 +283,16 @@ function fetch(input, init) {
         return response;
     }).catch(error => {
         if (request.signal && request.signal.aborted) throw abortError();
-        if (error && (error.name === "TimeoutException" || error.name === "TaskCanceledException") && request.timeout > 0)
-            throw timeoutError();
+        const hostErrorName = error && (
+            error.name ||
+            (error.GetType && error.GetType().Name) ||
+            (error.hostException && error.hostException.GetType && error.hostException.GetType().Name)
+        );
+        if (request.timeout > 0 && (
+            hostErrorName === "TimeoutException" ||
+            hostErrorName === "TaskCanceledException" ||
+            /task.*cancel|canceled|cancelled/i.test(String(error && error.message || ""))
+        )) throw timeoutError();
         throw error;
     }).finally(() => {
         if (abortListener) request.signal.removeEventListener("abort", abortListener);
@@ -259,4 +305,6 @@ function fetch(input, init) {
 globalThis.Headers = Headers;
 globalThis.Request = Request;
 globalThis.Response = Response;
+if (typeof globalThis.AbortController === "undefined") globalThis.AbortController = DealAbortController;
+if (typeof globalThis.AbortSignal === "undefined") globalThis.AbortSignal = DealAbortSignal;
 globalThis.fetch = fetch;
