@@ -68,6 +68,11 @@ namespace MiMFa.Engine.JavaScript.Web
             if (IsAlive)
                 return;
 
+            // Reuse an externally started Chromium instance when a port was
+            // explicitly configured; do not launch a second browser process.
+            if (Port > 0 && IsAvailableAsync().GetAwaiter().GetResult())
+                return;
+
             if (string.IsNullOrWhiteSpace(DriverPath))
             {
                 string x86Path = Path.Combine(
@@ -76,8 +81,8 @@ namespace MiMFa.Engine.JavaScript.Web
                 );
 
                 string x64Path = Path.Combine(
-                    Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)),
-                    "Program Files", "Google", "Chrome", "Application", "chrome.exe"
+                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                    "Google", "Chrome", "Application", "chrome.exe"
                 );
 
                 string localPath = Path.Combine(
