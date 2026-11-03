@@ -49,9 +49,15 @@ static _prepare(method, url, data) {
     let contentType = "application/x-www-form-urlencoded; charset=utf-8";
     let formData = Send._isFormData(data);
     const standard = ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"];
+    const pseudo = ["FILE", "STREAM", "INTERNAL", "EXTERNAL"];
 
-    if (!standard.includes(method)) {
+    if (pseudo.includes(method)) {
+        method = "POST";
+    } else if (!standard.includes(method)) {
         if (formData) data.append("__METHOD", method);
+        else if (Send._isBinary(data)) {
+            throw new TypeError("A custom HTTP method cannot be tunneled with a binary request body.");
+        }
         else if (data && typeof data === "object") data = Object.assign({}, data, { __METHOD: method });
         else if (data != null) {
             const value = String(data).replace(/^\?/, "");
