@@ -23,6 +23,7 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class FetchTransport : IDisposable
     {
         private HttpClient _client;
+        private CookieContainer _cookies;
 
         private readonly ConcurrentDictionary<string, CancellationTokenSource>
             _requests = new ConcurrentDictionary<string, CancellationTokenSource>();
@@ -44,7 +45,7 @@ namespace MiMFa.Engine.JavaScript.Web
             if (IsAlive)
                 return;
 
-            var cookies = new CookieContainer();
+            _cookies = new CookieContainer();
 
             var handler = new HttpClientHandler
             {
@@ -54,8 +55,9 @@ namespace MiMFa.Engine.JavaScript.Web
                     DecompressionMethods.GZip |
                     DecompressionMethods.Deflate,
 
-                UseCookies = true,
-                CookieContainer = cookies
+                // Cookies are managed per request so credentials:'omit' can
+                // be honored by the JavaScript Fetch compatibility layer.
+                UseCookies = false
             };
 
             _client = new HttpClient(handler, true)
@@ -109,7 +111,8 @@ namespace MiMFa.Engine.JavaScript.Web
             int timeout = 30000,
             JObject headers = null,
             string id = null,
-            string bodyBase64 = null)
+            string bodyBase64 = null,
+            string credentials = "same-origin")
         {
             if (!IsAlive || _client == null)
                 throw new ObjectDisposedException(nameof(FetchTransport));
@@ -157,11 +160,32 @@ namespace MiMFa.Engine.JavaScript.Web
                     if (headers != null)
                         AddHeaders(request, headers);
 
+                    // The host has no browser-origin context, so same-origin
+                    // and include both use the host cookie jar. omit sends none.
+                    if (!string.Equals(credentials, "omit", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string cookieHeader = _cookies.GetCookieHeader(requestUri);
+                        if (!string.IsNullOrEmpty(cookieHeader))
+                            request.Headers.TryAddWithoutValidation("Cookie", cookieHeader);
+                    }
+
                     using (var response = await _client.SendAsync(
                         request,
                         HttpCompletionOption.ResponseContentRead,
                         cancellation.Token).ConfigureAwait(false))
                     {
+                        if (!string.Equals(credentials, "omit", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (response.Headers.TryGetValues("Set-Cookie", out var setCookies))
+                            {
+                                foreach (var setCookie in setCookies)
+                                {
+                                    try { _cookies.SetCookies(requestUri, setCookie); }
+                                    catch (CookieException) { /* Ignore malformed server cookie values. */ }
+                                }
+                            }
+                        }
+
                         var responseBody = response.Content == null
                             ? Array.Empty<byte>()
                             : await response.Content.ReadAsByteArrayAsync()
