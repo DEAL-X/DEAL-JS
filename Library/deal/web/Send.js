@@ -87,6 +87,7 @@ static request(method = "POST", url = null, data = null, selector = "body",
     success = null, error = null, message = null, progress = null,
     timeout = null, asynchronous = true) {
 
+    const requestedMethod = String(method || "POST").toUpperCase();
     const prepared = Send._prepare(method, url, data);
     ({ method, url, data } = prepared);
     const { contentType, isForm } = prepared;
@@ -149,9 +150,14 @@ static request(method = "POST", url = null, data = null, selector = "body",
             const timeoutId = setTimeout(() => controller.abort(), timeout);
             return fetch(url, options).then(async response => {
                 Send._RECEIVED = response;
-                const raw = await response.text();
-                let result = raw;
-                if (raw) { try { result = JSON.parse(raw); } catch { } }
+                let result;
+                if (requestedMethod === "FILE" || requestedMethod === "STREAM") {
+                    result = new Uint8Array(await response.arrayBuffer());
+                } else {
+                    const raw = await response.text();
+                    result = raw;
+                    if (raw) { try { result = JSON.parse(raw); } catch { } }
+                }
                 if (response.ok) Send._notify(onSuccess, result, null, response);
                 else Send._notify(onError, result, response.status, response);
                 return response;
@@ -163,9 +169,14 @@ static request(method = "POST", url = null, data = null, selector = "body",
         }
         return fetch(url, options).then(async response => {
             Send._RECEIVED = response;
-            const raw = await response.text();
-            let result = raw;
-            if (raw) { try { result = JSON.parse(raw); } catch { } }
+            let result;
+            if (requestedMethod === "FILE" || requestedMethod === "STREAM") {
+                result = new Uint8Array(await response.arrayBuffer());
+            } else {
+                const raw = await response.text();
+                result = raw;
+                if (raw) { try { result = JSON.parse(raw); } catch { } }
+            }
             if (response.ok) Send._notify(onSuccess, result, null, response);
             else Send._notify(onError, result, response.status, response);
             return response;
@@ -178,6 +189,7 @@ static request(method = "POST", url = null, data = null, selector = "body",
 
     const xhr = new XMLHttpRequest();
     xhr.open(method, url, asynchronous !== false);
+    if (requestedMethod === "FILE" || requestedMethod === "STREAM") xhr.responseType = "blob";
     if (contentType) xhr.setRequestHeader("Content-Type", contentType);
     if (asynchronous !== false && timeout > 0) xhr.timeout = timeout;
     if (xhr.upload && xhr.upload.addEventListener)
