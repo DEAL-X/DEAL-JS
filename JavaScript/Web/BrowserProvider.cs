@@ -24,6 +24,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public bool RandomizedPort { get; set; } = false;
         public string Endpoint => Host + ":" + Port;
         public int Timeout { get; set; } = 60000;
+        public BrowserPage CurrentPage { get; private set; }
         public bool IsAlive => Process != null && !Process.HasExited;
 
         public BrowserProvider(string host = null, int? port = null, string driverPath = null)
@@ -36,6 +37,8 @@ namespace MiMFa.Engine.JavaScript.Web
 
         public void Dispose()
         {
+            CurrentPage?.Dispose();
+            CurrentPage = null;
             if (Process != null)
             {
                 try
@@ -166,6 +169,8 @@ namespace MiMFa.Engine.JavaScript.Web
                     var page = new BrowserPage(id, connection);
                     await page.InitializeAsync().ConfigureAwait(false);
                     await page.NavigateAsync(url, Timeout).ConfigureAwait(false);
+                    CurrentPage?.Dispose();
+                    CurrentPage = page;
                     return page;
                 }
                 catch
