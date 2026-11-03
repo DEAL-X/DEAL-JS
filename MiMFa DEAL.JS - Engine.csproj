@@ -172,16 +172,16 @@
     <None Update="Library\deal\web\load.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\download.js">
+    <None Update="Library\deal\web\Download.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Library\deal\web\request.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\send.js">
+    <None Update="Library\deal\web\Send.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\temporary.js">
+    <None Update="Library\deal\web\Temporary.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Library\deal\web\transfer.djs">

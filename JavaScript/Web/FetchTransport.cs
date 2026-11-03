@@ -23,6 +23,7 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class FetchTransport : IDisposable
     {
         private HttpClient _client;
+        private CookieContainer _cookies;
 
         private readonly ConcurrentDictionary<string, CancellationTokenSource>
             _requests = new ConcurrentDictionary<string, CancellationTokenSource>();
@@ -44,7 +45,7 @@ namespace MiMFa.Engine.JavaScript.Web
             if (IsAlive)
                 return;
 
-            var cookies = new CookieContainer();
+            _cookies = new CookieContainer();
 
             var handler = new HttpClientHandler
             {
@@ -54,8 +55,9 @@ namespace MiMFa.Engine.JavaScript.Web
                     DecompressionMethods.GZip |
                     DecompressionMethods.Deflate,
 
-                UseCookies = true,
-                CookieContainer = cookies
+                // Cookies are managed per request so credentials:'omit' can
+                // be honored by the JavaScript Fetch compatibility layer.
+                UseCookies = false
             };
 
             _client = new HttpClient(handler, true)
@@ -109,7 +111,8 @@ namespace MiMFa.Engine.JavaScript.Web
             int timeout = 30000,
             JObject headers = null,
             string id = null,
-            string bodyBase64 = null)
+            string bodyBase64 = null,
+            string credentials = "same-origin")
         {
             if (!IsAlive || _client == null)
                 throw new ObjectDisposedException(nameof(FetchTransport));
@@ -130,6 +133,18 @@ namespace MiMFa.Engine.JavaScript.Web
             method = string.IsNullOrWhiteSpace(method)
                 ? "GET"
                 : method.ToUpperInvariant();
+
+            if (timeout < 0)
+                throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be zero (infinite) or a positive number.");
+
+            if (!string.Equals(credentials, "omit", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(credentials, "same-origin", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(credentials, "include", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Invalid Fetch credentials mode.", nameof(credentials));
+
+            if ((method == "GET" || method == "HEAD") &&
+                (data != null || bodyBase64 != null))
+                throw new InvalidOperationException("GET and HEAD requests cannot contain a body.");
 
             var cancellation = new CancellationTokenSource();
 
@@ -157,11 +172,34 @@ namespace MiMFa.Engine.JavaScript.Web
                     if (headers != null)
                         AddHeaders(request, headers);
 
+                    // Cookie is a forbidden Fetch request header. Ignore any
+                    // caller-supplied Cookie value and apply the host cookie jar
+                    // only when credentials are not omitted.
+                    request.Headers.Remove("Cookie");
+                    if (!string.Equals(credentials, "omit", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string cookieHeader = _cookies.GetCookieHeader(requestUri);
+                        if (!string.IsNullOrEmpty(cookieHeader))
+                            request.Headers.TryAddWithoutValidation("Cookie", cookieHeader);
+                    }
+
                     using (var response = await _client.SendAsync(
                         request,
                         HttpCompletionOption.ResponseContentRead,
                         cancellation.Token).ConfigureAwait(false))
                     {
+                        if (!string.Equals(credentials, "omit", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (response.Headers.TryGetValues("Set-Cookie", out var setCookies))
+                            {
+                                foreach (var setCookie in setCookies)
+                                {
+                                    try { _cookies.SetCookies(response.RequestMessage?.RequestUri ?? requestUri, setCookie); }
+                                    catch (CookieException) { /* Ignore malformed server cookie values. */ }
+                                }
+                            }
+                        }
+
                         var responseBody = response.Content == null
                             ? Array.Empty<byte>()
                             : await response.Content.ReadAsByteArrayAsync()

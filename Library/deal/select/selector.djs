@@ -11,10 +11,10 @@
 //     an HTMLElement, or an XMLElement.
 
 function detect_Selector_Arguments() {
-    if (arguments.length <= 0) return [null, document];
+    if (arguments.length <= 0) return [null, typeof document !== "undefined" ? document : null];
 
     let query = arguments[0];
-    let source = document;
+    let source = typeof document !== "undefined" ? document : null;
 
     switch (arguments.length) {
         case 1:
@@ -53,13 +53,18 @@ COMMAND select_XPath(query, source) {
     }
 
     let doc = root.nodeType == 9 ? root : root.ownerDocument;
-    let evaluated = doc.evaluate(
-        query,
-        root,
-        null,
-        XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-        null
-    );
+    if (typeof doc.evaluate !== "function") return result;
+
+    // XPathResult is normally exposed by the browser global. Resolve it
+    // from the document's window when available, with the standard snapshot
+    // constant as a fallback for compatible DOM implementations.
+    let snapshotType = 7;
+    if (typeof XPathResult !== "undefined")
+        snapshotType = XPathResult.ORDERED_NODE_SNAPSHOT_TYPE;
+    else if (doc.defaultView && doc.defaultView.XPathResult)
+        snapshotType = doc.defaultView.XPathResult.ORDERED_NODE_SNAPSHOT_TYPE;
+
+    let evaluated = doc.evaluate(query, root, null, snapshotType, null);
 
     for (let i = 0; i < evaluated.snapshotLength; i++) {
         result.push(evaluated.snapshotItem(i));

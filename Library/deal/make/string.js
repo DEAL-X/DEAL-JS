@@ -1,31 +1,26 @@
-Make.string = function(object = null) {
-	const t = typeof object;
-	switch(t)
-	{
-		case "string":
-			return object;
-			
-		case "array":
-		case "object":
-			return JSON.stringify(object);
-		
-		default:
-			if(object instanceof HTMLInputElement) 
-				return object.value;
-			if(object instanceof HTMLImageElement) 
-				return object.src;
-			if(object instanceof HTMLSourceElement) 
-				return object.src;
-			if(object instanceof HTMLIFrameElement) 
-				return object.src;
-			if(object instanceof HTMLScriptElement) 
-				return object.src ?? object.textContent;
-			if(object instanceof HTMLStyleElement) 
-				return object.textContent;
-			if(object instanceof HTMLProgressElement) 
-				return object.value;
-			if(object instanceof HTMLElement) 
-				return object.innerText;
-			return String(object);
-	}
+Make.string = function (object = null) {
+    if (object === null || object === undefined)
+        return String(object);
+
+    if (typeof object === "string")
+        return object;
+
+    if (typeof object === "object") {
+        // DOM values must be handled before JSON serialization.
+        const isInstance = name =>
+            typeof globalThis[name] === "function" && object instanceof globalThis[name];
+
+        if (isInstance("HTMLInputElement")) return object.value;
+        if (isInstance("HTMLImageElement")) return object.src;
+        if (isInstance("HTMLSourceElement")) return object.src;
+        if (isInstance("HTMLIFrameElement")) return object.src;
+        if (isInstance("HTMLScriptElement")) return object.src || object.textContent;
+        if (isInstance("HTMLStyleElement")) return object.textContent;
+        if (isInstance("HTMLProgressElement")) return object.value;
+        if (isInstance("HTMLElement")) return object.innerText ?? object.textContent ?? "";
+
+        return JSON.stringify(object);
+    }
+
+    return String(object);
 };

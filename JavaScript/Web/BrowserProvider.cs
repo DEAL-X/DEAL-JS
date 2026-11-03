@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,8 +24,9 @@ namespace MiMFa.Engine.JavaScript.Web
         public string Host { get; set; } = "http://127.0.0.1";
         public int Port { get; set; }
         public bool RandomizedPort { get; set; } = false;
-        public string Endpoint => Host + ":" + Port;
+        public string Endpoint => Host.TrimEnd('/') + ":" + Port;
         public int Timeout { get; set; } = 60000;
+        public BrowserPage CurrentPage { get; private set; }
         public bool IsAlive => Process != null && !Process.HasExited;
 
         public BrowserProvider(string host = null, int? port = null, string driverPath = null)
@@ -34,8 +37,17 @@ namespace MiMFa.Engine.JavaScript.Web
             RandomizedPort = !port.HasValue;
         }
 
+        private void CloseCurrentPage()
+        {
+            if (CurrentPage == null) return;
+            try { CurrentPage.Close(); }
+            catch { CurrentPage.Dispose(); }
+            finally { CurrentPage = null; }
+        }
+
         public void Dispose()
         {
+            CloseCurrentPage();
             if (Process != null)
             {
                 try
@@ -65,6 +77,11 @@ namespace MiMFa.Engine.JavaScript.Web
             if (IsAlive)
                 return;
 
+            // Reuse an externally started Chromium instance when a port was
+            // explicitly configured; do not launch a second browser process.
+            if (Port > 0 && IsAvailableAsync().GetAwaiter().GetResult())
+                return;
+
             if (string.IsNullOrWhiteSpace(DriverPath))
             {
                 string x86Path = Path.Combine(
@@ -73,8 +90,8 @@ namespace MiMFa.Engine.JavaScript.Web
                 );
 
                 string x64Path = Path.Combine(
-                    Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)),
-                    "Program Files", "Google", "Chrome", "Application", "chrome.exe"
+                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                    "Google", "Chrome", "Application", "chrome.exe"
                 );
 
                 string localPath = Path.Combine(
@@ -104,7 +121,7 @@ namespace MiMFa.Engine.JavaScript.Web
 
             Directory.CreateDirectory(profilePath);
 
-            if(RandomizedPort || Port <= 0) Port = (new Random()).Next(9000,99999);
+            if (RandomizedPort || Port <= 0) Port = GetFreePort();
 
             var startInfo = new ProcessStartInfo
             {
@@ -114,7 +131,7 @@ namespace MiMFa.Engine.JavaScript.Web
                 CreateNoWindow = false
             };
 
-            Process = Process.Start(startInfo);
+            Process = System.Diagnostics.Process.Start(startInfo);
 
             if (Process == null)
                 throw new InvalidOperationException("Failed to start the browser.");
@@ -122,6 +139,14 @@ namespace MiMFa.Engine.JavaScript.Web
         public void Final()
         {
             Dispose();
+        }
+
+        private static int GetFreePort()
+        {
+            var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            try { return ((IPEndPoint)listener.LocalEndpoint).Port; }
+            finally { listener.Stop(); }
         }
 
         public async Task<bool> IsAvailableAsync()
@@ -143,9 +168,25 @@ namespace MiMFa.Engine.JavaScript.Web
             return r.Result;
         }
 
-        public async Task<BrowserPage> LoadAsync(string url)
+        public Task<BrowserPage> LoadAsync(string url)
+        {
+            return LoadAsync(url, Timeout);
+        }
+
+        public async Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds)
         {
             if (string.IsNullOrWhiteSpace(url)) url = "about:blank";
+            if (timeoutMilliseconds <= 0) timeoutMilliseconds = Timeout;
+            if (!IsAlive) Initial();
+
+            // Chromium may take a moment to expose its DevTools endpoint after launch.
+            var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMilliseconds);
+            while (!await IsAvailableAsync().ConfigureAwait(false))
+            {
+                if (DateTime.UtcNow >= deadline)
+                    throw new TimeoutException("The Chromium DevTools endpoint did not become available.");
+                await Task.Delay(100).ConfigureAwait(false);
+            }
 
             // /json/new is a DevTools endpoint and requires PUT on current Chromium builds.
             string createUrl = Endpoint.TrimEnd('/') + "/json/new?" + Uri.EscapeDataString(url);
@@ -165,7 +206,9 @@ namespace MiMFa.Engine.JavaScript.Web
                     await connection.ConnectAsync(wsUri, CancellationToken.None).ConfigureAwait(false);
                     var page = new BrowserPage(id, connection);
                     await page.InitializeAsync().ConfigureAwait(false);
-                    await page.NavigateAsync(url, Timeout).ConfigureAwait(false);
+                    await page.NavigateAsync(url, timeoutMilliseconds).ConfigureAwait(false);
+                    CloseCurrentPage();
+                    CurrentPage = page;
                     return page;
                 }
                 catch
