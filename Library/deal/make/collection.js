@@ -1,108 +1,50 @@
-Make.array = function (object) {
-	if (isArray(object))
-		if (count(object) === 1)
-			return array(object[0]);
-		else if (Array.isArray(obj)) return object;
-		else return Array.from(
-			(function* () {
-				let i = 0;
-				for (const item of object)
-					yield func(item, i++);
-			})()
-		);
-	else return [object];
+Make.array = function (value, mapper = null) {
+    let result;
+    if (value == null) result = [];
+    else if (Array.isArray(value)) result = value.slice();
+    else if (typeof value !== "string" && typeof value[Symbol.iterator] === "function")
+        result = Array.from(value);
+    else result = [value];
+
+    return typeof mapper === "function" ? result.map(mapper) : result;
 };
 
-Make.matrix = function(object) {
-    let res = [];
-
-    if (object == null) return res;
-    
-    // Convert a single object into a header row and a value row.
+Make.matrix = function (object) {
+    if (object == null) return [];
     if (!Array.isArray(object)) {
         if (typeof object !== "object") return [[object]];
-
-        let keys = Object.keys(object);
-        let values = [];
-
-        for (let key of keys) {
-            values.push(object[key]);
-        }
-
-        res.push(keys);
-        res.push(values);
-        return res;
+        const keys = Object.keys(object);
+        return [keys, keys.map(key => object[key])];
     }
+    if (object.length === 0) return [];
 
-    if (object.length === 0) return res;
-
-    // Check whether the array represents a collection of objects.
-    let isObjectRows = object.every(
-        item => item !== null &&
-                typeof item === "object" &&
-                !Array.isArray(item)
+    const isObjectRows = object.every(item =>
+        item !== null && typeof item === "object" && !Array.isArray(item)
     );
-
     if (isObjectRows) {
-        let keys = [];
-
-        // Collect all distinct property names in encounter order.
-        for (let item of object) {
-            for (let key of Object.keys(item)) {
+        const keys = [];
+        for (const item of object)
+            for (const key of Object.keys(item))
                 if (!keys.includes(key)) keys.push(key);
-            }
-        }
 
-        res.push(keys);
-
-        // Align each object's values with the shared header.
-        for (let item of object) {
-            let row = [];
-            let lastPresent = -1;
-
-            for (let i = 0; i < keys.length; i++) {
-                let key = keys[i];
-
-                if (Object.prototype.hasOwnProperty.call(item, key)) {
-                    row[i] = item[key];
-                    lastPresent = i;
-                } else {
-                    row[i] = undefined;
-                }
-            }
-
-            // Omit trailing columns that this object does not contain.
-            row.length = lastPresent + 1;
-            res.push(row);
-        }
-
-        return res;
+        return [
+            keys,
+            ...object.map(item => keys.map(key =>
+                Object.prototype.hasOwnProperty.call(item, key) ? item[key] : undefined
+            ))
+        ];
     }
 
-    // Preserve an existing matrix of scalar values.
-    let isScalarMatrix = object.every(
-        row => Array.isArray(row) &&
-               row.every(value =>
-                   value == null || typeof value !== "object"
-               )
+    const isScalarMatrix = object.every(row =>
+        Array.isArray(row) && row.every(value => value == null || typeof value !== "object")
     );
+    if (isScalarMatrix) return object.map(row => row.slice());
 
-    if (isScalarMatrix) {
-        return object.map(row => row.slice());
+    const result = [];
+    for (const item of object) {
+        if (Array.isArray(item)) result.push(...Make.matrix(item));
+        else if (item !== null && typeof item === "object") result.push(...Make.matrix(item));
+        else result.push([item]);
     }
-
-    // Recursively convert nested arrays or objects and append their rows.
-    for (let item of object) {
-        if (Array.isArray(item)) {
-            let nested = convert.to.matrix(item);
-            res.push(...nested);
-        } else if (item !== null && typeof item === "object") {
-            let nested = convert.to.matrix(item);
-            res.push(...nested);
-        } else {
-            res.push([item]);
-        }
-    }
-
-    return res;
+    return result;
 };
