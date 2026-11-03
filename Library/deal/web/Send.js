@@ -172,7 +172,7 @@ static request(method = "POST", url = null, data = null, selector = "body",
         if (contentType) headers["Content-Type"] = contentType;
         const options = { method, headers, timeout: timeout == null ? 0 : Number(timeout) };
         if (data != null) options.body = data;
-        if (timeout > 0 && typeof AbortController !== "undefined") {
+        if (timeout > 0 && typeof AbortController !== "undefined" && !fetch.isDealFetch) {
             const controller = new AbortController();
             options.signal = controller.signal;
             const timeoutId = setTimeout(() => controller.abort(), timeout);
