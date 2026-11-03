@@ -160,8 +160,10 @@ namespace MiMFa.Engine.JavaScript.Web
                     if (headers != null)
                         AddHeaders(request, headers);
 
-                    // The host has no browser-origin context, so same-origin
-                    // and include both use the host cookie jar. omit sends none.
+                    // Cookie is a forbidden Fetch request header. Ignore any
+                    // caller-supplied Cookie value and apply the host cookie jar
+                    // only when credentials are not omitted.
+                    request.Headers.Remove("Cookie");
                     if (!string.Equals(credentials, "omit", StringComparison.OrdinalIgnoreCase))
                     {
                         string cookieHeader = _cookies.GetCookieHeader(requestUri);
