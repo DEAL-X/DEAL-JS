@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -112,7 +114,7 @@ namespace MiMFa.Engine.JavaScript.Web
 
             Directory.CreateDirectory(profilePath);
 
-            if(RandomizedPort || Port <= 0) Port = (new Random()).Next(9000,99999);
+            if (RandomizedPort || Port <= 0) Port = GetFreePort();
 
             var startInfo = new ProcessStartInfo
             {
@@ -130,6 +132,14 @@ namespace MiMFa.Engine.JavaScript.Web
         public void Final()
         {
             Dispose();
+        }
+
+        private static int GetFreePort()
+        {
+            var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+            try { return ((IPEndPoint)listener.LocalEndpoint).Port; }
+            finally { listener.Stop(); }
         }
 
         public async Task<bool> IsAvailableAsync()
