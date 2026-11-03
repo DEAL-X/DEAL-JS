@@ -89,6 +89,10 @@ static _prepare(method, url, data) {
     }
     else if (formData) contentType = null;
     else if (Send._isBinary(data)) contentType = data.type || null;
+    else if (typeof URLSearchParams !== "undefined" && data instanceof URLSearchParams) {
+        data = data.toString();
+        contentType = "application/x-www-form-urlencoded; charset=utf-8";
+    }
     else if (data != null && typeof data === "object") {
         data = JSON.stringify(data);
         contentType = "application/json; charset=utf-8";
