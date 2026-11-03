@@ -53,10 +53,19 @@ static _prepare(method, url, data) {
 
     if (method === "GET" || method === "HEAD") {
         if (data != null) {
-            const params = data instanceof URLSearchParams
-                ? data
-                : new URLSearchParams(typeof data === "string" ? data : data);
-            const query = params.toString();
+            let query;
+            if (typeof URLSearchParams !== "undefined" && data instanceof URLSearchParams) {
+                query = data.toString();
+            } else if (typeof data === "string") {
+                query = data.replace(/^\\?/, "");
+            } else {
+                const entries = Array.isArray(data) ? data : Object.entries(data);
+                query = entries.map(entry => {
+                    const key = Array.isArray(entry) ? entry[0] : entry[0];
+                    const value = Array.isArray(entry) ? entry[1] : entry[1];
+                    return encodeURIComponent(key) + "=" + encodeURIComponent(value == null ? "" : value);
+                }).join("&");
+            }
             if (query) url += (url.includes("?") ? "&" : "?") + query;
         }
         data = null;
