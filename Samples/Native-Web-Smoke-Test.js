@@ -1,4 +1,4 @@
-// Run after the Environment has injected fetchTransport and loaded ~fetch.js.
+// Run after Environment has initialized the Engine and loaded Library/deal/web/fetch.js.
 async function testDealFetch() {
     const response = await fetch("https://example.com/");
     if (!(response instanceof Response)) throw new Error("fetch did not return Response");
