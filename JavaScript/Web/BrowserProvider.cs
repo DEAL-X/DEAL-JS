@@ -161,12 +161,18 @@ namespace MiMFa.Engine.JavaScript.Web
             return r.Result;
         }
 
-        public async Task<BrowserPage> LoadAsync(string url)
+        public Task<BrowserPage> LoadAsync(string url)
+        {
+            return LoadAsync(url, Timeout);
+        }
+
+        public async Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds)
         {
             if (string.IsNullOrWhiteSpace(url)) url = "about:blank";
+            if (timeoutMilliseconds <= 0) timeoutMilliseconds = Timeout;
 
             // Chromium may take a moment to expose its DevTools endpoint after launch.
-            var deadline = DateTime.UtcNow.AddMilliseconds(Timeout);
+            var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMilliseconds);
             while (!await IsAvailableAsync().ConfigureAwait(false))
             {
                 if (DateTime.UtcNow >= deadline)
@@ -192,7 +198,7 @@ namespace MiMFa.Engine.JavaScript.Web
                     await connection.ConnectAsync(wsUri, CancellationToken.None).ConfigureAwait(false);
                     var page = new BrowserPage(id, connection);
                     await page.InitializeAsync().ConfigureAwait(false);
-                    await page.NavigateAsync(url, Timeout).ConfigureAwait(false);
+                    await page.NavigateAsync(url, timeoutMilliseconds).ConfigureAwait(false);
                     CurrentPage?.Dispose();
                     CurrentPage = page;
                     return page;
