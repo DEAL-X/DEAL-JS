@@ -24,7 +24,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public string Host { get; set; } = "http://127.0.0.1";
         public int Port { get; set; }
         public bool RandomizedPort { get; set; } = false;
-        public string Endpoint => Host + ":" + Port;
+        public string Endpoint => Host.TrimEnd('/') + ":" + Port;
         public int Timeout { get; set; } = 60000;
         public BrowserPage CurrentPage { get; private set; }
         public bool IsAlive => Process != null && !Process.HasExited;
@@ -177,6 +177,7 @@ namespace MiMFa.Engine.JavaScript.Web
         {
             if (string.IsNullOrWhiteSpace(url)) url = "about:blank";
             if (timeoutMilliseconds <= 0) timeoutMilliseconds = Timeout;
+            if (!IsAlive) Initial();
 
             // Chromium may take a moment to expose its DevTools endpoint after launch.
             var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMilliseconds);
