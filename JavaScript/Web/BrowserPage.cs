@@ -57,7 +57,8 @@ namespace MiMFa.Engine.JavaScript.Web
                 await _connection.SendAsync("Page.navigate", new JObject { ["url"] = url })
                     .ConfigureAwait(false);
                 using (var timeout = new CancellationTokenSource(timeoutMilliseconds))
-                using (timeout.Token.Register(() => loaded.TrySetCanceled()))
+                using (timeout.Token.Register(() => loaded.TrySetException(
+                    new TimeoutException("The page did not finish loading before the navigation timeout."))))
                     await loaded.Task.ConfigureAwait(false);
 
                 await RefreshAsync().ConfigureAwait(false);
@@ -76,12 +77,17 @@ namespace MiMFa.Engine.JavaScript.Web
                 ["userGesture"] = true
             }).ConfigureAwait(false);
 
+            if (result["exceptionDetails"] != null)
+                throw new InvalidOperationException(result["exceptionDetails"].ToString());
+
             JObject remote = result["result"] as JObject;
             if (remote == null) return null;
-            if (remote["exceptionDetails"] != null)
-                throw new InvalidOperationException(remote["exceptionDetails"].ToString());
-            JToken value = remote["result"]?["value"];
-            return value == null ? null : value.Type == JTokenType.String ? (string)value : value.ToString();
+            if (remote["subtype"]?.Value<string>() == "error")
+                throw new InvalidOperationException(remote["description"]?.Value<string>() ?? "JavaScript evaluation failed.");
+
+            JToken value = remote["value"];
+            if (value == null) return null;
+            return value.Type == JTokenType.String ? value.Value<string>() : value.ToString();
         }
 
         public async Task RefreshAsync()
