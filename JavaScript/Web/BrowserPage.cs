@@ -48,14 +48,19 @@ namespace MiMFa.Engine.JavaScript.Web
             Action<string, JObject> handler = null;
             handler = (name, data) =>
             {
-                if (name == "Page.loadEventFired") loaded.TrySetResult(true);
+                if (name == "Page.loadEventFired" || name == "Page.navigatedWithinDocument")
+                    loaded.TrySetResult(true);
             };
             _connection.EventReceived += handler;
 
             try
             {
-                await _connection.SendAsync("Page.navigate", new JObject { ["url"] = url })
-                    .ConfigureAwait(false);
+                var navigation = await _connection.SendAsync(
+                    "Page.navigate", new JObject { ["url"] = url }).ConfigureAwait(false);
+                if (navigation["errorText"] != null)
+                    throw new InvalidOperationException(navigation["errorText"].Value<string>());
+
+                if (timeoutMilliseconds <= 0) timeoutMilliseconds = 60000;
                 using (var timeout = new CancellationTokenSource(timeoutMilliseconds))
                 using (timeout.Token.Register(() => loaded.TrySetException(
                     new TimeoutException("The page did not finish loading before the navigation timeout."))))
