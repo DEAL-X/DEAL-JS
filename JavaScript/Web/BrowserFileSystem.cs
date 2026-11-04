@@ -24,7 +24,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> kind => GetKindAsync();
         public Task<string> GetNameAsync() => _page.CallFunctionValueAsync(ObjectId, "function(){return this.name}");
         public Task<string> GetKindAsync() => _page.CallFunctionValueAsync(ObjectId, "function(){return this.kind}");
-        public Task<BrowserFileMetadata> getFile() => GetFileAsync();
+        public Task<BrowserFileSystemFile> getFile() => GetFileAsync();
         public Task<string> text() => ReadTextAsync();
         public Task<string> base64() => ReadBase64Async();
         public Task<bool> writeText(string text) => WriteTextAsync(text);
@@ -39,13 +39,9 @@ namespace MiMFa.Engine.JavaScript.Web
             return bool.TryParse(result, out bool same) && same;
         }
 
-        public async Task<BrowserFileMetadata> GetFileAsync()
-        {
-            string json = await _page.CallFunctionValueAsync(ObjectId,
-                "async function(){const f=await this.getFile();return JSON.stringify({name:f.name,size:f.size,type:f.type,lastModified:f.lastModified})}")
-                .ConfigureAwait(false);
-            return Newtonsoft.Json.JsonConvert.DeserializeObject<BrowserFileMetadata>(json);
-        }
+        public Task<BrowserFileSystemFile> GetFileAsync() =>
+            _page.CallFunctionObjectAsync(ObjectId, "async function(){return await this.getFile()}")
+                .ContinueWith(t => new BrowserFileSystemFile(_page, t.GetAwaiter().GetResult()), TaskScheduler.Default);
 
         public Task<string> ReadTextAsync() =>
             _page.CallFunctionValueAsync(ObjectId, "async function(){return await (await this.getFile()).text()}");
@@ -110,6 +106,27 @@ namespace MiMFa.Engine.JavaScript.Web
             string result = await _page.CallFunctionValueAsync(ObjectId, "async function(){await this.abort();return true}").ConfigureAwait(false);
             return bool.TryParse(result, out bool success) && success;
         }
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _page.ReleaseObjectAsync(ObjectId).GetAwaiter().GetResult();
+        }
+    }
+
+    public sealed class BrowserFileSystemFile : IDisposable
+    {
+        private readonly BrowserPage _page;
+        private bool _disposed;
+        internal BrowserFileSystemFile(BrowserPage page, string objectId) { _page = page; ObjectId = objectId; }
+        internal string ObjectId { get; }
+        public Task<string> name => _page.CallFunctionValueAsync(ObjectId, "function(){return this.name}");
+        public Task<string> type => _page.CallFunctionValueAsync(ObjectId, "function(){return this.type}");
+        public Task<string> size => _page.CallFunctionValueAsync(ObjectId, "function(){return this.size}");
+        public Task<string> lastModified => _page.CallFunctionValueAsync(ObjectId, "function(){return this.lastModified}");
+        public Task<string> text() => _page.CallFunctionValueAsync(ObjectId, "async function(){return await this.text()}");
+        public Task<string> base64() => _page.CallFunctionValueAsync(ObjectId,
+            "async function(){const b=new Uint8Array(await this.arrayBuffer());let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)}");
         public void Dispose()
         {
             if (_disposed) return;
