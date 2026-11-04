@@ -315,16 +315,51 @@ namespace MiMFa.Engine.JavaScript.Web
             if (string.IsNullOrWhiteSpace(url)) url = "about:blank";
             if (timeoutMilliseconds <= 0) timeoutMilliseconds = Timeout;
             await EnsureAvailableAsync(timeoutMilliseconds).ConfigureAwait(false);
+            await EnsureBrowserConnectionAsync().ConfigureAwait(false);
 
-            string createUrl = Endpoint.TrimEnd('/') + "/json/new?" + Uri.EscapeDataString(url);
-            using (var response = await _http.PutAsync(createUrl, null).ConfigureAwait(false))
+            // Activate an anchor tab first so Chromium creates the new tab in this
+            // BrowserProvider's application-level window, not another window.
+            if (!string.IsNullOrEmpty(_currentTargetId))
+                await _browserConnection.SendAsync("Target.activateTarget",
+                    new JObject { ["targetId"] = _currentTargetId }).ConfigureAwait(false);
+
+            JObject created = await _browserConnection.SendAsync("Target.createTarget",
+                new JObject { ["url"] = "about:blank", ["newWindow"] = false, ["background"] = false })
+                .ConfigureAwait(false);
+            string id = (string)created["targetId"];
+            if (string.IsNullOrWhiteSpace(id))
+                throw new InvalidOperationException("Chromium did not return the identifier of the new tab.");
+
+            try
             {
-                response.EnsureSuccessStatusCode();
-                JObject target = JObject.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-                string id = (string)target["id"];
-                string ws = (string)target["webSocketDebuggerUrl"];
-                if (string.IsNullOrWhiteSpace(id) || !Uri.TryCreate(ws, UriKind.Absolute, out Uri wsUri))
-                    throw new InvalidOperationException("Browser returned an invalid page target.");
+                int createdWindowId = await GetWindowIdAsync(id).ConfigureAwait(false);
+                if (!_windowId.HasValue) _windowId = createdWindowId;
+                if (_windowId.Value != createdWindowId)
+                    throw new InvalidOperationException("Chromium created the new tab in a different application-level window.");
+
+                BrowserTabInfo info = null;
+                var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMilliseconds);
+                while (info == null && DateTime.UtcNow < deadline)
+                {
+                    using (var response = await _http.GetAsync(Endpoint.TrimEnd('/') + "/json/list").ConfigureAwait(false))
+                    {
+                        response.EnsureSuccessStatusCode();
+                        var targets = JArray.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                        var item = targets.OfType<JObject>().FirstOrDefault(x => (string)x["id"] == id);
+                        if (item != null)
+                            info = new BrowserTabInfo
+                            {
+                                Id = id,
+                                Type = (string)item["type"],
+                                Title = (string)item["title"],
+                                Url = (string)item["url"],
+                                WebSocketDebuggerUrl = (string)item["webSocketDebuggerUrl"]
+                            };
+                    }
+                    if (info == null) await Task.Delay(50).ConfigureAwait(false);
+                }
+                if (info == null || !Uri.TryCreate(info.WebSocketDebuggerUrl, UriKind.Absolute, out Uri wsUri))
+                    throw new TimeoutException("The new tab did not become available through the DevTools endpoint.");
 
                 var connection = new CdpConnection();
                 try
@@ -343,6 +378,12 @@ namespace MiMFa.Engine.JavaScript.Web
                     connection.Dispose();
                     throw;
                 }
+            }
+            catch
+            {
+                try { await _browserConnection.SendAsync("Target.closeTarget", new JObject { ["targetId"] = id }).ConfigureAwait(false); }
+                catch { }
+                throw;
             }
         }
 
