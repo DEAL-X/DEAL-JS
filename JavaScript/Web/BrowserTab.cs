@@ -30,8 +30,6 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> reload() => ReloadAsync();
         public Task<bool> close() => CloseAsync();
         public Task<bool> activate() => ActivateAsync();
-        public Task<string> open(string optionsJson = null) => OpenAsync(optionsJson);
-        public Task<string> save(string optionsJson = null) => SaveAsync(optionsJson);
 
         public Task<string> ReloadAsync() => Page.ReloadAsync();
         public Task<bool> CloseAsync() => _browser.CloseAsync(Id);
