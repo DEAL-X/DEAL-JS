@@ -33,7 +33,7 @@ async function browserObjectModelSmokeTest() {
         throw new Error("browser.tab did not follow browser.activate().");
 
     const version = await browser.runtime.GetVersionAsync();
-    if (!version || !version.Browser)
+    if (!version || !version.product)
         throw new Error("Browser runtime version information was not returned.");
 
     await browser.close(opened);
@@ -42,7 +42,7 @@ async function browserObjectModelSmokeTest() {
         title: title,
         href: href,
         tabCountBeforeClose: tabs.length,
-        browserVersion: version.Browser
+        browserVersion: version.product
     };
 }
 
