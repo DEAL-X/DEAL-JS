@@ -31,6 +31,10 @@ namespace MiMFa.Engine.JavaScript.Web
         private readonly HttpClient _http = new HttpClient();
         private readonly ConcurrentDictionary<string, BrowserPage> _pages =
             new ConcurrentDictionary<string, BrowserPage>();
+        private readonly ConcurrentDictionary<string, BrowserTab> _tabs =
+            new ConcurrentDictionary<string, BrowserTab>();
+        public BrowserTabs Tabs { get; }
+        public BrowserTab Tab => CurrentPage == null ? null : GetTab(CurrentPage);
 
         public Process Process;
         public string DriverPath { get; set; }
@@ -47,6 +51,7 @@ namespace MiMFa.Engine.JavaScript.Web
             Host = host ?? "http://127.0.0.1";
             Port = port ?? 0;
             DriverPath = driverPath;
+            Tabs = new BrowserTabs(this);
             RandomizedPort = !port.HasValue;
         }
 
@@ -55,6 +60,7 @@ namespace MiMFa.Engine.JavaScript.Web
             foreach (var item in _pages.Values)
                 item.Dispose();
             _pages.Clear();
+            _tabs.Clear();
             CurrentPage = null;
 
             if (Process != null)
@@ -149,7 +155,7 @@ namespace MiMFa.Engine.JavaScript.Web
             {
                 response.EnsureSuccessStatusCode();
                 var items = JArray.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-                return items.OfType<JObject>()
+                var result = items.OfType<JObject>()
                     .Where(x => string.Equals((string)x["type"], "page", StringComparison.OrdinalIgnoreCase))
                     .Select(x => new BrowserTabInfo
                     {
@@ -160,6 +166,14 @@ namespace MiMFa.Engine.JavaScript.Web
                         WebSocketDebuggerUrl = (string)x["webSocketDebuggerUrl"],
                         IsCurrent = CurrentPage != null && CurrentPage.TargetId == (string)x["id"]
                     }).ToList();
+                var activeIds = new HashSet<string>(result.Select(x => x.Id));
+                foreach (var id in _pages.Keys.Where(x => !activeIds.Contains(x)).ToList())
+                {
+                    if (_pages.TryRemove(id, out var stale)) stale.Dispose();
+                    _tabs.TryRemove(id, out _);
+                    if (CurrentPage != null && CurrentPage.TargetId == id) CurrentPage = null;
+                }
+                return result;
             }
         }
 
@@ -197,6 +211,23 @@ namespace MiMFa.Engine.JavaScript.Web
                 connection.Dispose();
                 throw;
             }
+        }
+
+        private BrowserTab GetTab(BrowserPage page)
+        {
+            return _tabs.GetOrAdd(page.TargetId, _ => new BrowserTab(this, page));
+        }
+
+        public async Task<BrowserTab> GetTabAsync(string targetId)
+        {
+            var page = await GetPageAsync(targetId).ConfigureAwait(false);
+            return GetTab(page);
+        }
+
+        public async Task<BrowserTab> OpenTabAsync(string url, int timeoutMilliseconds = 0)
+        {
+            var page = await OpenAsync(url, timeoutMilliseconds).ConfigureAwait(false);
+            return GetTab(page);
         }
 
         public async Task<BrowserPage> OpenAsync(string url, int timeoutMilliseconds = 0)
