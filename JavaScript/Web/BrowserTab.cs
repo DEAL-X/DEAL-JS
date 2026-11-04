@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace MiMFa.Engine.JavaScript.Web
 {
@@ -35,9 +36,18 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<bool> CloseAsync() => _browser.CloseAsync(Id);
         public Task<bool> ActivateAsync() => _browser.ActivateAsync(Id);
 
-        // Aliases of the native File System Access API. Chromium owns the picker UI.
-        public Task<string> OpenAsync(string optionsJson = null) => Page.EvaluateAsync("window.showOpenFilePicker(" + (string.IsNullOrWhiteSpace(optionsJson) ? "{}" : optionsJson) + ").then(handles=>JSON.stringify(handles.map(h=>({name:h.name,kind:h.kind}))))");
-        public Task<string> SaveAsync(string optionsJson = null) => Page.EvaluateAsync("window.showSaveFilePicker(" + (string.IsNullOrWhiteSpace(optionsJson) ? "{}" : optionsJson) + ").then(handle=>JSON.stringify({name:handle.name,kind:handle.kind}))");
+        // Native File System Access API aliases. Chromium owns the picker UI.
+        private static string NormalizePickerOptions(string optionsJson)
+        {
+            if (string.IsNullOrWhiteSpace(optionsJson)) return "{}";
+            var options = JObject.Parse(optionsJson);
+            return options.ToString(Newtonsoft.Json.Formatting.None);
+        }
+
+        public Task<string> OpenAsync(string optionsJson = null) =>
+            Page.EvaluateAsync("window.showOpenFilePicker(" + NormalizePickerOptions(optionsJson) + ").then(handles=>JSON.stringify(handles.map(h=>({name:h.name,kind:h.kind}))))");
+        public Task<string> SaveAsync(string optionsJson = null) =>
+            Page.EvaluateAsync("window.showSaveFilePicker(" + NormalizePickerOptions(optionsJson) + ").then(handle=>JSON.stringify({name:handle.name,kind:handle.kind}))");
 
         public void Dispose() => Page.Dispose();
     }
