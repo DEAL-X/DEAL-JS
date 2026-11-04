@@ -185,7 +185,8 @@ namespace MiMFa.Engine.JavaScript.Web
             _connection.EventReceived += handler;
             try
             {
-                await command().ConfigureAwait(false);
+                bool initiated = await command().ConfigureAwait(false);
+                if (!initiated) return Url;
                 using (var timeout = new CancellationTokenSource(timeoutMilliseconds))
                 using (timeout.Token.Register(() => loaded.TrySetException(new TimeoutException("The page navigation timed out."))))
                     await loaded.Task.ConfigureAwait(false);
@@ -203,7 +204,8 @@ namespace MiMFa.Engine.JavaScript.Web
                 int index = history["currentIndex"].Value<int>();
                 var entries = history["entries"] as JArray;
                 if (entries == null || index <= 0) return false;
-                await _connection.SendAsync("Page.navigateToHistoryEntry", new JObject { ["entryId"] = entries[index - 1]["id"] }).ConfigureAwait(false);
+                await _connection.SendAsync("Page.navigateToHistoryEntry",
+                    new JObject { ["entryId"] = entries[index - 1]["id"] }).ConfigureAwait(false);
                 return true;
             });
         }
@@ -216,21 +218,19 @@ namespace MiMFa.Engine.JavaScript.Web
                 int index = history["currentIndex"].Value<int>();
                 var entries = history["entries"] as JArray;
                 if (entries == null || index + 1 >= entries.Count) return false;
-                await _connection.SendAsync("Page.navigateToHistoryEntry", new JObject { ["entryId"] = entries[index + 1]["id"] }).ConfigureAwait(false);
+                await _connection.SendAsync("Page.navigateToHistoryEntry",
+                    new JObject { ["entryId"] = entries[index + 1]["id"] }).ConfigureAwait(false);
                 return true;
             });
         }
 
         public Task<string> ReloadAsync()
         {
-            return RunNavigationCommandAsync(() =>
-                ReloadCommandAsync());
-
-        private async Task<bool> ReloadCommandAsync()
-        {
-            await _connection.SendAsync("Page.reload", new JObject { ["ignoreCache"] = false }).ConfigureAwait(false);
-            return true;
-        }
+            return RunNavigationCommandAsync(async () =>
+            {
+                await _connection.SendAsync("Page.reload", new JObject { ["ignoreCache"] = false }).ConfigureAwait(false);
+                return true;
+            });
         }
 
         public void Close()
