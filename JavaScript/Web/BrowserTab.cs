@@ -23,17 +23,13 @@ namespace MiMFa.Engine.JavaScript.Web
         public string Title => Page.Title;
         public BrowserWindow Window { get; }
         public BrowserWindows Windows { get; }
-        public BrowserLocation Location => Window.Location;
         public BrowserWindow window => Window;
         public BrowserWindows windows => Windows;
-        public BrowserLocation location => Location;
         public Task<string> reload() => ReloadAsync();
         public Task<bool> close() => CloseAsync();
-        public Task<bool> activate() => ActivateAsync();
 
         public Task<string> ReloadAsync() => Page.ReloadAsync();
         public Task<bool> CloseAsync() => _browser.CloseAsync(Id);
-        public Task<bool> ActivateAsync() => _browser.ActivateAsync(Id);
 
         // Direct aliases for the native File System Access API. The picker and
         // its security/permission checks remain entirely owned by Chromium.
