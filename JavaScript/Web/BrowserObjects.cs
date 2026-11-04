@@ -50,6 +50,9 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> GetNameAsync() => EvaluateAsync("window.name");
         public Task<string> GetInnerWidthAsync() => EvaluateAsync("window.innerWidth");
         public Task<string> GetInnerHeightAsync() => EvaluateAsync("window.innerHeight");
+        public Task<string> focus() => FocusAsync();
+        public Task<string> scrollTo(double x, double y) => ScrollToAsync(x, y);
+        public Task<string> open(string url = null, string target = "_blank") => OpenAsync(url, target);
         public Task<string> FocusAsync() => EvaluateAsync("(window.focus(), true)");
         public Task<string> ScrollToAsync(double x, double y) => EvaluateAsync("window.scrollTo(" + x.ToString(System.Globalization.CultureInfo.InvariantCulture) + "," + y.ToString(System.Globalization.CultureInfo.InvariantCulture) + ")");
         public Task<string> OpenAsync(string url = null, string target = "_blank") =>
@@ -70,6 +73,8 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> GetHtmlAsync() => EvaluateAsync("document.documentElement ? document.documentElement.outerHTML : null");
         public Task<string> GetTextAsync() => EvaluateAsync("document.documentElement ? document.documentElement.innerText : null");
         public Task<string> GetCookieAsync() => EvaluateAsync("document.cookie");
+        public Task<string> querySelector(string selector) => QuerySelectorAsync(selector);
+        public Task<string> querySelectorAll(string selector) => QuerySelectorAllAsync(selector);
         public Task<string> QuerySelectorAsync(string selector) =>
             EvaluateAsync("(function(e){return e?e.outerHTML:null})(document.querySelector(" + Json(selector) + "))");
         public Task<string> QuerySelectorAllAsync(string selector) =>
