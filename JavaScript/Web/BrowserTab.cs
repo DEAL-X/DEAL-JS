@@ -28,16 +28,16 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> reload() => ReloadAsync();
         public Task<bool> close() => CloseAsync();
         public Task<bool> activate() => ActivateAsync();
-        public Task<string> open() => OpenAsync();
-        public Task<string> save() => SaveAsync();
+        public Task<string> open(string optionsJson = null) => OpenAsync(optionsJson);
+        public Task<string> save(string optionsJson = null) => SaveAsync(optionsJson);
 
         public Task<string> ReloadAsync() => Page.ReloadAsync();
         public Task<bool> CloseAsync() => _browser.CloseAsync(Id);
         public Task<bool> ActivateAsync() => _browser.ActivateAsync(Id);
 
         // Aliases of the native File System Access API. Chromium owns the picker UI.
-        public Task<string> OpenAsync() => Page.EvaluateAsync("window.showOpenFilePicker().then(handles=>JSON.stringify(handles.map(h=>({name:h.name,kind:h.kind}))))");
-        public Task<string> SaveAsync() => Page.EvaluateAsync("window.showSaveFilePicker().then(handle=>JSON.stringify({name:handle.name,kind:handle.kind}))");
+        public Task<string> OpenAsync(string optionsJson = null) => Page.EvaluateAsync("window.showOpenFilePicker(" + (string.IsNullOrWhiteSpace(optionsJson) ? "{}" : optionsJson) + ").then(handles=>JSON.stringify(handles.map(h=>({name:h.name,kind:h.kind}))))");
+        public Task<string> SaveAsync(string optionsJson = null) => Page.EvaluateAsync("window.showSaveFilePicker(" + (string.IsNullOrWhiteSpace(optionsJson) ? "{}" : optionsJson) + ").then(handle=>JSON.stringify({name:handle.name,kind:handle.kind}))");
 
         public void Dispose() => Page.Dispose();
     }
