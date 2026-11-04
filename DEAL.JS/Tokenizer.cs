@@ -126,8 +126,10 @@ namespace MiMFa.Engine.DEAL.JS
                                         if (Engine != null) try { Engine.Reserves[key] = ""; } catch { }
                                         return GetAcceptedToken(TokenType.Comment, $"// Reserved {Newtonsoft.Json.JsonConvert.ToString(key)} as a noise", location);
                                     case "be":
+                                    case "is":
                                     case "as":
                                     case "=":
+                                    case ":":
                                         walker.MoveToProcedure();
                                         var val = TokenizeCode(walker)?.Value ?? "";
                                         try { Engine?.Reserves.Add(key, val); } catch { }
@@ -242,12 +244,13 @@ namespace MiMFa.Engine.DEAL.JS
                         if(word.Length <= 6) return GetAcceptedToken(TokenType.Statement, word, location);
                     }
 
-                    //if (current == ":")
-                    //    return GetAcceptedToken(TokenType.End | TokenType.Symbol, current, location);
-
                     var p = string.Concat(walker.PeekUntil(ch => string.IsNullOrWhiteSpace(ch)).ToArray());
                     if (Regex.IsMatch(p, "^\\w+:\\/([\\/][^\\s\\[\\]\\{\\}\\/\\\\]+)+$", RegexOptions.CultureInvariant))
                         return TokenizePath(walker, location);
+
+                    var next = walker.Peek(1);
+                    if (current == "@" && (next == "\"" || next == "'" || next == "`"))
+                        return TokenizeString(walker, location, true);
                 }
             }
 
@@ -282,8 +285,8 @@ namespace MiMFa.Engine.DEAL.JS
             var compiler = this.Engine as MiMFa.Engine.Engine;
             if (compiler == null) return 0;
             var baseDirectory = Regex.IsMatch(path, "^\\.[\\/\\\\]", RegexOptions.CultureInvariant) ?
-                compiler?.ResourceProvider?.ParentDirectory(compiler.Input?.Source ?? compiler.SourceDirectory+"index") :
-                compiler?.ResourceProvider?.ParentDirectory(compiler.SourceDirectory + "index");
+                compiler?.ResourceProvider?.ParentDirectory(compiler.Input?.Source ?? compiler.ResourceDirectory+"index") :
+                compiler?.ResourceProvider?.ParentDirectory(compiler.ResourceDirectory + "index");
             var val = compiler?.ResourceProvider?.Resolve(path, baseDirectory);
             if (!string.IsNullOrEmpty(val) && val.EndsWith("\\")) return UseFolder(val, force);
             int num;
@@ -292,7 +295,7 @@ namespace MiMFa.Engine.DEAL.JS
         protected virtual int UseUrl(string url, bool force = false)
         {
             if (!Engine.FetchTransport.IsAlive) Engine.FetchTransport.Initial();
-            var path = Engine.SourceDirectory + url.GetHashCode()+(Regex.Match(url, "\\.[a-z]$").Value??".djs");
+            var path = Engine.ResourceDirectory + url.GetHashCode()+(Regex.Match(url, "\\.[a-z]$").Value??".djs");
             if(Engine.ResourceProvider.Exists(path)) return UsePath(path, force);
             var resp = Engine.FetchTransport.Get(url);
             if(!resp.Value<bool>("ok")) return 0;
@@ -335,7 +338,7 @@ namespace MiMFa.Engine.DEAL.JS
             {
                 var compiler = this.Engine as MiMFa.Engine.Engine;
                 var rp = compiler?.ResourceProvider;
-                if ((compiler as Engine).HasDependency(file)) return 1;
+                if (!force && (compiler as Engine).HasDependency(file)) return 1;
                 if (rp != null && rp.Exists(file))
                 {
                     int c = (compiler as Engine).Dependencies.Count + (Regex.IsMatch(file, @"[\\/]\.(deal|djs|js)$", RegexOptions.IgnoreCase)?0:UseFile(rp.ParentDirectory(file).TrimEnd('/','\\')+Path.DirectorySeparatorChar));

@@ -201,8 +201,8 @@ namespace MiMFa.Engine.JavaScript
             if (token.Is(TokenType.StringData))
             {
                 if (token.Is(TokenType.PatternData)) yield return new Node(token, NodeType.Chunk);
-                else if (token.Is(TokenType.TemplateStringData)) yield return new Node(token.Clone(null, "`" + token.Value + "`", null), NodeType.Chunk);
-                else yield return new Node(token.Clone(null, Newtonsoft.Json.JsonConvert.ToString(token.Value), null), NodeType.Chunk);
+                else if (token.Is(TokenType.TemplateStringData)) yield return new Node(token, NodeType.Chunk);
+                else yield return new Node(token, NodeType.Chunk);
             }
             else if (token.Is(TokenType.ArrayData)) yield return new Node(token.Clone(null, "[]", null), NodeType.Chunk);
             else if (token.Is(TokenType.ObjectData)) yield return new Node(token.Clone(null, "{}", null), NodeType.Chunk);

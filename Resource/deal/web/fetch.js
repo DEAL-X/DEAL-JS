@@ -5,9 +5,6 @@
 // Browser-only features (CORS enforcement, service workers, streaming bodies,
 // cache modes and browser-origin policy) are not simulated.
 
-const NativePromise = Promise;
-const NativeMap = Map;
-
 function createError(name, message) {
     const error = new Error(message);
     error.name = name;
@@ -57,7 +54,7 @@ class DealAbortController {
 // ------------------------------------------------------------
 class Headers {
     constructor(init) {
-        this._items = new NativeMap();
+        this._items = new Map();
         if (init instanceof Headers) init.forEach((v, k) => this.append(k, v));
         else if (Array.isArray(init)) init.forEach(pair => {
             if (!Array.isArray(pair) || pair.length !== 2) throw new TypeError("Each header pair must contain a name and value.");
@@ -114,8 +111,8 @@ class DealBlob {
         this.size = size;
         this.type = String(options.type || "").toLowerCase();
     }
-    arrayBuffer() { return NativePromise.resolve(this._bytes.slice().buffer); }
-    text() { return NativePromise.resolve(Make.textFromBytes(this._bytes)); }
+    arrayBuffer() { return Promise.resolve(this._bytes.slice().buffer); }
+    text() { return Promise.resolve(Make.textFromBytes(this._bytes)); }
     slice(start = 0, end = this.size, type = "") {
         const from = start < 0 ? Math.max(this.size + start, 0) : Math.min(start, this.size);
         const to = end < 0 ? Math.max(this.size + end, 0) : Math.min(end, this.size);
@@ -130,9 +127,9 @@ class Body {
         this.bodyUsed = !!bodyUsed;
     }
     _consume() {
-        if (this.bodyUsed) return NativePromise.reject(new TypeError("Body has already been consumed."));
+        if (this.bodyUsed) return Promise.reject(new TypeError("Body has already been consumed."));
         this.bodyUsed = true;
-        return NativePromise.resolve(this._bytes);
+        return Promise.resolve(this._bytes);
     }
     arrayBuffer() {
         return this._consume().then(bytes => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
@@ -244,25 +241,25 @@ function fetch(input, init) {
     let request;
     try {
         request = input instanceof Request && init === undefined ? input.clone() : new Request(input, init);
-    } catch (error) { return NativePromise.reject(error); }
+    } catch (error) { return Promise.reject(error); }
 
-    if (request.signal && request.signal.aborted) return NativePromise.reject(abortError());
+    if (request.signal && request.signal.aborted) return Promise.reject(abortError());
     if (request.redirect !== "follow")
-        return NativePromise.reject(new TypeError("The host transport currently supports redirect:'follow' only."));
+        return Promise.reject(new TypeError("The host transport currently supports redirect:'follow' only."));
     if (request.mode !== "cors")
-        return NativePromise.reject(new TypeError("The host Fetch transport supports mode:'cors' only; it does not emulate browser CORS or navigation modes."));
+        return Promise.reject(new TypeError("The host Fetch transport supports mode:'cors' only; it does not emulate browser CORS or navigation modes."));
     if (request.credentials !== "omit" && request.credentials !== "same-origin" && request.credentials !== "include")
-        return NativePromise.reject(new TypeError("Invalid credentials mode."));
+        return Promise.reject(new TypeError("Invalid credentials mode."));
     // There is no browser-origin context in ClearScript. The host treats
     // same-origin and include identically; omit is enforced by FetchTransport.
     if (request.cache !== "default")
-        return NativePromise.reject(new TypeError("The host Fetch transport does not implement browser cache modes."));
+        return Promise.reject(new TypeError("The host Fetch transport does not implement browser cache modes."));
     if (request.integrity)
-        return NativePromise.reject(new TypeError("Subresource integrity is not implemented by the host Fetch transport."));
+        return Promise.reject(new TypeError("Subresource integrity is not implemented by the host Fetch transport."));
     if (request.referrer)
-        return NativePromise.reject(new TypeError("Browser referrer policy is not implemented by the host Fetch transport."));
+        return Promise.reject(new TypeError("Browser referrer policy is not implemented by the host Fetch transport."));
     if (request.keepalive)
-        return NativePromise.reject(new TypeError("Browser keepalive semantics are not implemented by the host Fetch transport."));
+        return Promise.reject(new TypeError("Browser keepalive semantics are not implemented by the host Fetch transport."));
 
     let transport, id, abortListener, operation;
     try {
@@ -277,10 +274,10 @@ function fetch(input, init) {
         operation = transport.FetchAsync(request.method, request.url, null, null, request.timeout, headers, id, bodyBase64, request.credentials);
     } catch (error) {
         if (abortListener) request.signal.removeEventListener("abort", abortListener);
-        return NativePromise.reject(error);
+        return Promise.reject(error);
     }
 
-    return NativePromise.resolve(operation).then(nativeResult => {
+    return Promise.resolve(operation).then(nativeResult => {
         if (request.signal && request.signal.aborted) throw abortError();
         const result = JSON.parse(nativeResult.ToString());
         const response = new Response(Make.bytesFromBase64(result.data || ""), {

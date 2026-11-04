@@ -635,14 +635,26 @@ There are multiple defined variables accessible globally, which users can intera
     ITS				        // The current object or class will accessible through this one
     ```
 
-### Native web runtime (ClearScript)
+### Native web runtime
 
-DEAL.JS separates HTTP transport from browser-page control so the same web library can be used in a browser environment or from the .NET ClearScript host.
+DEAL.JS separates HTTP transport from browser-page control so the same web library can be used in a browser environment or from the DEAL.JS host.
 
 #### HTTP requests
 
-The ClearScript environment exposes `Engine.FetchTransport`. The JavaScript `fetch` compatibility layer converts request bodies to bytes, transfers binary data through Base64, and converts the native response into a JavaScript `Response`.
+The JavaScript `fetch` compatibility layer converts request bodies to bytes, transfers binary data through Base64, and converts the native response into a JavaScript `Response`.
 
+```ts
+Consider response constant be await fetch "https://example.com/data", {
+    method: "GET",
+    headers: { "Accept": "application/json" },
+    timeout: 15000
+};
+
+If response ok is not true, throw new Error "HTTP " + response.status;
+
+Consider data constant be await response.json();
+```
+It will compile to:
 ```js
 const response = await fetch("https://example.com/data", {
     method: "GET",
@@ -650,7 +662,7 @@ const response = await fetch("https://example.com/data", {
     timeout: 15000
 });
 
-if (!response.ok)
+if (response.ok != true)
     throw new Error("HTTP " + response.status);
 
 const data = await response.json();

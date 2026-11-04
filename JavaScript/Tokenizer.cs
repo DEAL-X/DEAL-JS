@@ -80,7 +80,7 @@ namespace MiMFa.Engine.JavaScript
                 case "typeof":
                     walker.Move(word.Length);
                     walker.MoveToProcedure();
-                    return new Token(TokenType.Statement, word, location);
+                    return new Token(TokenType.Start | TokenType.Statement, word, location);
 
                 case "of":
                 case "in":
@@ -157,9 +157,10 @@ namespace MiMFa.Engine.JavaScript
             return new Token(TokenType.PatternData, value, location);
         }
 
-        protected virtual Token TokenizeString(CodeWalker walker, Position location)
+        protected virtual Token TokenizeString(CodeWalker walker, Position location, bool strict = false)
         {
             var quote = walker.Walk();
+            if(strict) quote = walker.Walk();
             var value = "";
             var escaped = false;
             while (!walker.IsEnded)
@@ -168,13 +169,17 @@ namespace MiMFa.Engine.JavaScript
                 if (!escaped && ch == quote) break;
                 if (ch == (this.Engine?.Options?.Escape ?? "\\")[0].ToString() && !escaped)
                 {
-                    escaped = true;
-                    continue;
+                    value += ch;
+                    if (strict) value += this.Engine?.Options?.Escape ?? ch;
+                    else escaped = true;
                 }
-                if (ch != null) value += ch;
-                escaped = false;
+                else
+                {
+                    if (ch != null) value += ch;
+                    escaped = false;
+                }
             }
-            return new Token(quote == "`" && value.Contains("${") ? TokenType.TemplateStringData : TokenType.StringData, value, location);
+            return new Token(quote == "`" && value.Contains("${") ? TokenType.TemplateStringData : TokenType.StringData, quote + value + quote, location);
         }
 
         protected virtual Token TokenizeOperator(CodeWalker walker, Position location)

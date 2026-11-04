@@ -250,32 +250,37 @@ namespace MiMFa.Engine.DEAL.JS
                      );
 
                 case "command":
-                    if (next?.Is("(") == true || (next.Is("*") && next2.Is("(")))
+                    node.Token.Value = "function";
+                    if (next?.Is("*") == true)
                     {
-                        node.Token.Value = "function";
-                        break;
+                        node.Token.Value += walker.WalkProcedure().Value;
+                        next = walker.PeekProcedure();
+                        next2 = walker.PeekProcedure(1);
                     }
+                    if (next?.Is("(") == true)
+                        return node.Update(NodeType.DefineStructure | NodeType.Region | NodeType.Line | NodeType.Prepend).AddRange(
+                            AssembleNode(walker),
+                            walker.PeekProcedure()?.Is(AssignSigns) == true ?
+                            Engine.CreateReturnedBlockNode(
+                                NormalSectionAssembleNode(
+                                    MoveToStartProcedure(ref walker)
+                                )
+                            ) : AssembleNode(walker)
+                        );
                     var cname = walker.WalkProcedure();
-                    if (cname != null && cname.Is("*"))
-                    {
-                        node.Token.Value += cname.Token.Value;
-                        cname = walker.WalkProcedure();
-                    }
                     next = walker.PeekProcedure();
                     if (next?.Is("(") == true)
                     {
-                        node.Token.Value = "function";
                         Engine?.SetFunctionCommand(cname.Token.Update(TokenType.FunctionKeyword));
                         return node.Update(NodeType.DefineStructure | NodeType.Region | NodeType.Line | NodeType.Prepend).AddRange(
                             cname.Add(AssembleNode(walker)),
                             cname.Last.Count > 1 && walker.PeekProcedure()?.Is("=>") != true ? null :
+                                    walker.PeekProcedure()?.Is(AssignSigns) == true ?
                             Engine.CreateReturnedBlockNode(
                                 NormalSectionAssembleNode(
-                                    walker.PeekProcedure()?.Is(AssignSigns) == true ?
-                                        MoveToStartProcedure(ref walker) :
-                                        walker
+                                        MoveToStartProcedure(ref walker)
                                 )
-                            )
+                            ) : AssembleNode(walker)
                         );
                     }
                     else
@@ -288,24 +293,33 @@ namespace MiMFa.Engine.DEAL.JS
                     }
 
                 case "function":
-                    if (next?.Is("(") == true || (next.Is("*") && next2.Is("("))) break;
-                    var fname = walker.WalkProcedure();
-                    if (fname != null && fname.Is("*"))
+                    if (next?.Is("*") == true)
                     {
-                        node.Token.Value += fname.Token.Value;
-                        fname = walker.WalkProcedure();
+                        node.Token.Value += walker.WalkProcedure().Value;
+                        next = walker.PeekProcedure();
+                        next2 = walker.PeekProcedure(1);
                     }
+                    if (next?.Is("(") == true)
+                        return node.Update(NodeType.DefineStructure | NodeType.Region | NodeType.Line | NodeType.Prepend).AddRange(
+                            AssembleNode(walker),
+                            walker.PeekProcedure()?.Is(AssignSigns) == true ?
+                            Engine.CreateReturnedBlockNode(
+                                NormalSectionAssembleNode(
+                                    MoveToStartProcedure(ref walker)
+                                )
+                            ) : AssembleNode(walker)
+                        );
+                    var fname = walker.WalkProcedure();
                     Engine?.SetKeyword(fname.Token.Update(TokenType.FunctionKeyword));
                     return node.Update(NodeType.DefineStructure | NodeType.Region | NodeType.Line | NodeType.Prepend).AddRange(
                         fname.Add(AssembleNode(walker)),
                         fname.Last.Count > 1 && walker.PeekProcedure()?.Is("=>") != true ? null :
+                        walker.PeekProcedure()?.Is(AssignSigns) == true ? 
                         Engine.CreateReturnedBlockNode(
                             NormalSectionAssembleNode(
-                                walker.PeekProcedure()?.Is(AssignSigns) == true ? 
-                                MoveToStartProcedure(ref walker) :
-                                walker
+                                MoveToStartProcedure(ref walker)
                             )
-                        )
+                        ) : AssembleNode(walker)
                     );
 
                 case "implements":
@@ -509,7 +523,7 @@ namespace MiMFa.Engine.DEAL.JS
                 //    (!Engine.IsFlag(next) || !node.Is(TokenType.TerminatorSymbol))
                 //)
                 //    return new Node();
-                if (Engine.IsOrganizers(next))
+                if (next?.Token?.Type == TokenType.Statement)
                 {
                     node.Token.Update(TokenType.TerminatorSymbol, ";");
                     return node.Update(NodeType.Append);
@@ -604,16 +618,18 @@ namespace MiMFa.Engine.DEAL.JS
                     
                     if (
                         !node.Is("this") &&
-                        (next?.Is(TokenType.Data, TokenType.Start | TokenType.Scope) == true || (fname != null && next?.Is(TokenType.Keyword) == true)) &&
+                        (
+                            next?.Is(TokenType.Data, TokenType.Start | TokenType.Scope) == true ||
+                            (fname != null && next?.Is(TokenType.Keyword) == true)
+                        ) &&
                         (iname == null || before?.Is(TokenType.IdentifierKeyword, TokenType.NamespaceKeyword, TokenType.ConcatenatorSymbol) == true) &&
-                        (isNamespaced || fname != null) &&
                         !Engine.IsSeparators(next) &&
                         !Engine.IsMediators(next) &&
                         !Engine.IsComplementors(next) &&
                         !Engine.IsFinalizers(next) &&
                         !Engine.IsOrganizers(next) &&
                         (
-                            fname != null ||
+                            (!isNamespaced && fname != null) ||
                             next.Is(TokenType.Data) ||
                             next.Is("(", "...") ||
                             Engine.IsSeparators(next2) ||
