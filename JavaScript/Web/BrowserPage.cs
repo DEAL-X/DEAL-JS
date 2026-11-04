@@ -99,6 +99,67 @@ namespace MiMFa.Engine.JavaScript.Web
             return value.Type == JTokenType.String ? value.Value<string>() : value.ToString();
         }
 
+        internal async Task<string> EvaluateObjectAsync(string expression)
+        {
+            var response = await _connection.SendAsync("Runtime.evaluate", new JObject
+            {
+                ["expression"] = expression ?? "undefined",
+                ["awaitPromise"] = true,
+                ["returnByValue"] = false,
+                ["userGesture"] = true
+            }).ConfigureAwait(false);
+            if (response["exceptionDetails"] != null)
+                throw new InvalidOperationException(response["exceptionDetails"].ToString());
+            var remote = response["result"] as JObject;
+            if (remote == null || remote["objectId"] == null)
+                throw new InvalidOperationException(remote?["description"]?.Value<string>() ?? "The expression did not return a remote object.");
+            return remote["objectId"].Value<string>();
+        }
+
+        internal async Task<string> CallFunctionObjectAsync(string objectId, string functionDeclaration, JArray arguments = null)
+        {
+            var response = await _connection.SendAsync("Runtime.callFunctionOn", new JObject
+            {
+                ["objectId"] = objectId,
+                ["functionDeclaration"] = functionDeclaration,
+                ["arguments"] = arguments ?? new JArray(),
+                ["awaitPromise"] = true,
+                ["returnByValue"] = false,
+                ["userGesture"] = true
+            }).ConfigureAwait(false);
+            if (response["exceptionDetails"] != null)
+                throw new InvalidOperationException(response["exceptionDetails"].ToString());
+            var remote = response["result"] as JObject;
+            if (remote == null || remote["objectId"] == null)
+                throw new InvalidOperationException(remote?["description"]?.Value<string>() ?? "The browser operation did not return an object.");
+            return remote["objectId"].Value<string>();
+        }
+
+        internal async Task<string> CallFunctionValueAsync(string objectId, string functionDeclaration, JArray arguments = null)
+        {
+            var response = await _connection.SendAsync("Runtime.callFunctionOn", new JObject
+            {
+                ["objectId"] = objectId,
+                ["functionDeclaration"] = functionDeclaration,
+                ["arguments"] = arguments ?? new JArray(),
+                ["awaitPromise"] = true,
+                ["returnByValue"] = true,
+                ["userGesture"] = true
+            }).ConfigureAwait(false);
+            if (response["exceptionDetails"] != null)
+                throw new InvalidOperationException(response["exceptionDetails"].ToString());
+            var remote = response["result"] as JObject;
+            if (remote == null || remote["value"] == null) return null;
+            var value = remote["value"];
+            return value.Type == JTokenType.String ? value.Value<string>() : value.ToString();
+        }
+
+        internal async Task ReleaseObjectAsync(string objectId)
+        {
+            if (string.IsNullOrWhiteSpace(objectId) || _disposed) return;
+            await _connection.SendAsync("Runtime.releaseObject", new JObject { ["objectId"] = objectId }).ConfigureAwait(false);
+        }
+
         public async Task RefreshAsync()
         {
             string state = await EvaluateAsync("JSON.stringify({url:location.href,title:document.title})").ConfigureAwait(false);
