@@ -252,6 +252,7 @@ namespace MiMFa.Engine.JavaScript.Web
                 }
                 if (string.IsNullOrEmpty(_currentTargetId) && result.Count > 0)
                     _currentTargetId = result[0].Id;
+                foreach (var item in result) item.IsCurrent = item.Id == _currentTargetId;
                 var activeIds = new HashSet<string>(result.Select(x => x.Id));
                 foreach (var id in _pages.Keys.Where(x => !activeIds.Contains(x)).ToList())
                 {
@@ -269,7 +270,6 @@ namespace MiMFa.Engine.JavaScript.Web
             if (string.IsNullOrWhiteSpace(targetId)) throw new ArgumentException("A browser tab identifier is required.", nameof(targetId));
             if (_pages.TryGetValue(targetId, out var existing))
             {
-                if (CurrentPage == null) CurrentPage = existing;
                 return existing;
             }
 
@@ -290,7 +290,6 @@ namespace MiMFa.Engine.JavaScript.Web
                     page.Dispose();
                     page = _pages[targetId];
                 }
-                if (CurrentPage == null) CurrentPage = page;
                 return page;
             }
             catch
