@@ -22,6 +22,14 @@ namespace MiMFa.Engine.JavaScript.Web
         public BrowserWindow Window { get; }
         public BrowserWindows Windows { get; }
         public BrowserLocation Location => Window.Location;
+        public BrowserWindow window => Window;
+        public BrowserWindows windows => Windows;
+        public BrowserLocation location => Location;
+        public Task<string> reload() => ReloadAsync();
+        public Task<bool> close() => CloseAsync();
+        public Task<bool> activate() => ActivateAsync();
+        public Task<string> open() => OpenAsync();
+        public Task<string> save() => SaveAsync();
 
         public Task<string> ReloadAsync() => Page.ReloadAsync();
         public Task<bool> CloseAsync() => _browser.CloseAsync(Id);
