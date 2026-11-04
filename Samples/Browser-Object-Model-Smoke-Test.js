@@ -21,7 +21,10 @@ async function browserObjectModelSmokeTest() {
         throw new Error("The localStorage proxy did not round-trip a value.");
 
     const tabs = await browser.tabs.all;
-    if (!tabs.some(tab => tab.Id === opened.Id))
+    let found = false;
+    for (let i = 0; i < tabs.Count; i++)
+        if (tabs[i].Id === opened.Id) found = true;
+    if (!found)
         throw new Error("The opened tab was not found in browser.tabs.all.");
 
     const fetched = await browser.tabs.get(opened.Id);
@@ -33,7 +36,7 @@ async function browserObjectModelSmokeTest() {
         throw new Error("browser.tab did not follow browser.activate().");
 
     const version = await browser.runtime.GetVersionAsync();
-    if (!version || !version.product)
+    if (!version || version.ToString().indexOf("product") < 0)
         throw new Error("Browser runtime version information was not returned.");
 
     await browser.close(opened);
@@ -41,8 +44,8 @@ async function browserObjectModelSmokeTest() {
         passed: true,
         title: title,
         href: href,
-        tabCountBeforeClose: tabs.length,
-        browserVersion: version.product
+        tabCountBeforeClose: tabs.Count,
+        browserVersion: version.ToString()
     };
 }
 
