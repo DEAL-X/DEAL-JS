@@ -220,8 +220,38 @@ namespace MiMFa.Engine.JavaScript.Web
     {
         private readonly BrowserTab _tab;
         internal BrowserWindows(BrowserTab tab) { _tab = tab; }
+        public Task<string> length => GetCountAsync();
+        public Task<IList<BrowserFrame>> all => GetAllAsync();
+        public Task<BrowserFrame> get(int index) => GetAsync(index);
         public Task<string> GetCountAsync() => _tab.Page.EvaluateAsync("window.frames.length");
         public Task<string> GetNamesAsync() => _tab.Page.EvaluateAsync("JSON.stringify(Array.from(window.frames).map((w,i)=>({index:i,name:w.name,url:(()=>{try{return w.location.href}catch(e){return null}})()})))");
         public Task<string> GetFrameUrlAsync(int index) => _tab.Page.EvaluateAsync("(function(w){try{return w.location.href}catch(e){return null}})(window.frames[" + index + "])");
+        public async Task<BrowserFrame> GetAsync(int index)
+        {
+            int count = int.Parse(await GetCountAsync().ConfigureAwait(false), System.Globalization.CultureInfo.InvariantCulture);
+            if (index < 0 || index >= count) throw new ArgumentOutOfRangeException(nameof(index));
+            return new BrowserFrame(_tab, index);
+        }
+        public async Task<IList<BrowserFrame>> GetAllAsync()
+        {
+            int count = int.Parse(await GetCountAsync().ConfigureAwait(false), System.Globalization.CultureInfo.InvariantCulture);
+            var frames = new List<BrowserFrame>(count);
+            for (int i = 0; i < count; i++) frames.Add(new BrowserFrame(_tab, i));
+            return frames;
+        }
+    }
+
+    /// <summary>A lightweight index-based proxy to a child browsing context.</summary>
+    public sealed class BrowserFrame
+    {
+        private readonly BrowserTab _tab;
+        public int Index { get; }
+        internal BrowserFrame(BrowserTab tab, int index) { _tab = tab; Index = index; }
+        private string Prefix => "window.frames[" + Index.ToString(System.Globalization.CultureInfo.InvariantCulture) + "]";
+        public Task<string> name => _tab.Page.EvaluateAsync(Prefix + ".name");
+        public Task<string> url => _tab.Page.EvaluateAsync("(function(w){try{return w.location.href}catch(e){return null}})(" + Prefix + ")");
+        public Task<string> title => _tab.Page.EvaluateAsync("(function(w){try{return w.document.title}catch(e){return null}})(" + Prefix + ")");
+        public Task<string> EvaluateAsync(string expression) =>
+            _tab.Page.EvaluateAsync("(function(w){return w.eval(" + (expression ?? "undefined") + ")})(" + Prefix + ")");
     }
 }
