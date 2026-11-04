@@ -108,10 +108,13 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> BackAsync() => Tab.Page.GoBackAsync();
         public Task<string> ForwardAsync() => Tab.Page.GoForwardAsync();
         public Task<string> GoAsync(int delta) => Tab.Page.GoAsync(delta);
+        private static string StateJson(string jsonState) =>
+            string.IsNullOrWhiteSpace(jsonState) ? "null" :
+            JToken.Parse(jsonState).ToString(Newtonsoft.Json.Formatting.None);
         public Task<string> PushStateAsync(string jsonState, string title = "", string url = null) =>
-            EvaluateAsync("(history.pushState(" + (jsonState ?? "null") + "," + Json(title) + (url == null ? "" : "," + Json(url)) + "), true)");
+            EvaluateAsync("(history.pushState(" + StateJson(jsonState) + "," + Json(title) + (url == null ? "" : "," + Json(url)) + "), true)");
         public Task<string> ReplaceStateAsync(string jsonState, string title = "", string url = null) =>
-            EvaluateAsync("(history.replaceState(" + (jsonState ?? "null") + "," + Json(title) + (url == null ? "" : "," + Json(url)) + "), true)");
+            EvaluateAsync("(history.replaceState(" + StateJson(jsonState) + "," + Json(title) + (url == null ? "" : "," + Json(url)) + "), true)");
     }
 
     public sealed class BrowserNavigator : BrowserRemoteObject
@@ -166,6 +169,10 @@ namespace MiMFa.Engine.JavaScript.Web
     {
         internal BrowserCookies(BrowserTab tab) : base(tab) { }
         public Task<string> document => GetDocumentCookiesAsync();
+        public Task<string> all => GetAllAsync();
+        public Task<bool> set(string cookieJson) => SetAsync(cookieJson);
+        public Task<JObject> delete(string name, string domain = null, string path = null) => DeleteAsync(name, domain, path);
+        public Task<JObject> clear() => ClearAsync();
         public Task<string> GetDocumentCookiesAsync() => EvaluateAsync("document.cookie");
         public Task<string> SetDocumentCookieAsync(string cookie) => EvaluateAsync("(document.cookie=" + Json(cookie) + ")");
         public async Task<string> GetAllAsync()
