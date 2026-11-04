@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 
 namespace MiMFa.Engine.JavaScript.Web
 {
@@ -36,7 +37,8 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<bool> CloseAsync() => _browser.CloseAsync(Id);
         public Task<bool> ActivateAsync() => _browser.ActivateAsync(Id);
 
-        // Native File System Access API aliases. Chromium owns the picker UI.
+        // Direct aliases for the native File System Access API. The picker and
+        // its security/permission checks remain entirely owned by Chromium.
         private static string NormalizePickerOptions(string optionsJson)
         {
             if (string.IsNullOrWhiteSpace(optionsJson)) return "{}";
@@ -44,10 +46,36 @@ namespace MiMFa.Engine.JavaScript.Web
             return options.ToString(Newtonsoft.Json.Formatting.None);
         }
 
-        public Task<string> OpenAsync(string optionsJson = null) =>
-            Page.EvaluateAsync("window.showOpenFilePicker(" + NormalizePickerOptions(optionsJson) + ").then(handles=>JSON.stringify(handles.map(h=>({name:h.name,kind:h.kind}))))");
-        public Task<string> SaveAsync(string optionsJson = null) =>
-            Page.EvaluateAsync("window.showSaveFilePicker(" + NormalizePickerOptions(optionsJson) + ").then(handle=>JSON.stringify({name:handle.name,kind:handle.kind}))");
+        public async Task<IList<BrowserFileSystemFileHandle>> OpenAsync(string optionsJson = null)
+        {
+            string objectId = await Page.EvaluateObjectAsync(
+                "window.showOpenFilePicker(" + NormalizePickerOptions(optionsJson) + ")").ConfigureAwait(false);
+            try
+            {
+                string lengthText = await Page.CallFunctionValueAsync(objectId, "function(){return this.length}").ConfigureAwait(false);
+                int length = int.Parse(lengthText, System.Globalization.CultureInfo.InvariantCulture);
+                var handles = new List<BrowserFileSystemFileHandle>(length);
+                for (int i = 0; i < length; i++)
+                {
+                    string handleId = await Page.CallFunctionObjectAsync(objectId,
+                        "function(index){return this[index]}",
+                        new JArray { new JObject { ["value"] = i } }).ConfigureAwait(false);
+                    handles.Add(new BrowserFileSystemFileHandle(Page, handleId));
+                }
+                return handles;
+            }
+            finally { await Page.ReleaseObjectAsync(objectId).ConfigureAwait(false); }
+        }
+
+        public async Task<BrowserFileSystemFileHandle> SaveAsync(string optionsJson = null)
+        {
+            string objectId = await Page.EvaluateObjectAsync(
+                "window.showSaveFilePicker(" + NormalizePickerOptions(optionsJson) + ")").ConfigureAwait(false);
+            return new BrowserFileSystemFileHandle(Page, objectId);
+        }
+
+        public Task<IList<BrowserFileSystemFileHandle>> open(string optionsJson = null) => OpenAsync(optionsJson);
+        public Task<BrowserFileSystemFileHandle> save(string optionsJson = null) => SaveAsync(optionsJson);
 
         public void Dispose() => Page.Dispose();
     }
