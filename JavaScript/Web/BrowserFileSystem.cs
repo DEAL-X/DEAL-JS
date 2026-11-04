@@ -20,8 +20,15 @@ namespace MiMFa.Engine.JavaScript.Web
         }
 
         internal string ObjectId { get; }
+        public Task<string> name => GetNameAsync();
+        public Task<string> kind => GetKindAsync();
         public Task<string> GetNameAsync() => _page.CallFunctionValueAsync(ObjectId, "function(){return this.name}");
         public Task<string> GetKindAsync() => _page.CallFunctionValueAsync(ObjectId, "function(){return this.kind}");
+        public Task<BrowserFileMetadata> getFile() => GetFileAsync();
+        public Task<string> text() => ReadTextAsync();
+        public Task<string> base64() => ReadBase64Async();
+        public Task<bool> writeText(string text) => WriteTextAsync(text);
+        public Task<BrowserFileSystemWritable> createWritable() => CreateWritableAsync();
         public Task<string> IsSameEntryAsync(BrowserFileSystemFileHandle other)
         {
             if (other == null) throw new ArgumentNullException(nameof(other));
@@ -44,10 +51,13 @@ namespace MiMFa.Engine.JavaScript.Web
             _page.CallFunctionValueAsync(ObjectId,
                 "async function(){const b=new Uint8Array(await (await this.getFile()).arrayBuffer());let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)}");
 
-        public Task<bool> WriteTextAsync(string text) =>
-            _page.CallFunctionValueAsync(ObjectId,
+        public async Task<bool> WriteTextAsync(string text)
+        {
+            string result = await _page.CallFunctionValueAsync(ObjectId,
                 "async function(value){const w=await this.createWritable();try{await w.write(value);await w.close();return true}catch(e){try{await w.abort()}catch(_){}throw e}}",
-                new JArray { new JObject { ["value"] = text ?? string.Empty } }).ContinueWith(t => bool.Parse(t.GetAwaiter().GetResult()), TaskScheduler.Default);
+                new JArray { new JObject { ["value"] = text ?? string.Empty } }).ConfigureAwait(false);
+            return bool.TryParse(result, out bool success) && success;
+        }
 
         public Task<BrowserFileSystemWritable> CreateWritableAsync() =>
             _page.CallFunctionObjectAsync(ObjectId, "async function(){return await this.createWritable()}").ContinueWith(
@@ -78,6 +88,9 @@ namespace MiMFa.Engine.JavaScript.Web
             _page.CallFunctionValueAsync(ObjectId,
                 "async function(value){const b=Uint8Array.from(atob(value),c=>c.charCodeAt(0));await this.write(b);return true}",
                 new JArray { new JObject { ["value"] = base64 ?? string.Empty } });
+        public Task<string> write(string text) => WriteTextAsync(text);
+        public Task<string> close() => CloseAsync();
+        public Task<string> abort() => AbortAsync();
         public Task<string> CloseAsync() => _page.CallFunctionValueAsync(ObjectId, "async function(){await this.close();return true}");
         public Task<string> AbortAsync() => _page.CallFunctionValueAsync(ObjectId, "async function(){await this.abort();return true}");
         public void Dispose()
