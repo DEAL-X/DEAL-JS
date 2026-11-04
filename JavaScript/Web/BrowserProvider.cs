@@ -50,16 +50,12 @@ namespace MiMFa.Engine.JavaScript.Web
             get
             {
                 if (CurrentPage != null) return GetTab(CurrentPage);
-                try
-                {
-                    if (string.IsNullOrEmpty(_currentTargetId))
-                        GetTabsAsync().GetAwaiter().GetResult();
-                    if (string.IsNullOrEmpty(_currentTargetId)) return null;
-                    var current = GetTabAsync(_currentTargetId).GetAwaiter().GetResult();
-                    CurrentPage = current.Page;
-                    return current;
-                }
-                catch { return null; }
+                if (string.IsNullOrEmpty(_currentTargetId))
+                    GetTabsAsync().GetAwaiter().GetResult();
+                if (string.IsNullOrEmpty(_currentTargetId)) return null;
+                var current = GetTabAsync(_currentTargetId).GetAwaiter().GetResult();
+                CurrentPage = current.Page;
+                return current;
             }
         }
         // Lower-case aliases form the public JavaScript-facing API.
