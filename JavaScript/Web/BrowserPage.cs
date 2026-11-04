@@ -228,6 +228,21 @@ namespace MiMFa.Engine.JavaScript.Web
             });
         }
 
+        public Task<string> GoAsync(int delta)
+        {
+            return RunNavigationCommandAsync(async () =>
+            {
+                var history = await _connection.SendAsync("Page.getNavigationHistory").ConfigureAwait(false);
+                int index = history["currentIndex"].Value<int>();
+                var entries = history["entries"] as JArray;
+                int targetIndex = index + delta;
+                if (entries == null || targetIndex < 0 || targetIndex >= entries.Count) return false;
+                await _connection.SendAsync("Page.navigateToHistoryEntry",
+                    new JObject { ["entryId"] = entries[targetIndex]["id"] }).ConfigureAwait(false);
+                return true;
+            });
+        }
+
         public Task<string> ReloadAsync()
         {
             return RunNavigationCommandAsync(async () =>
