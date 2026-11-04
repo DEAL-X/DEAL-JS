@@ -163,23 +163,25 @@ namespace MiMFa.Engine.JavaScript
             if(strict) quote = walker.Walk();
             var value = "";
             var escaped = false;
+            var escapechar = (this.Engine?.Options?.Escape ?? "\\")[0].ToString();
             while (!walker.IsEnded)
             {
                 var ch = walker.Walk();
-                if (!escaped && ch == quote) break;
-                if (ch == (this.Engine?.Options?.Escape ?? "\\")[0].ToString() && !escaped)
+                if (escaped)
                 {
-                    value += ch;
-                    if (strict) value += this.Engine?.Options?.Escape ?? ch;
-                    else escaped = true;
-                }
-                else
-                {
-                    if (ch != null) value += ch;
+                    value += Regex.Unescape(escapechar+ch);
                     escaped = false;
                 }
+                else if (ch == quote) break;
+                else if (ch == escapechar)
+                {
+                    //value += ch;
+                    if (strict) value += escapechar;
+                    else escaped = true;
+                }
+                else if (ch != null) value += ch;
             }
-            return new Token(quote == "`" && value.Contains("${") ? TokenType.TemplateStringData : TokenType.StringData, quote + value + quote, location);
+            return new Token(quote == "`" && value.Contains("${") ? TokenType.TemplateStringData : TokenType.StringData, value, location);
         }
 
         protected virtual Token TokenizeOperator(CodeWalker walker, Position location)

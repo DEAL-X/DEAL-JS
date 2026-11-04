@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using MiMFa.Engine.Model;
 using MiMFa.Engine.Walker;
 
@@ -201,8 +202,18 @@ namespace MiMFa.Engine.JavaScript
             if (token.Is(TokenType.StringData))
             {
                 if (token.Is(TokenType.PatternData)) yield return new Node(token, NodeType.Chunk);
-                else if (token.Is(TokenType.TemplateStringData)) yield return new Node(token, NodeType.Chunk);
-                else yield return new Node(token, NodeType.Chunk);
+                else if (token.Is(TokenType.TemplateStringData)) yield return new Node(token.Update(null, $"`{token.Value}`"), NodeType.Chunk);
+                else yield return new Node(token.Update(null, Newtonsoft.Json.JsonConvert.SerializeObject(token.Value)), NodeType.Chunk);
+                //else yield return new Node(token.Update(null,
+                //    !Regex.IsMatch(@"(?<!\\)""", token.Value) ?
+                //    $"\"{token.Value}\"" : (
+                //        !Regex.IsMatch(@"(?<!\\)'", token.Value) ?
+                //        $"'{token.Value}'" : (
+                //            !Regex.IsMatch(@"(?<!\\)`", token.Value) ?
+                //            $"`{token.Value}`" :
+                //            Newtonsoft.Json.JsonConvert.SerializeObject(token.Value))
+                //        )
+                //    ), NodeType.Chunk);
             }
             else if (token.Is(TokenType.ArrayData)) yield return new Node(token.Clone(null, "[]", null), NodeType.Chunk);
             else if (token.Is(TokenType.ObjectData)) yield return new Node(token.Clone(null, "{}", null), NodeType.Chunk);

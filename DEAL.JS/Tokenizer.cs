@@ -102,7 +102,7 @@ namespace MiMFa.Engine.DEAL.JS
                             int libs = UsePath(src, force);
                             if (walker.PeekProcedure() == ";" ) walker.WalkProcedure();
                             //walker.Replace(location.Index, p == ";"? walker.MoveToProcedure().Location.Index - location.Index : walker.Location.Index - location.Index, res.ToCharArray().Select(c => c.ToString()).ToArray());
-                            return GetAcceptedToken(TokenType.Comment, libs<=0? $"// Could not find the {Newtonsoft.Json.JsonConvert.ToString(src)} library" : (libs > 1 ? $"// Used {libs} libraries from {Newtonsoft.Json.JsonConvert.ToString(src)}" : $"// Used {Newtonsoft.Json.JsonConvert.ToString(src)} library"), location);
+                            return GetAcceptedToken(TokenType.Comment, libs<=0? $"// Could not find the {Newtonsoft.Json.JsonConvert.ToString(src)} resource" : (libs > 1 ? $"// Used {libs} resources from {Newtonsoft.Json.JsonConvert.ToString(src)}" : $"// Used {Newtonsoft.Json.JsonConvert.ToString(src)} resource"), location);
                         }
                         else walker.Reset(position);
                         break;
