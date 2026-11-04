@@ -34,6 +34,7 @@ namespace MiMFa.Engine.JavaScript.Web
         private Task<string> PermissionAsync(string method, string mode) =>
             _page.CallFunctionValueAsync(ObjectId, "async function(value){return await this[" + Newtonsoft.Json.JsonConvert.SerializeObject(method) + "]({mode:value})}",
                 new JArray { new JObject { ["value"] = mode ?? "read" } });
+        public Task<bool> isSameEntry(BrowserFileSystemFileHandle other) => IsSameEntryAsync(other);
         public async Task<bool> IsSameEntryAsync(BrowserFileSystemFileHandle other)
         {
             if (other == null) throw new ArgumentNullException(nameof(other));
@@ -131,8 +132,6 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> size => _page.CallFunctionValueAsync(ObjectId, "function(){return this.size}");
         public Task<string> lastModified => _page.CallFunctionValueAsync(ObjectId, "function(){return this.lastModified}");
         public Task<string> text() => _page.CallFunctionValueAsync(ObjectId, "async function(){return await this.text()}");
-        public Task<string> base64() => _page.CallFunctionValueAsync(ObjectId,
-            "async function(){const b=new Uint8Array(await this.arrayBuffer());let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)}");
         public Task<string> base64() => _page.CallFunctionValueAsync(ObjectId,
             "async function(){const b=new Uint8Array(await this.arrayBuffer());let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)}");
         public void Dispose()
