@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 namespace MiMFa.Engine.JavaScript.Web
 {
     /// <summary>
-    /// A host-side handle to a remote Chromium page. Page objects remain in Chromium;
-    /// values returned by evaluation are serialized into the DEAL runtime.
+    /// A host-side handle to a remote Chromium page. The actual Window and Document
+    /// remain in Chromium and are accessed through the DevTools Protocol.
     /// </summary>
     public sealed class BrowserPage : IDisposable
     {
@@ -16,8 +16,8 @@ namespace MiMFa.Engine.JavaScript.Web
 
         internal BrowserPage(string targetId, CdpConnection connection)
         {
-            TargetId = targetId;
-            _connection = connection;
+            TargetId = targetId ?? throw new ArgumentNullException(nameof(targetId));
+            _connection = connection ?? throw new ArgumentNullException(nameof(connection));
             _connection.EventReceived += OnEvent;
         }
 
@@ -27,7 +27,22 @@ namespace MiMFa.Engine.JavaScript.Web
 
         private void OnEvent(string name, JObject data)
         {
-            if (name == "Page.frameNavigated") RefreshAsync().GetAwaiter().GetResult();
+            // Never issue a CDP command synchronously from the receive loop:
+            // its response must be processed by that same loop.
+            if (name == "Page.frameNavigated")
+            {
+                var frame = data?["frame"] as JObject;
+                if (frame?["parentId"] == null)
+                    Url = (string)frame["url"];
+            }
+            else if (name == "Page.loadEventFired")
+            {
+                Task.Run(async () =>
+                {
+                    try { await RefreshAsync().ConfigureAwait(false); }
+                    catch { /* A navigation can close the target while refreshing. */ }
+                });
+            }
         }
 
         internal async Task InitializeAsync()
@@ -97,9 +112,55 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> GetDocumentTextAsync() => EvaluateAsync("document.documentElement ? document.documentElement.innerText : null");
         public Task<string> GetUrlAsync() => EvaluateAsync("location.href");
         public Task<string> GetTitleAsync() => EvaluateAsync("document.title");
-        public Task<string> GoBackAsync() => EvaluateAsync("(history.back(), location.href)");
-        public Task<string> GoForwardAsync() => EvaluateAsync("(history.forward(), location.href)");
-        public Task<string> ReloadAsync() => EvaluateAsync("(location.reload(), location.href)");
+
+        private async Task WaitForLoadAsync(int timeoutMilliseconds = 30000)
+        {
+            var loaded = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Action<string, JObject> handler = (name, data) =>
+            {
+                if (name == "Page.loadEventFired") loaded.TrySetResult(true);
+            };
+            _connection.EventReceived += handler;
+            try
+            {
+                using (var timeout = new CancellationTokenSource(timeoutMilliseconds))
+                using (timeout.Token.Register(() => loaded.TrySetException(new TimeoutException("The page load timed out."))))
+                    await loaded.Task.ConfigureAwait(false);
+            }
+            finally { _connection.EventReceived -= handler; }
+        }
+
+        public async Task<string> GoBackAsync()
+        {
+            var history = await _connection.SendAsync("Page.getNavigationHistory").ConfigureAwait(false);
+            int index = history["currentIndex"].Value<int>();
+            var entries = history["entries"] as JArray;
+            if (entries == null || index <= 0) return Url;
+            await _connection.SendAsync("Page.navigateToHistoryEntry", new JObject { ["entryId"] = entries[index - 1]["id"] }).ConfigureAwait(false);
+            await WaitForLoadAsync().ConfigureAwait(false);
+            await RefreshAsync().ConfigureAwait(false);
+            return Url;
+        }
+
+        public async Task<string> GoForwardAsync()
+        {
+            var history = await _connection.SendAsync("Page.getNavigationHistory").ConfigureAwait(false);
+            int index = history["currentIndex"].Value<int>();
+            var entries = history["entries"] as JArray;
+            if (entries == null || index + 1 >= entries.Count) return Url;
+            await _connection.SendAsync("Page.navigateToHistoryEntry", new JObject { ["entryId"] = entries[index + 1]["id"] }).ConfigureAwait(false);
+            await WaitForLoadAsync().ConfigureAwait(false);
+            await RefreshAsync().ConfigureAwait(false);
+            return Url;
+        }
+
+        public async Task<string> ReloadAsync()
+        {
+            await _connection.SendAsync("Page.reload", new JObject { ["ignoreCache"] = false }).ConfigureAwait(false);
+            await WaitForLoadAsync().ConfigureAwait(false);
+            await RefreshAsync().ConfigureAwait(false);
+            return Url;
+        }
 
         public void Close()
         {
