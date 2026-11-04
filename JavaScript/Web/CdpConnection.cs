@@ -15,6 +15,7 @@ namespace MiMFa.Engine.JavaScript.Web
         private readonly ConcurrentDictionary<int, TaskCompletionSource<JObject>> _pending =
             new ConcurrentDictionary<int, TaskCompletionSource<JObject>>();
         private readonly CancellationTokenSource _shutdown = new CancellationTokenSource();
+        private readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
         private int _nextId;
         private Task _receiver;
 
@@ -45,8 +46,13 @@ namespace MiMFa.Engine.JavaScript.Web
             byte[] payload = Encoding.UTF8.GetBytes(command.ToString(Newtonsoft.Json.Formatting.None));
             try
             {
-                await _socket.SendAsync(new ArraySegment<byte>(payload), WebSocketMessageType.Text, true, _shutdown.Token)
-                    .ConfigureAwait(false);
+                await _sendLock.WaitAsync(_shutdown.Token).ConfigureAwait(false);
+                try
+                {
+                    await _socket.SendAsync(new ArraySegment<byte>(payload), WebSocketMessageType.Text, true, _shutdown.Token)
+                        .ConfigureAwait(false);
+                }
+                finally { _sendLock.Release(); }
                 using (var timeout = CancellationTokenSource.CreateLinkedTokenSource(_shutdown.Token))
                 {
                     timeout.CancelAfter(timeoutMilliseconds);
@@ -140,6 +146,7 @@ namespace MiMFa.Engine.JavaScript.Web
             }
             catch { }
             _socket.Dispose();
+            _sendLock.Dispose();
             _shutdown.Dispose();
         }
     }
