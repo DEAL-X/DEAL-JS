@@ -316,6 +316,8 @@ namespace MiMFa.Engine.JavaScript.Web
             if (timeoutMilliseconds <= 0) timeoutMilliseconds = Timeout;
             await EnsureAvailableAsync(timeoutMilliseconds).ConfigureAwait(false);
             await EnsureBrowserConnectionAsync().ConfigureAwait(false);
+            if (string.IsNullOrEmpty(_currentTargetId))
+                await GetTabsAsync().ConfigureAwait(false);
 
             // Activate an anchor tab first so Chromium creates the new tab in this
             // BrowserProvider's application-level window, not another window.
@@ -391,30 +393,39 @@ namespace MiMFa.Engine.JavaScript.Web
         {
             if (string.IsNullOrWhiteSpace(targetId)) return false;
             await EnsureAvailableAsync(Timeout).ConfigureAwait(false);
-            using (var response = await _http.GetAsync(Endpoint.TrimEnd('/') + "/json/activate/" + Uri.EscapeDataString(targetId)).ConfigureAwait(false))
-            {
-                if (!response.IsSuccessStatusCode) return false;
-                if (_pages.TryGetValue(targetId, out var page)) CurrentPage = page;
-                else page = await GetPageAsync(targetId).ConfigureAwait(false);
-                CurrentPage = page;
-                _currentTargetId = targetId;
-                return true;
-            }
+            var tabs = await GetTabsAsync().ConfigureAwait(false);
+            if (!tabs.Any(x => x.Id == targetId)) return false;
+            await EnsureBrowserConnectionAsync().ConfigureAwait(false);
+            JObject result = await _browserConnection.SendAsync("Target.activateTarget",
+                new JObject { ["targetId"] = targetId }).ConfigureAwait(false);
+            if (result["success"] != null && !result["success"].Value<bool>()) return false;
+            var page = await GetPageAsync(targetId).ConfigureAwait(false);
+            CurrentPage = page;
+            _currentTargetId = targetId;
+            return true;
         }
 
         public async Task<bool> CloseAsync(string targetId)
         {
             if (string.IsNullOrWhiteSpace(targetId)) return false;
             await EnsureAvailableAsync(Timeout).ConfigureAwait(false);
-            using (var response = await _http.GetAsync(Endpoint.TrimEnd('/') + "/json/close/" + Uri.EscapeDataString(targetId)).ConfigureAwait(false))
+            var tabs = await GetTabsAsync().ConfigureAwait(false);
+            if (!tabs.Any(x => x.Id == targetId)) return false;
+            await EnsureBrowserConnectionAsync().ConfigureAwait(false);
+            JObject result = await _browserConnection.SendAsync("Target.closeTarget",
+                new JObject { ["targetId"] = targetId }).ConfigureAwait(false);
+            bool success = result["success"] == null || result["success"].Value<bool>();
+            if (!success) return false;
+            if (_pages.TryRemove(targetId, out var page)) page.Dispose();
+            _tabs.TryRemove(targetId, out _);
+            if (CurrentPage != null && CurrentPage.TargetId == targetId) CurrentPage = null;
+            if (_currentTargetId == targetId)
             {
-                if (!response.IsSuccessStatusCode) return false;
-                if (_pages.TryRemove(targetId, out var page)) page.Dispose();
-                if (CurrentPage != null && CurrentPage.TargetId == targetId) CurrentPage = null;
-                if (_currentTargetId == targetId) _currentTargetId = null;
-                _tabs.TryRemove(targetId, out _);
-                return true;
+                _currentTargetId = null;
+                var remaining = await GetTabsAsync().ConfigureAwait(false);
+                _currentTargetId = remaining.FirstOrDefault()?.Id;
             }
+            return true;
         }
     }
 }
