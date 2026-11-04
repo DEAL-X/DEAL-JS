@@ -36,6 +36,17 @@ namespace MiMFa.Engine.JavaScript.Web
         public BrowserConsole Console { get; }
         public BrowserCookies Cookies { get; }
         public BrowserStorage Storage { get; }
+        public BrowserDocument document => Document;
+        public BrowserLocation location => Location;
+        public BrowserHistory history => History;
+        public BrowserNavigator navigator => Navigator;
+        public BrowserScreen screen => Screen;
+        public BrowserConsole console => Console;
+        public BrowserCookies cookies => Cookies;
+        public BrowserStorage storage => Storage;
+        public Task<string> name => GetNameAsync();
+        public Task<string> innerWidth => GetInnerWidthAsync();
+        public Task<string> innerHeight => GetInnerHeightAsync();
         public Task<string> GetNameAsync() => EvaluateAsync("window.name");
         public Task<string> GetInnerWidthAsync() => EvaluateAsync("window.innerWidth");
         public Task<string> GetInnerHeightAsync() => EvaluateAsync("window.innerHeight");
@@ -48,6 +59,11 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserDocument : BrowserRemoteObject
     {
         internal BrowserDocument(BrowserTab tab) : base(tab) { }
+        public Task<string> title => GetTitleAsync();
+        public Task<string> url => GetUrlAsync();
+        public Task<string> readyState => GetReadyStateAsync();
+        public Task<string> html => GetHtmlAsync();
+        public Task<string> text => GetTextAsync();
         public Task<string> GetTitleAsync() => EvaluateAsync("document.title");
         public Task<string> GetUrlAsync() => EvaluateAsync("document.URL");
         public Task<string> GetReadyStateAsync() => EvaluateAsync("document.readyState");
@@ -63,6 +79,11 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserLocation : BrowserRemoteObject
     {
         internal BrowserLocation(BrowserTab tab) : base(tab) { }
+        public Task<string> href => GetHrefAsync();
+        public Task<string> origin => GetOriginAsync();
+        public Task<string> pathname => GetPathnameAsync();
+        public Task<string> search => GetSearchAsync();
+        public Task<string> hash => GetHashAsync();
         public Task<string> GetHrefAsync() => EvaluateAsync("location.href");
         public Task<string> GetOriginAsync() => EvaluateAsync("location.origin");
         public Task<string> GetPathnameAsync() => EvaluateAsync("location.pathname");
@@ -130,12 +151,16 @@ namespace MiMFa.Engine.JavaScript.Web
         internal BrowserStorage(BrowserTab tab) : base(tab) { Local = new BrowserStorageArea(tab, "localStorage"); Session = new BrowserStorageArea(tab, "sessionStorage"); }
         public BrowserStorageArea Local { get; }
         public BrowserStorageArea Session { get; }
+        public BrowserStorageArea local => Local;
+        public BrowserStorageArea session => Session;
     }
 
     public sealed class BrowserStorageArea : BrowserRemoteObject
     {
         private readonly string _storage;
         internal BrowserStorageArea(BrowserTab tab, string storage) : base(tab) { _storage = storage; }
+        public Task<string> length => GetLengthAsync();
+        public Task<string> keys => GetKeysAsync();
         public Task<string> GetLengthAsync() => EvaluateAsync(_storage + ".length");
         public Task<string> GetItemAsync(string key) => EvaluateAsync(_storage + ".getItem(" + Json(key) + ")");
         public Task<string> SetItemAsync(string key, string value) => EvaluateAsync("(" + _storage + ".setItem(" + Json(key) + "," + Json(value) + "), true)");
