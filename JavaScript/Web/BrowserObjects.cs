@@ -107,7 +107,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> GetStateAsync() => EvaluateAsync("JSON.stringify(history.state)");
         public Task<string> BackAsync() => Tab.Page.GoBackAsync();
         public Task<string> ForwardAsync() => Tab.Page.GoForwardAsync();
-        public Task<string> GoAsync(int delta) => EvaluateAsync("(history.go(" + delta + "), true)");
+        public Task<string> GoAsync(int delta) => Tab.Page.GoAsync(delta);
         public Task<string> PushStateAsync(string jsonState, string title = "", string url = null) =>
             EvaluateAsync("(history.pushState(" + (jsonState ?? "null") + "," + Json(title) + (url == null ? "" : "," + Json(url)) + "), true)");
         public Task<string> ReplaceStateAsync(string jsonState, string title = "", string url = null) =>
