@@ -113,53 +113,55 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> GetUrlAsync() => EvaluateAsync("location.href");
         public Task<string> GetTitleAsync() => EvaluateAsync("document.title");
 
-        private async Task WaitForLoadAsync(int timeoutMilliseconds = 30000)
+        private async Task<string> RunNavigationCommandAsync(Func<Task> command, int timeoutMilliseconds = 30000)
         {
             var loaded = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             Action<string, JObject> handler = (name, data) =>
             {
-                if (name == "Page.loadEventFired") loaded.TrySetResult(true);
+                if (name == "Page.loadEventFired" || name == "Page.navigatedWithinDocument")
+                    loaded.TrySetResult(true);
             };
             _connection.EventReceived += handler;
             try
             {
+                await command().ConfigureAwait(false);
                 using (var timeout = new CancellationTokenSource(timeoutMilliseconds))
-                using (timeout.Token.Register(() => loaded.TrySetException(new TimeoutException("The page load timed out."))))
+                using (timeout.Token.Register(() => loaded.TrySetException(new TimeoutException("The page navigation timed out."))))
                     await loaded.Task.ConfigureAwait(false);
+                await RefreshAsync().ConfigureAwait(false);
+                return Url;
             }
             finally { _connection.EventReceived -= handler; }
         }
 
-        public async Task<string> GoBackAsync()
+        public Task<string> GoBackAsync()
         {
-            var history = await _connection.SendAsync("Page.getNavigationHistory").ConfigureAwait(false);
-            int index = history["currentIndex"].Value<int>();
-            var entries = history["entries"] as JArray;
-            if (entries == null || index <= 0) return Url;
-            await _connection.SendAsync("Page.navigateToHistoryEntry", new JObject { ["entryId"] = entries[index - 1]["id"] }).ConfigureAwait(false);
-            await WaitForLoadAsync().ConfigureAwait(false);
-            await RefreshAsync().ConfigureAwait(false);
-            return Url;
+            return RunNavigationCommandAsync(async () =>
+            {
+                var history = await _connection.SendAsync("Page.getNavigationHistory").ConfigureAwait(false);
+                int index = history["currentIndex"].Value<int>();
+                var entries = history["entries"] as JArray;
+                if (entries == null || index <= 0) return;
+                await _connection.SendAsync("Page.navigateToHistoryEntry", new JObject { ["entryId"] = entries[index - 1]["id"] }).ConfigureAwait(false);
+            });
         }
 
-        public async Task<string> GoForwardAsync()
+        public Task<string> GoForwardAsync()
         {
-            var history = await _connection.SendAsync("Page.getNavigationHistory").ConfigureAwait(false);
-            int index = history["currentIndex"].Value<int>();
-            var entries = history["entries"] as JArray;
-            if (entries == null || index + 1 >= entries.Count) return Url;
-            await _connection.SendAsync("Page.navigateToHistoryEntry", new JObject { ["entryId"] = entries[index + 1]["id"] }).ConfigureAwait(false);
-            await WaitForLoadAsync().ConfigureAwait(false);
-            await RefreshAsync().ConfigureAwait(false);
-            return Url;
+            return RunNavigationCommandAsync(async () =>
+            {
+                var history = await _connection.SendAsync("Page.getNavigationHistory").ConfigureAwait(false);
+                int index = history["currentIndex"].Value<int>();
+                var entries = history["entries"] as JArray;
+                if (entries == null || index + 1 >= entries.Count) return;
+                await _connection.SendAsync("Page.navigateToHistoryEntry", new JObject { ["entryId"] = entries[index + 1]["id"] }).ConfigureAwait(false);
+            });
         }
 
-        public async Task<string> ReloadAsync()
+        public Task<string> ReloadAsync()
         {
-            await _connection.SendAsync("Page.reload", new JObject { ["ignoreCache"] = false }).ConfigureAwait(false);
-            await WaitForLoadAsync().ConfigureAwait(false);
-            await RefreshAsync().ConfigureAwait(false);
-            return Url;
+            return RunNavigationCommandAsync(() =>
+                _connection.SendAsync("Page.reload", new JObject { ["ignoreCache"] = false }));
         }
 
         public void Close()
