@@ -91,11 +91,18 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> GetHashAsync() => EvaluateAsync("location.hash");
         public Task<string> AssignAsync(string url) => EvaluateAsync("(location.assign(" + Json(url) + "), true)");
         public Task<string> ReplaceAsync(string url) => EvaluateAsync("(location.replace(" + Json(url) + "), true)");
+        public Task<string> assign(string url) => AssignAsync(url);
+        public Task<string> replace(string url) => ReplaceAsync(url);
     }
 
     public sealed class BrowserHistory : BrowserRemoteObject
     {
         internal BrowserHistory(BrowserTab tab) : base(tab) { }
+        public Task<string> length => GetLengthAsync();
+        public Task<string> state => GetStateAsync();
+        public Task<string> back() => BackAsync();
+        public Task<string> forward() => ForwardAsync();
+        public Task<string> go(int delta) => GoAsync(delta);
         public Task<string> GetLengthAsync() => EvaluateAsync("history.length");
         public Task<string> GetStateAsync() => EvaluateAsync("JSON.stringify(history.state)");
         public Task<string> BackAsync() => Tab.Page.GoBackAsync();
@@ -110,6 +117,12 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserNavigator : BrowserRemoteObject
     {
         internal BrowserNavigator(BrowserTab tab) : base(tab) { }
+        public Task<string> userAgent => GetUserAgentAsync();
+        public Task<string> language => GetLanguageAsync();
+        public Task<string> languages => GetLanguagesAsync();
+        public Task<string> platform => GetPlatformAsync();
+        public Task<string> online => GetOnlineAsync();
+        public Task<string> cookieEnabled => GetCookieEnabledAsync();
         public Task<string> GetUserAgentAsync() => EvaluateAsync("navigator.userAgent");
         public Task<string> GetLanguageAsync() => EvaluateAsync("navigator.language");
         public Task<string> GetLanguagesAsync() => EvaluateAsync("JSON.stringify(navigator.languages)");
@@ -121,6 +134,11 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserScreen : BrowserRemoteObject
     {
         internal BrowserScreen(BrowserTab tab) : base(tab) { }
+        public Task<string> width => GetWidthAsync();
+        public Task<string> height => GetHeightAsync();
+        public Task<string> availWidth => GetAvailableWidthAsync();
+        public Task<string> availHeight => GetAvailableHeightAsync();
+        public Task<string> colorDepth => GetColorDepthAsync();
         public Task<string> GetWidthAsync() => EvaluateAsync("screen.width");
         public Task<string> GetHeightAsync() => EvaluateAsync("screen.height");
         public Task<string> GetAvailableWidthAsync() => EvaluateAsync("screen.availWidth");
@@ -132,6 +150,11 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserConsole : BrowserRemoteObject
     {
         internal BrowserConsole(BrowserTab tab) : base(tab) { }
+        public Task<string> log(string value) => LogAsync(value);
+        public Task<string> info(string value) => InfoAsync(value);
+        public Task<string> warn(string value) => WarnAsync(value);
+        public Task<string> error(string value) => ErrorAsync(value);
+        public Task<string> clear() => ClearAsync();
         public Task<string> LogAsync(string value) => EvaluateAsync("console.log(" + Json(value) + ")");
         public Task<string> InfoAsync(string value) => EvaluateAsync("console.info(" + Json(value) + ")");
         public Task<string> WarnAsync(string value) => EvaluateAsync("console.warn(" + Json(value) + ")");
@@ -142,8 +165,28 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserCookies : BrowserRemoteObject
     {
         internal BrowserCookies(BrowserTab tab) : base(tab) { }
+        public Task<string> document => GetDocumentCookiesAsync();
         public Task<string> GetDocumentCookiesAsync() => EvaluateAsync("document.cookie");
         public Task<string> SetDocumentCookieAsync(string cookie) => EvaluateAsync("(document.cookie=" + Json(cookie) + ")");
+        public async Task<string> GetAllAsync()
+        {
+            var result = await Tab.Page.SendCommandAsync("Network.getAllCookies").ConfigureAwait(false);
+            return result["cookies"]?.ToString(Newtonsoft.Json.Formatting.None) ?? "[]";
+        }
+        public async Task<bool> SetAsync(string cookieJson)
+        {
+            if (string.IsNullOrWhiteSpace(cookieJson)) throw new ArgumentException("Cookie JSON is required.", nameof(cookieJson));
+            var result = await Tab.Page.SendCommandAsync("Network.setCookie", JObject.Parse(cookieJson)).ConfigureAwait(false);
+            return result["success"] == null || result["success"].Value<bool>();
+        }
+        public Task<JObject> DeleteAsync(string name, string domain = null, string path = null)
+        {
+            var parameters = new JObject { ["name"] = name };
+            if (domain != null) parameters["domain"] = domain;
+            if (path != null) parameters["path"] = path;
+            return Tab.Page.SendCommandAsync("Network.deleteCookies", parameters);
+        }
+        public Task<JObject> ClearAsync() => Tab.Page.SendCommandAsync("Network.clearBrowserCookies");
     }
 
     public sealed class BrowserStorage : BrowserRemoteObject
@@ -162,6 +205,10 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> length => GetLengthAsync();
         public Task<string> keys => GetKeysAsync();
         public Task<string> GetLengthAsync() => EvaluateAsync(_storage + ".length");
+        public Task<string> getItem(string key) => GetItemAsync(key);
+        public Task<string> setItem(string key, string value) => SetItemAsync(key, value);
+        public Task<string> removeItem(string key) => RemoveItemAsync(key);
+        public Task<string> clear() => ClearAsync();
         public Task<string> GetItemAsync(string key) => EvaluateAsync(_storage + ".getItem(" + Json(key) + ")");
         public Task<string> SetItemAsync(string key, string value) => EvaluateAsync("(" + _storage + ".setItem(" + Json(key) + "," + Json(value) + "), true)");
         public Task<string> RemoveItemAsync(string key) => EvaluateAsync("(" + _storage + ".removeItem(" + Json(key) + "), true)");
