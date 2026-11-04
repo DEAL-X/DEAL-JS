@@ -77,7 +77,10 @@ namespace MiMFa.Engine.JavaScript.Web
 
         public void Dispose()
         {
-            try { CloseAsync().GetAwaiter().GetResult(); }
+            try
+            {
+                if (!CloseAsync().GetAwaiter().GetResult()) Page.Dispose();
+            }
             catch { Page.Dispose(); }
         }
     }
