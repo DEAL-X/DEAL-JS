@@ -75,6 +75,10 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<IList<BrowserFileSystemFileHandle>> open(string optionsJson = null) => OpenAsync(optionsJson);
         public Task<BrowserFileSystemFileHandle> save(string optionsJson = null) => SaveAsync(optionsJson);
 
-        public void Dispose() => Page.Dispose();
+        public void Dispose()
+        {
+            try { CloseAsync().GetAwaiter().GetResult(); }
+            catch { Page.Dispose(); }
+        }
     }
 }
