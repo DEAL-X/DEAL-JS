@@ -55,7 +55,9 @@ namespace MiMFa.Engine.JavaScript.Web
                     if (string.IsNullOrEmpty(_currentTargetId))
                         GetTabsAsync().GetAwaiter().GetResult();
                     if (string.IsNullOrEmpty(_currentTargetId)) return null;
-                    return GetTabAsync(_currentTargetId).GetAwaiter().GetResult();
+                    var current = GetTabAsync(_currentTargetId).GetAwaiter().GetResult();
+                    CurrentPage = current.Page;
+                    return current;
                 }
                 catch { return null; }
             }
