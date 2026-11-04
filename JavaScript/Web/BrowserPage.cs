@@ -49,6 +49,7 @@ namespace MiMFa.Engine.JavaScript.Web
         {
             await _connection.SendAsync("Page.enable").ConfigureAwait(false);
             await _connection.SendAsync("Runtime.enable").ConfigureAwait(false);
+            await _connection.SendAsync("Network.enable").ConfigureAwait(false);
             await RefreshAsync().ConfigureAwait(false);
         }
 
@@ -98,6 +99,9 @@ namespace MiMFa.Engine.JavaScript.Web
             if (value == null) return null;
             return value.Type == JTokenType.String ? value.Value<string>() : value.ToString();
         }
+
+        internal Task<JObject> SendCommandAsync(string method, JObject parameters = null) =>
+            _connection.SendAsync(method, parameters);
 
         internal async Task<string> EvaluateObjectAsync(string expression)
         {
