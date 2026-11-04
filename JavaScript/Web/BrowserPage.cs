@@ -174,7 +174,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> GetUrlAsync() => EvaluateAsync("location.href");
         public Task<string> GetTitleAsync() => EvaluateAsync("document.title");
 
-        private async Task<string> RunNavigationCommandAsync(Func<Task> command, int timeoutMilliseconds = 30000)
+        private async Task<string> RunNavigationCommandAsync(Func<Task<bool>> command, int timeoutMilliseconds = 30000)
         {
             var loaded = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             Action<string, JObject> handler = (name, data) =>
@@ -202,8 +202,9 @@ namespace MiMFa.Engine.JavaScript.Web
                 var history = await _connection.SendAsync("Page.getNavigationHistory").ConfigureAwait(false);
                 int index = history["currentIndex"].Value<int>();
                 var entries = history["entries"] as JArray;
-                if (entries == null || index <= 0) return;
+                if (entries == null || index <= 0) return false;
                 await _connection.SendAsync("Page.navigateToHistoryEntry", new JObject { ["entryId"] = entries[index - 1]["id"] }).ConfigureAwait(false);
+                return true;
             });
         }
 
@@ -214,15 +215,22 @@ namespace MiMFa.Engine.JavaScript.Web
                 var history = await _connection.SendAsync("Page.getNavigationHistory").ConfigureAwait(false);
                 int index = history["currentIndex"].Value<int>();
                 var entries = history["entries"] as JArray;
-                if (entries == null || index + 1 >= entries.Count) return;
+                if (entries == null || index + 1 >= entries.Count) return false;
                 await _connection.SendAsync("Page.navigateToHistoryEntry", new JObject { ["entryId"] = entries[index + 1]["id"] }).ConfigureAwait(false);
+                return true;
             });
         }
 
         public Task<string> ReloadAsync()
         {
             return RunNavigationCommandAsync(() =>
-                _connection.SendAsync("Page.reload", new JObject { ["ignoreCache"] = false }));
+                ReloadCommandAsync());
+
+        private async Task<bool> ReloadCommandAsync()
+        {
+            await _connection.SendAsync("Page.reload", new JObject { ["ignoreCache"] = false }).ConfigureAwait(false);
+            return true;
+        }
         }
 
         public void Close()
