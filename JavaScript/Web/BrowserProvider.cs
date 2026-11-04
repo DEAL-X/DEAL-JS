@@ -35,6 +35,12 @@ namespace MiMFa.Engine.JavaScript.Web
             new ConcurrentDictionary<string, BrowserTab>();
         public BrowserTabs Tabs { get; }
         public BrowserTab Tab => CurrentPage == null ? null : GetTab(CurrentPage);
+        // Lower-case aliases form the public JavaScript-facing API.
+        public BrowserTabs tabs => Tabs;
+        public BrowserTab tab => Tab;
+        public Task<BrowserTab> open(string url) => OpenTabAsync(url);
+        public Task<bool> close(BrowserTab tab) => tab == null ? Task.FromResult(false) : CloseAsync(tab.Id);
+        public Task<bool> activate(BrowserTab tab) => tab == null ? Task.FromResult(false) : ActivateAsync(tab.Id);
 
         public Process Process;
         public string DriverPath { get; set; }
