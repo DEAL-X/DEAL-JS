@@ -39,6 +39,12 @@ namespace MiMFa.Engine.JavaScript.Web
         private readonly ConcurrentDictionary<string, BrowserTab> _tabs =
             new ConcurrentDictionary<string, BrowserTab>();
         public BrowserTabs Tabs { get; }
+        public BrowserDownloads Downloads { get; }
+        public BrowserPermissions Permissions { get; }
+        public BrowserRuntime Runtime { get; }
+        public BrowserDownloads downloads => Downloads;
+        public BrowserPermissions permissions => Permissions;
+        public BrowserRuntime runtime => Runtime;
         public BrowserTab Tab
         {
             get
@@ -73,6 +79,9 @@ namespace MiMFa.Engine.JavaScript.Web
             DriverPath = driverPath;
             _windowId = windowId;
             Tabs = new BrowserTabs(this);
+            Downloads = new BrowserDownloads(this);
+            Permissions = new BrowserPermissions(this);
+            Runtime = new BrowserRuntime(this);
             RandomizedPort = !port.HasValue;
         }
 
@@ -197,6 +206,13 @@ namespace MiMFa.Engine.JavaScript.Web
                 }
             }
             finally { _browserConnectionLock.Release(); }
+        }
+
+        internal async Task<JObject> SendBrowserCommandAsync(string method, JObject parameters = null)
+        {
+            await EnsureAvailableAsync(Timeout).ConfigureAwait(false);
+            await EnsureBrowserConnectionAsync().ConfigureAwait(false);
+            return await _browserConnection.SendAsync(method, parameters).ConfigureAwait(false);
         }
 
         private async Task<int> GetWindowIdAsync(string targetId)
