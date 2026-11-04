@@ -47,7 +47,7 @@ async function browserObjectModelSmokeTest() {
 }
 
 // Optional manual checks. These invoke Chromium's native pickers.
-// const selected = await browser.tab.open({ multiple: true });
+// const selected = await browser.tab.open(JSON.stringify({ multiple: true }));
 // const fileInfo = await selected[0].getFile();
-// const saveHandle = await browser.tab.save({ suggestedName: "deal-output.txt" });
+// const saveHandle = await browser.tab.save(JSON.stringify({ suggestedName: "deal-output.txt" }));
 // await saveHandle.writeText("Created through the native File System Access API.");
