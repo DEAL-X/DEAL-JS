@@ -2,6 +2,7 @@ use deal/make/string;
 
 // All resource related commands
 command Local = {};
+command local = Local;
 
 Local.folder = function (path = null, recursive = false) {
 	if(!path) return null;
@@ -43,6 +44,26 @@ Local.prepend = function (path = null, object = null) {
 Local.append = function (path = null, object = null) {
 	if(!path) return false;
 	return application.Engine.ResourceProvider.AppendFileContents(path, Make.string(object));
+};
+Local.directory = function (path = null) {
+	if(!path) return false;
+	application.Engine.ResourceProvider.CreateDirectory(path);
+	return application.Engine.ResourceProvider.Exists(path);
+};
+Local.move = function (source = null, destination = null, overwrite = false) {
+	if(!source || !destination) return false;
+	application.Engine.ResourceProvider.Move(source, destination, overwrite);
+	return true;
+};
+Local.copy = function (source = null, destination = null, overwrite = false) {
+	if(!source || !destination) return false;
+	application.Engine.ResourceProvider.Copy(source, destination, overwrite);
+	return true;
+};
+Local.rename = function (path = null, newName = null, overwrite = false) {
+	if(!path || !newName) return false;
+	application.Engine.ResourceProvider.Rename(path, newName, overwrite);
+	return true;
 };
 Local.delete = function (path = null) {
 	if(!path) return false;
