@@ -29,12 +29,26 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserProvider : IDisposable
     {
         private readonly HttpClient _http = new HttpClient();
+        private readonly SemaphoreSlim _browserConnectionLock = new SemaphoreSlim(1, 1);
+        private CdpConnection _browserConnection;
+        private int? _windowId;
+        private string _currentTargetId;
+        public int? WindowId => _windowId;
         private readonly ConcurrentDictionary<string, BrowserPage> _pages =
             new ConcurrentDictionary<string, BrowserPage>();
         private readonly ConcurrentDictionary<string, BrowserTab> _tabs =
             new ConcurrentDictionary<string, BrowserTab>();
         public BrowserTabs Tabs { get; }
-        public BrowserTab Tab => CurrentPage == null ? null : GetTab(CurrentPage);
+        public BrowserTab Tab
+        {
+            get
+            {
+                if (CurrentPage != null) return GetTab(CurrentPage);
+                if (string.IsNullOrEmpty(_currentTargetId)) return null;
+                try { return GetTabAsync(_currentTargetId).GetAwaiter().GetResult(); }
+                catch { return null; }
+            }
+        }
         // Lower-case aliases form the public JavaScript-facing API.
         public BrowserTabs tabs => Tabs;
         public BrowserTab tab => Tab;
@@ -52,11 +66,12 @@ namespace MiMFa.Engine.JavaScript.Web
         public BrowserPage CurrentPage { get; private set; }
         public bool IsAlive => Process != null && !Process.HasExited;
 
-        public BrowserProvider(string host = null, int? port = null, string driverPath = null)
+        public BrowserProvider(string host = null, int? port = null, string driverPath = null, int? windowId = null)
         {
             Host = host ?? "http://127.0.0.1";
             Port = port ?? 0;
             DriverPath = driverPath;
+            _windowId = windowId;
             Tabs = new BrowserTabs(this);
             RandomizedPort = !port.HasValue;
         }
@@ -68,6 +83,9 @@ namespace MiMFa.Engine.JavaScript.Web
             _pages.Clear();
             _tabs.Clear();
             CurrentPage = null;
+            _currentTargetId = null;
+            _browserConnection?.Dispose();
+            _browserConnection = null;
 
             if (Process != null)
             {
@@ -87,6 +105,7 @@ namespace MiMFa.Engine.JavaScript.Web
                 }
             }
             _http.Dispose();
+            _browserConnectionLock.Dispose();
         }
 
         public void Initial()
@@ -154,6 +173,40 @@ namespace MiMFa.Engine.JavaScript.Web
             }
         }
 
+        private async Task EnsureBrowserConnectionAsync()
+        {
+            if (_browserConnection != null) return;
+            await _browserConnectionLock.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                if (_browserConnection != null) return;
+                using (var response = await _http.GetAsync(Endpoint.TrimEnd('/') + "/json/version").ConfigureAwait(false))
+                {
+                    response.EnsureSuccessStatusCode();
+                    JObject version = JObject.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+                    string websocket = (string)version["webSocketDebuggerUrl"];
+                    if (!Uri.TryCreate(websocket, UriKind.Absolute, out Uri uri))
+                        throw new InvalidOperationException("Chromium did not provide a browser-level DevTools WebSocket URL.");
+                    var connection = new CdpConnection();
+                    try
+                    {
+                        await connection.ConnectAsync(uri, CancellationToken.None).ConfigureAwait(false);
+                        _browserConnection = connection;
+                    }
+                    catch { connection.Dispose(); throw; }
+                }
+            }
+            finally { _browserConnectionLock.Release(); }
+        }
+
+        private async Task<int> GetWindowIdAsync(string targetId)
+        {
+            await EnsureBrowserConnectionAsync().ConfigureAwait(false);
+            JObject result = await _browserConnection.SendAsync("Browser.getWindowForTarget",
+                new JObject { ["targetId"] = targetId }).ConfigureAwait(false);
+            return result["windowId"].Value<int>();
+        }
+
         public async Task<IList<BrowserTabInfo>> GetTabsAsync()
         {
             await EnsureAvailableAsync(Timeout).ConfigureAwait(false);
@@ -161,23 +214,35 @@ namespace MiMFa.Engine.JavaScript.Web
             {
                 response.EnsureSuccessStatusCode();
                 var items = JArray.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-                var result = items.OfType<JObject>()
+                var pages = items.OfType<JObject>()
                     .Where(x => string.Equals((string)x["type"], "page", StringComparison.OrdinalIgnoreCase))
-                    .Select(x => new BrowserTabInfo
+                    .ToList();
+                var result = new List<BrowserTabInfo>();
+                foreach (var item in pages)
+                {
+                    string id = (string)item["id"];
+                    int windowId = await GetWindowIdAsync(id).ConfigureAwait(false);
+                    if (!_windowId.HasValue) _windowId = windowId;
+                    if (_windowId.Value != windowId) continue;
+                    result.Add(new BrowserTabInfo
                     {
-                        Id = (string)x["id"],
-                        Type = (string)x["type"],
-                        Title = (string)x["title"],
-                        Url = (string)x["url"],
-                        WebSocketDebuggerUrl = (string)x["webSocketDebuggerUrl"],
-                        IsCurrent = CurrentPage != null && CurrentPage.TargetId == (string)x["id"]
-                    }).ToList();
+                        Id = id,
+                        Type = (string)item["type"],
+                        Title = (string)item["title"],
+                        Url = (string)item["url"],
+                        WebSocketDebuggerUrl = (string)item["webSocketDebuggerUrl"],
+                        IsCurrent = !string.IsNullOrEmpty(_currentTargetId) && _currentTargetId == id
+                    });
+                }
+                if (string.IsNullOrEmpty(_currentTargetId) && result.Count > 0)
+                    _currentTargetId = result[0].Id;
                 var activeIds = new HashSet<string>(result.Select(x => x.Id));
                 foreach (var id in _pages.Keys.Where(x => !activeIds.Contains(x)).ToList())
                 {
                     if (_pages.TryRemove(id, out var stale)) stale.Dispose();
                     _tabs.TryRemove(id, out _);
                     if (CurrentPage != null && CurrentPage.TargetId == id) CurrentPage = null;
+                    if (_currentTargetId == id) _currentTargetId = result.FirstOrDefault()?.Id;
                 }
                 return result;
             }
@@ -188,7 +253,7 @@ namespace MiMFa.Engine.JavaScript.Web
             if (string.IsNullOrWhiteSpace(targetId)) throw new ArgumentException("A browser tab identifier is required.", nameof(targetId));
             if (_pages.TryGetValue(targetId, out var existing))
             {
-                CurrentPage = existing;
+                if (CurrentPage == null) CurrentPage = existing;
                 return existing;
             }
 
@@ -209,7 +274,7 @@ namespace MiMFa.Engine.JavaScript.Web
                     page.Dispose();
                     page = _pages[targetId];
                 }
-                CurrentPage = page;
+                if (CurrentPage == null) CurrentPage = page;
                 return page;
             }
             catch
@@ -270,6 +335,7 @@ namespace MiMFa.Engine.JavaScript.Web
                     await page.NavigateAsync(url, timeoutMilliseconds).ConfigureAwait(false);
                     _pages[id] = page;
                     CurrentPage = page;
+                    _currentTargetId = id;
                     return page;
                 }
                 catch
@@ -288,7 +354,9 @@ namespace MiMFa.Engine.JavaScript.Web
             {
                 if (!response.IsSuccessStatusCode) return false;
                 if (_pages.TryGetValue(targetId, out var page)) CurrentPage = page;
-                else await GetPageAsync(targetId).ConfigureAwait(false);
+                else page = await GetPageAsync(targetId).ConfigureAwait(false);
+                CurrentPage = page;
+                _currentTargetId = targetId;
                 return true;
             }
         }
@@ -302,6 +370,8 @@ namespace MiMFa.Engine.JavaScript.Web
                 if (!response.IsSuccessStatusCode) return false;
                 if (_pages.TryRemove(targetId, out var page)) page.Dispose();
                 if (CurrentPage != null && CurrentPage.TargetId == targetId) CurrentPage = null;
+                if (_currentTargetId == targetId) _currentTargetId = null;
+                _tabs.TryRemove(targetId, out _);
                 return true;
             }
         }
