@@ -29,11 +29,14 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> base64() => ReadBase64Async();
         public Task<bool> writeText(string text) => WriteTextAsync(text);
         public Task<BrowserFileSystemWritable> createWritable() => CreateWritableAsync();
-        public Task<string> IsSameEntryAsync(BrowserFileSystemFileHandle other)
+        public async Task<bool> IsSameEntryAsync(BrowserFileSystemFileHandle other)
         {
             if (other == null) throw new ArgumentNullException(nameof(other));
-            return _page.CallFunctionValueAsync(ObjectId, "async function(other){return await this.isSameEntry(other)}",
-                new JArray { new JObject { ["objectId"] = other.ObjectId } });
+            if (!ReferenceEquals(_page, other._page))
+                throw new InvalidOperationException("File handles from different browser tabs cannot be compared.");
+            string result = await _page.CallFunctionValueAsync(ObjectId, "async function(other){return await this.isSameEntry(other)}",
+                new JArray { new JObject { ["objectId"] = other.ObjectId } }).ConfigureAwait(false);
+            return bool.TryParse(result, out bool same) && same;
         }
 
         public async Task<BrowserFileMetadata> GetFileAsync()
@@ -81,18 +84,32 @@ namespace MiMFa.Engine.JavaScript.Web
             ObjectId = objectId;
         }
         internal string ObjectId { get; }
-        public Task<string> WriteTextAsync(string text) =>
-            _page.CallFunctionValueAsync(ObjectId, "async function(value){await this.write(value);return true}",
-                new JArray { new JObject { ["value"] = text ?? string.Empty } });
-        public Task<string> WriteBase64Async(string base64) =>
-            _page.CallFunctionValueAsync(ObjectId,
+        public async Task<bool> WriteTextAsync(string text)
+        {
+            string result = await _page.CallFunctionValueAsync(ObjectId, "async function(value){await this.write(value);return true}",
+                new JArray { new JObject { ["value"] = text ?? string.Empty } }).ConfigureAwait(false);
+            return bool.TryParse(result, out bool success) && success;
+        }
+        public async Task<bool> WriteBase64Async(string base64)
+        {
+            string result = await _page.CallFunctionValueAsync(ObjectId,
                 "async function(value){const b=Uint8Array.from(atob(value),c=>c.charCodeAt(0));await this.write(b);return true}",
-                new JArray { new JObject { ["value"] = base64 ?? string.Empty } });
-        public Task<string> write(string text) => WriteTextAsync(text);
-        public Task<string> close() => CloseAsync();
-        public Task<string> abort() => AbortAsync();
-        public Task<string> CloseAsync() => _page.CallFunctionValueAsync(ObjectId, "async function(){await this.close();return true}");
-        public Task<string> AbortAsync() => _page.CallFunctionValueAsync(ObjectId, "async function(){await this.abort();return true}");
+                new JArray { new JObject { ["value"] = base64 ?? string.Empty } }).ConfigureAwait(false);
+            return bool.TryParse(result, out bool success) && success;
+        }
+        public Task<bool> write(string text) => WriteTextAsync(text);
+        public Task<bool> close() => CloseAsync();
+        public Task<bool> abort() => AbortAsync();
+        public async Task<bool> CloseAsync()
+        {
+            string result = await _page.CallFunctionValueAsync(ObjectId, "async function(){await this.close();return true}").ConfigureAwait(false);
+            return bool.TryParse(result, out bool success) && success;
+        }
+        public async Task<bool> AbortAsync()
+        {
+            string result = await _page.CallFunctionValueAsync(ObjectId, "async function(){await this.abort();return true}").ConfigureAwait(false);
+            return bool.TryParse(result, out bool success) && success;
+        }
         public void Dispose()
         {
             if (_disposed) return;
