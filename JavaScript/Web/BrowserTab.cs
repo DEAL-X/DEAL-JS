@@ -24,7 +24,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public BrowserLocation Location => Window.Location;
 
         public Task<string> ReloadAsync() => Page.ReloadAsync();
-        public Task<string> CloseAsync() => _browser.CloseAsync(Id).ContinueWith(t => t.GetAwaiter().GetResult().ToString(), TaskScheduler.Default);
+        public Task<bool> CloseAsync() => _browser.CloseAsync(Id);
         public Task<bool> ActivateAsync() => _browser.ActivateAsync(Id);
 
         // Aliases of the native File System Access API. Chromium owns the picker UI.
