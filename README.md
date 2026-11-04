@@ -662,16 +662,45 @@ This is a host-side Fetch compatibility layer, not a complete browser Fetch impl
 
 The ClearScript V8 host must enable `V8ScriptEngineFlags.EnableTaskPromiseConversion` for .NET `Task` results to be awaitable from JavaScript.
 
-#### Chromium page control
+#### Chromium browser object model
 
-`BrowserProvider` connects to Chromium through the Chrome DevTools Protocol (CDP). It can start Chromium or connect to an explicitly configured debugging port. A `BrowserPage` is a remote page proxy: its DOM remains in Chromium and is not exposed as a local ClearScript `document` object.
+The ClearScript host exposes `application.Engine.BrowserProvider` as the DEAL `browser` object. One `BrowserProvider` is scoped to one application-level Chromium window; its `WindowId` is discovered from CDP or can be supplied when attaching to an existing debugging endpoint. Create a separate provider instance for each application-level browser window. There is deliberately no `browser.windows` alias.
 
 ```js
-const page = await load("https://example.com/");
-const title = await page.EvaluateAsync("document.title");
-const html = await page.GetDocumentHtmlAsync();
+const tab = await browser.open("https://example.com/");
+const title = await tab.window.document.title;
+const html = await tab.window.document.html;
+
+const tabs = await browser.tabs.all;
+const sameTab = await browser.tabs.get(tab.Id);
+await browser.activate(sameTab);
+await browser.close(tab);
 ```
 
-`BrowserPage.EvaluateAsync` evaluates JavaScript inside the remote page and returns a serialized by-value result. It does not marshal live DOM nodes or arbitrary remote JavaScript objects into the ClearScript process. Use page methods such as `GetDocumentHtmlAsync`, `GetDocumentTextAsync`, or `EvaluateAsync` to work with page content.
+The public object hierarchy is:
 
-The native web smoke tests are in [Samples/Native-Web-Smoke-Test.js](Samples/Native-Web-Smoke-Test.js).
+- `browser.tab`: the provider's current tab handle.
+- `browser.tabs.current`, `browser.tabs.all`, and `browser.tabs.get(id)`: tab access within this application-level window.
+- `browser.open(url)`, `browser.close(tab)`, and `browser.activate(tab)`: tab lifecycle.
+- `browser.tab.window`: remote JavaScript Window proxy, with `document`, `location`, `history`, `navigator`, `screen`, `console`, `cookies`, and `storage.local/session`.
+- `browser.tab.windows`: child frames/browsing contexts belonging to the tab.
+- `browser.downloads`, `browser.permissions`, and `browser.runtime`: browser-level CDP services.
+
+Every tab returned from `browser.open`, `browser.tabs.get`, or `browser.tabs.all` is a `BrowserTab` with the same interface as `browser.tab`. `browser.tab.window` and its descendants are remote proxies; they do not become local ClearScript DOM objects.
+
+The `browser.tab.open(options)` and `browser.tab.save(options)` methods are direct aliases for the native `window.showOpenFilePicker(options)` and `window.showSaveFilePicker(options)` APIs. They do not implement their own dialogs. They return remote file-handle proxies so callers can read metadata/content and create writable streams without attempting to marshal Chromium's native handles into V8. The browser's secure-context, permission, and transient-user-activation requirements still apply.
+
+```js
+const handles = await browser.tab.open();
+const file = await handles[0].getFile();
+const text = await handles[0].text();
+
+const output = await browser.tab.save({ suggestedName: "result.txt" });
+await output.writeText("Saved by DEAL.JS");
+```
+
+CDP does not expose a reliable query for which tab the user has selected manually in the Chrome UI. Accordingly, `browser.tab` tracks the tab most recently opened or activated through this provider; on first discovery it selects the first page target returned by Chromium. Calling `browser.activate(tab)` updates that selection and activates the corresponding tab/window.
+
+The provider scopes `tabs`, activation, and closing to its application-level `WindowId`. A newly opened tab is created after activating an anchor tab and its resulting window ID is checked. If Chromium creates it in a different window, the operation fails and the stray target is closed rather than silently mixing tabs from different browser objects.
+
+`BrowserPage.EvaluateAsync` returns by-value results. Internal remote-object operations are used only for browser-owned handles such as File System Access handles; these handles must be disposed when no longer needed. The native web smoke tests are in [Samples/Native-Web-Smoke-Test.js](Samples/Native-Web-Smoke-Test.js).
