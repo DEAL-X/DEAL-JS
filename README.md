@@ -688,14 +688,14 @@ The public object hierarchy is:
 
 Every tab returned from `browser.open`, `browser.tabs.get`, or `browser.tabs.all` is a `BrowserTab` with the same interface as `browser.tab`. `browser.tab.window` and its descendants are remote proxies; they do not become local ClearScript DOM objects.
 
-The `browser.tab.open(options)` and `browser.tab.save(options)` methods are direct aliases for the native `window.showOpenFilePicker(options)` and `window.showSaveFilePicker(options)` APIs. They do not implement their own dialogs. They return remote file-handle proxies so callers can read metadata/content and create writable streams without attempting to marshal Chromium's native handles into V8. The browser's secure-context, permission, and transient-user-activation requirements still apply.
+The `browser.tab.open(optionsJson)` and `browser.tab.save(optionsJson)` methods are direct aliases for the native `window.showOpenFilePicker(options)` and `window.showSaveFilePicker(options)` APIs. They do not implement their own dialogs. They return remote file-handle proxies so callers can read metadata/content and create writable streams without attempting to marshal Chromium's native handles into V8. The browser's secure-context, permission, and transient-user-activation requirements still apply.
 
 ```js
 const handles = await browser.tab.open();
 const file = await handles[0].getFile();
 const text = await handles[0].text();
 
-const output = await browser.tab.save({ suggestedName: "result.txt" });
+const output = await browser.tab.save(JSON.stringify({ suggestedName: "result.txt" }));
 await output.writeText("Saved by DEAL.JS");
 ```
 
