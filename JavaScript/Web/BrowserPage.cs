@@ -80,6 +80,30 @@ namespace MiMFa.Engine.JavaScript.Web
             finally { _connection.EventReceived -= handler; }
         }
 
+        /// <summary>Replaces the current document without adding a history entry.</summary>
+        public async Task<string> ReplaceNavigateAsync(string url, int timeoutMilliseconds = 60000)
+        {
+            if (string.IsNullOrWhiteSpace(url)) throw new ArgumentException("A navigation URL is required.", nameof(url));
+            var loaded = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Action<string, JObject> handler = (name, data) =>
+            {
+                if (name == "Page.loadEventFired" || name == "Page.navigatedWithinDocument")
+                    loaded.TrySetResult(true);
+            };
+            _connection.EventReceived += handler;
+            try
+            {
+                await EvaluateAsync("location.replace(" + Newtonsoft.Json.JsonConvert.ToString(url) + ")").ConfigureAwait(false);
+                if (timeoutMilliseconds <= 0) timeoutMilliseconds = 60000;
+                using (var timeout = new CancellationTokenSource(timeoutMilliseconds))
+                using (timeout.Token.Register(() => loaded.TrySetException(new TimeoutException("The page did not finish loading before the navigation timeout."))))
+                    await loaded.Task.ConfigureAwait(false);
+                await RefreshAsync().ConfigureAwait(false);
+                return Url;
+            }
+            finally { _connection.EventReceived -= handler; }
+        }
+
         public async Task<string> EvaluateAsync(string expression)
         {
             var result = await _connection.SendAsync("Runtime.evaluate", new JObject
