@@ -13,8 +13,8 @@ Consider headings is [];
 
 Try,
     await browser.open(targetUrl);
-    Consider pageTitle is browser.tab.document.title;
-    Consider pageUrl is browser.tab.location.href;
+    Consider pageTitle is browser.tab.window.document.title;
+    Consider pageUrl is browser.tab.window.location.href;
     log "Loaded " + pageTitle + " from " + pageUrl;
 Catch problem,
     log error problem;
@@ -28,8 +28,8 @@ const headings = [];
 
 try {
     await browser.open(targetUrl);
-    const pageTitle = browser.tab.document.title;
-    const pageUrl = browser.tab.location.href;
+    const pageTitle = browser.tab.window.document.title;
+    const pageUrl = browser.tab.window.location.href;
     console.log("Loaded " + pageTitle + " from " + pageUrl);
 } catch (problem) {
     console.error(problem);
