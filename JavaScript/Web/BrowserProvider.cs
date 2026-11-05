@@ -26,6 +26,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public bool RandomizedPort { get; set; } = false;
         public string Endpoint => Host.TrimEnd('/') + ":" + Port;
         public int Timeout { get; set; } = 60000;
+
         public BrowserPage CurrentPage { get; private set; }
         public bool IsAlive => Process != null && !Process.HasExited;
 
@@ -173,7 +174,7 @@ namespace MiMFa.Engine.JavaScript.Web
             return LoadAsync(url, Timeout);
         }
 
-        public async Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds)
+        public async Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = -1)
         {
             if (string.IsNullOrWhiteSpace(url)) url = "about:blank";
             if (timeoutMilliseconds <= 0) timeoutMilliseconds = Timeout;
