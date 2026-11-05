@@ -7,25 +7,26 @@ async function browserObjectModelSmokeTest() {
     if (!opened || !opened.Id)
         throw new Error("browser.open() did not return a BrowserTab.");
 
-    const title = await opened.window.document.title;
+    // Browser object properties are synchronous, not Task-returning values.
+    const title = opened.window.document.title;
     if (!title || title.toLowerCase().indexOf("example") < 0)
-        throw new Error("The remote document title was not read correctly.");
+        throw new Error("The remote document title was not read synchronously.");
 
-    const href = await opened.window.location.href;
+    const href = opened.window.location.href;
     if (href.indexOf("example.com") < 0)
-        throw new Error("The remote location was not read correctly.");
+        throw new Error("The remote location was not read synchronously.");
 
     await opened.window.storage.local.setItem("deal.browser.smoke", "ok");
     const stored = await opened.window.storage.local.getItem("deal.browser.smoke");
     if (stored !== "ok")
         throw new Error("The localStorage proxy did not round-trip a value.");
 
-    const tabs = await browser.tabs.all;
+    const tabs = browser.tabs.all;
     let found = false;
     for (let i = 0; i < tabs.Count; i++)
         if (tabs[i].Id === opened.Id) found = true;
     if (!found)
-        throw new Error("The opened tab was not found in browser.tabs.all.");
+        throw new Error("browser.tabs.all was not available synchronously or missed the opened tab.");
 
     const fetched = await browser.tabs.get(opened.Id);
     if (fetched.Id !== opened.Id)
@@ -39,7 +40,19 @@ async function browserObjectModelSmokeTest() {
     if (!version || version.ToString().indexOf("product") < 0)
         throw new Error("Browser runtime version information was not returned.");
 
-    await browser.close(opened);
+    // load() replaces the current document; navigate() adds a history entry.
+    await browser.tab.load("https://example.com/");
+    await browser.tab.navigate("https://example.org/");
+    await browser.tab.back();
+    if (browser.tab.Id !== fetched.Id)
+        throw new Error("Current-tab navigation changed the current tab unexpectedly.");
+
+    await browser.tab.close();
+    const replacement = browser.tab;
+    if (replacement && replacement.Id === fetched.Id)
+        throw new Error("browser.tab.close() did not select a replacement tab.");
+
+    browser.close();
     return {
         passed: true,
         title: title,
