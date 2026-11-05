@@ -23,8 +23,8 @@ For each product of products,
         log error problem;
 
 Consider tab is await browser.open("https://example.com");
-Consider title is browser.tab.document.title;
-Consider currentUrl is browser.tab.location.href;
+Consider title is browser.tab.window.document.title;
+Consider currentUrl is browser.tab.window.location.href;
 
 await browser.tab.navigate("https://example.org/results");
 await browser.tab.back();
@@ -55,8 +55,8 @@ for (const product of products) {
 }
 
 await browser.open("https://example.com");
-const title = browser.tab.document.title;
-const currentUrl = browser.tab.location.href;
+const title = browser.tab.window.document.title;
+const currentUrl = browser.tab.window.location.href;
 
 await browser.tab.navigate("https://example.org/results");
 await browser.tab.back();
@@ -69,6 +69,6 @@ console.log("Collected " + destination.length + " result sets.");
 - `browser.open(url)` opens a new tab.
 - `browser.tab.load(url)` replaces the current document without adding a history entry.
 - `browser.tab.navigate(url)` performs normal navigation and adds a history entry.
-- `browser.tab.document.title` and `browser.tab.location.href` are synchronous properties.
+- `browser.tab.window.document.title` and `browser.tab.window.location.href` are synchronous properties.
 - `browser.tab.close()` closes the current tab and updates `browser.tab` to the tab selected next.
 - `USE` skips a dependency that has already been loaded; `REUSE` processes it again.
