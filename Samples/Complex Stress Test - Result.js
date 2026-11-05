@@ -3,7 +3,7 @@
 /* Reserved "every" as the "for" */
 (scrapeMap = (() => {
     try {
-        open(base.Browser).then((argument) => {
+        browser.open("about:blank").then((argument) => {
             handle(argument, true);
 
             for (const url/* The URL of the website */ of list) browser.tab.load(url).then((argument) => {
