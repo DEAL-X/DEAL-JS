@@ -74,14 +74,21 @@ namespace MiMFa.Engine.JavaScript.Web
         private static bool LooksLikeWebAddress(string value)
         {
             if (value.StartsWith("//", StringComparison.Ordinal)) return true;
-            if (value.Contains("/") || value.Contains(@"\") || value.StartsWith(".", StringComparison.Ordinal) || value.StartsWith("~", StringComparison.Ordinal))
-                return false;
+            if (value.StartsWith(".", StringComparison.Ordinal) || value.StartsWith("~", StringComparison.Ordinal) ||
+                value.StartsWith("/", StringComparison.Ordinal) || value.StartsWith(@"\", StringComparison.Ordinal) ||
+                LooksLikeWindowsDrivePath(value)) return false;
             if (File.Exists(value)) return false;
-            if (value.Contains(":")) return true;
-            string extension = Path.GetExtension(value).ToLowerInvariant();
-            if (new[] { ".txt", ".md", ".djs", ".js", ".mjs", ".json", ".html", ".htm", ".css", ".xml", ".csv", ".pdf", ".png", ".jpg", ".jpeg", ".gif" }.Contains(extension))
-                return false;
-            return value.Contains(".") || string.Equals(value, "localhost", StringComparison.OrdinalIgnoreCase);
+            string host = value.Split('/', '\\')[0];
+            if (host.Contains(":") || string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase))
+                return true;
+            if (host.Contains("."))
+            {
+                string extension = Path.GetExtension(host).ToLowerInvariant();
+                if (new[] { ".txt", ".md", ".djs", ".js", ".mjs", ".json", ".html", ".htm", ".css", ".xml", ".csv", ".pdf", ".png", ".jpg", ".jpeg", ".gif" }.Contains(extension))
+                    return false;
+                return true;
+            }
+            return false;
         }
     }
 }
