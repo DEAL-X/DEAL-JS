@@ -54,7 +54,7 @@ namespace MiMFa.Engine.JavaScript.Web
             address = Environment.ExpandEnvironmentVariables(address.Trim());
             if (HasExplicitScheme(address) || LooksLikeWebAddress(address))
                 return Resolve(address);
-            if (address.StartsWith("~/", StringComparison.Ordinal) || address.StartsWith(@"~\\", StringComparison.Ordinal))
+            if (address.StartsWith("~/", StringComparison.Ordinal) || address.StartsWith(@"~\", StringComparison.Ordinal))
                 address = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), address.Substring(2));
             if (!Path.IsPathRooted(address))
                 address = Path.Combine(string.IsNullOrWhiteSpace(BaseDirectory) ? Environment.CurrentDirectory : BaseDirectory, address);
