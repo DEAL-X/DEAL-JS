@@ -300,14 +300,16 @@ namespace MiMFa.Engine.DEAL.JS
             var resolvedUrl = Engine.PathProvider?.Resolve(url) ?? url;
             var uri = new Uri(resolvedUrl, UriKind.Absolute);
             var extension = System.IO.Path.GetExtension(uri.AbsolutePath);
-            if (!Regex.IsMatch(extension, @"^\\.(deal|djs|js)$", RegexOptions.IgnoreCase)) extension = ".djs";
+            if (!Regex.IsMatch(extension, @"^\.(deal|djs|js)$", RegexOptions.IgnoreCase)) extension = ".djs";
             var path = Engine.ResourceProvider.Resolve(".\\download\\" + resolvedUrl.GetHashCode() + extension);
-            if (Engine.ResourceProvider.Exists(path) && !force) return UsePath(path, force);
-            var resp = Engine.FetchTransport.Get(resolvedUrl);
-            if (!resp.Value<bool>("ok")) return 0;
-            var encoded = resp.Value<string>("data") ?? "";
-            var content = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
-            Engine.ResourceProvider.SetFileContents(path, content);
+            if (!Engine.ResourceProvider.Exists(path) || force)
+            {
+                var resp = Engine.FetchTransport.Get(resolvedUrl);
+                if (!resp.Value<bool>("ok")) return 0;
+                var encoded = resp.Value<byte[]>("data") ?? null;
+                var content = System.Text.Encoding.UTF8.GetString(encoded);
+                Engine.ResourceProvider.SetFileContents(path, content);
+            }
             return UsePath(path, force);
         }
         protected virtual int UseFolder(string folder, bool force = false)
