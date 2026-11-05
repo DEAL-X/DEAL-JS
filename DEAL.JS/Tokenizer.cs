@@ -297,11 +297,17 @@ namespace MiMFa.Engine.DEAL.JS
         {
             if (!Engine.FetchTransport.IsAlive) Engine.FetchTransport.Initial();
             Engine.ResourceProvider.CreateDirectory(".\\download");
-            var path = Engine.ResourceProvider.Resolve(".\\download\\"+url.GetHashCode()+(Regex.Match(url, "\\.[a-z]$").Value??".djs"));
-            if(Engine.ResourceProvider.Exists(path) && !force) return UsePath(path, force);
-            var resp = Engine.FetchTransport.Get(url);
-            if(!resp.Value<bool>("ok")) return 0;
-            Engine.ResourceProvider.SetFileContents(path, resp.Value<string>("data"));
+            var resolvedUrl = Engine.PathProvider?.Resolve(url) ?? url;
+            var uri = new Uri(resolvedUrl, UriKind.Absolute);
+            var extension = System.IO.Path.GetExtension(uri.AbsolutePath);
+            if (!Regex.IsMatch(extension, @"^\\.(deal|djs|js)$", RegexOptions.IgnoreCase)) extension = ".djs";
+            var path = Engine.ResourceProvider.Resolve(".\\download\\" + resolvedUrl.GetHashCode() + extension);
+            if (Engine.ResourceProvider.Exists(path) && !force) return UsePath(path, force);
+            var resp = Engine.FetchTransport.Get(resolvedUrl);
+            if (!resp.Value<bool>("ok")) return 0;
+            var encoded = resp.Value<string>("data") ?? "";
+            var content = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+            Engine.ResourceProvider.SetFileContents(path, content);
             return UsePath(path, force);
         }
         protected virtual int UseFolder(string folder, bool force = false)
