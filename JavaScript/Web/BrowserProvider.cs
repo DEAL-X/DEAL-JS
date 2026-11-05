@@ -165,8 +165,13 @@ namespace MiMFa.Engine.JavaScript.Web
             CurrentPage = null;
             _currentTargetId = null;
             _windowId = null;
-            _browserConnection?.Dispose();
-            _browserConnection = null;
+            if (_browserConnection != null)
+            {
+                try { _browserConnection.SendAsync("Browser.close").GetAwaiter().GetResult(); }
+                catch { /* The browser may already be shutting down. */ }
+                _browserConnection.Dispose();
+                _browserConnection = null;
+            }
             if (Process != null)
             {
                 try
