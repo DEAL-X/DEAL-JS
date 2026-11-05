@@ -710,29 +710,29 @@ The Window proxy exposes `Document`, `Location`, `History`, `Navigator`, `Screen
 - `Screen.Width`, `Height`, `AvailWidth`, `AvailHeight`, and `ColorDepth`.
 - `Storage.Local` and `Storage.Session`; each storage area exposes `Length` and `Keys`.
 
-Browser properties return native values synchronously, including file-system metadata such as `Name`, `Kind`, `Type`, `Size`, and `LastModified`. Operations that communicate asynchronously with Chromium remain awaitable. For example:
+Browser properties return native values synchronously, including file-system metadata such as `Name`, `Kind`, `Type`, `Size`, and `LastModified`. The non-`Async` convenience methods are synchronous as well; their explicitly named `...Async()` counterparts remain awaitable. DEAL source uses the familiar lower-case browser-object spelling because ClearScript resolves the public PascalCase .NET members without regard to casing:
 
-```javascript
-const tab = await browser.Open("https://example.com/");
-const title = tab.Window.Document.Title;
+```deal
+Consider tab is browser.open("https://example.com/");
+Consider title is browser.tab.window.document.title;
 
-await tab.Window.Storage.Local.SetItem("key", "value");
-const value = await tab.Window.Storage.Local.GetItem("key");
+browser.tab.window.storage.local.setItem("key", "value");
+Consider value is browser.tab.window.storage.local.getItem("key");
 
-await tab.Navigate("https://example.org/");
-await tab.Back();
+browser.tab.navigate("https://example.org/");
+browser.tab.back();
 ```
 
-The File System Access API is exposed through the native browser file pickers. `browser.Tab.Open(optionsJson)` and `browser.Tab.Save(optionsJson)` call `window.showOpenFilePicker(options)` and `window.showSaveFilePicker(options)`. The returned handles remain browser-owned remote proxies:
+The File System Access API is exposed through the native browser file pickers. `browser.tab.open(optionsJson)` and `browser.tab.save(optionsJson)` call `window.showOpenFilePicker(options)` and `window.showSaveFilePicker(options)`. Their non-`Async` forms return browser-owned remote proxies synchronously:
 
-```javascript
-const handles = await browser.Tab.Open();
-const file = await handles[0].GetFile();
-const text = await file.ReadTextAsync();
-const fileName = file.Name;
+```deal
+Consider handles is browser.tab.open();
+Consider file is handles[0].getFile();
+Consider text is file.text();
+Consider fileName is file.name;
 
-const output = await browser.Tab.Save(JSON.stringify({ suggestedName: "result.txt" }));
-await output.WriteText("Saved by DEAL.JS");
+Consider output is browser.tab.save("{\"suggestedName\":\"result.txt\"}");
+output.writeText("Saved by DEAL.JS");
 ```
 
 Chromium continues to enforce its secure-context, permission, and transient-user-activation requirements. Dispose remote file handles when they are no longer needed.
