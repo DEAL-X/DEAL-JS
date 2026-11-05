@@ -104,7 +104,7 @@ So DEAL has **five** main principles:
 2. **Deterministic** and **Explicit**: Every DEAL instruction has a defined compilation into its destination language.
     * So the previous instructions will compile to the pure JavaScript code below:
     ```js
-    for(const url of list) browser.load(url).then((data) => {
+    for(const url of list) browser.open(url).then((data) => {
         handle(data);
         append(all("h3#title"), destination);
     }).catch((data) => {
@@ -553,11 +553,11 @@ DEAL allows optional readability words that improve the natural flow of the lang
         ```
         Or:
         ```ts
-        RESERVE restart AS "browser.load(\"http://mimfa.net\");";
+        RESERVE restart AS "browser.open(\"http://mimfa.net\");";
         // Other procedures
         RESTART
         // With the same meaning
-        browser.load("http://mimfa.net");
+        browser.open("http://mimfa.net");
         ```
     * Parser will replace those specified words before parsing by default.
 * Noise-words: All words are ignored semantically while being preserved in the source code.
@@ -580,9 +580,9 @@ DEAL allows optional readability words that improve the natural flow of the lang
         ```ts
         RESERVE a;
         // Other procedures
-        browser.load("www.example.com")
+        browser.open("www.example.com")
         // With the same meaning
-        browser.load("www.example.com")
+        browser.open("www.example.com")
         ```
     * Parser will skip those specified words before parsing by default.
 
@@ -686,7 +686,7 @@ const html = await tab.window.document.html;
 const tabs = await browser.tabs.all;
 const sameTab = await browser.tabs.get(tab.Id);
 await browser.activate(sameTab);
-await browser.close(tab);
+await browser.tab.close();
 ```
 
 The public object hierarchy is:
@@ -720,105 +720,72 @@ The provider scopes `tabs`, activation, and closing to its application-level `Wi
 
 ## Browser navigation, address resolution, and Fetch
 
-Browser navigation belongs to the `browser` object. The former global browser commands (`load`, `go`, `reload`, `locate`, and `relocate`) are no longer provided. This avoids maintaining two APIs for the same browser operations.
+Browser-level lifecycle and current-tab navigation are deliberately separate:
 
-```js
-// Open a new tab. Incomplete hostnames are normalized automatically.
-const tab = await browser.load("example.com");
+```javascript
+// Open a new tab; close() closes the browser instance.
+const opened = await browser.open("example.com");
 
-// Navigate the current tab.
-await browser.go("https://example.org/docs");
+// The current tab is exposed synchronously.
+const tab = browser.tab;
+const currentUrl = tab.url;
+const title = tab.document.title;
 
-// Browser-level navigation and history.
-await browser.reload();
-await browser.back();
-await browser.forward();
+// Replace the current document without adding a history entry.
+await tab.load("example.org/start");
 
-// Update the current URL/history entry without a full navigation.
-await browser.locate("https://example.org/docs#section");
-await browser.relocate("https://example.org/docs#next-section");
+// Navigate normally and create a history entry.
+await tab.navigate("example.org/next");
+await tab.back();
+await tab.forward();
+await tab.reload();
 
-// Tab-level operations and remote document access.
-const current = browser.tab;
-const title = await current.window.document.title;
-await current.reload();
-await browser.close(tab);
+// Update the current history entry or add a same-document entry.
+await tab.locate("https://example.org/next#section");
+await tab.relocate("https://example.org/next#details");
+
+// Close the current tab; the provider selects another available tab.
+await browser.tab.close();
+
+// Close the Chromium browser process.
+browser.close();
 ```
 
-The equivalent DEAL code uses the same object API:
+The API is organized by responsibility:
 
-```ts
-USE deal/web;
+- `browser.open(url)`: open a new tab.
+- `browser.close()`: close the browser instance.
+- `browser.tab`: synchronously access the current tab.
+- `browser.tab.load(url)`: replace the current document without adding a history entry.
+- `browser.tab.navigate(url)`: navigate the current tab and add a history entry.
+- `browser.tab.back()`, `forward()`, `go(delta)`, and `reload()`: current-tab navigation controls.
+- `browser.tab.locate(url)` and `relocate(url)`: replace or add a same-document history entry.
+- `browser.tab.close()`: close the current tab and select a replacement when one remains.
+- `browser.tabs.current`, `browser.tabs.all`, and `browser.tabs.get(id)`: access tabs in the browser instance.
+- `browser.activate(tab)`: activate a tab and make it the current tab.
+- `browser.tab.window`: remote Window proxy, with `document`, `location`, `history`, `navigator`, `screen`, `console`, `cookies`, and `storage.local/session`.
 
-Consider tab be await browser.load "example.com";
-Consider title be await tab.window.document.title;
-await browser.go "example.org/docs";
-await browser.reload();
-```
+Browser-object properties are synchronous snapshots/proxies: expressions such as `browser.tab.url`, `browser.tab.document.title`, `browser.tab.location.href`, and `browser.tabs.all` do not expose .NET `Task` objects. Browser commands that communicate with Chromium remain awaitable operations. This keeps the V8-facing object model synchronous for property access without pretending that CDP network operations are inherently synchronous.
 
-### Central path provider
+The shared `PathProvider` normalizes incomplete web addresses and resolves local paths. Browser navigation, Fetch, the legacy `Send` request helper, and remote `USE`/`REUSE` module resolution use the same provider. For example, `browser.tab.load("./pages/start.html")` loads a local file in the current tab. Chromium's normal `file://` security restrictions still apply.
 
-The JavaScript Engine owns one shared `PathProvider`, exposed as `application.Engine.PathProvider`. The same instance is assigned to the browser provider and native Fetch transport. Browser navigation, Fetch, the legacy `Send` request helper, and remote `USE`/`REUSE` module resolution pass their addresses through this provider.
-
-Resolution rules:
-
-- `example.com` becomes `http://example.com`.
-- `www.example.com/page` becomes `http://www.example.com/page`.
-- Explicit absolute URLs such as `https://example.com` retain their scheme.
-- Absolute local paths and relative paths become absolute `file://` addresses.
-- Explicit local relative paths (`./...`, `../...`, and `~/...`) are resolved against `PathProvider.BaseDirectory`, which defaults to the host process's current working directory. Common file extensions such as `.txt`, `.json`, `.html`, `.js`, and `.djs` are also recognized as local-file paths.
-- When `PathProvider.BaseAddress` is set to an HTTP or HTTPS URL, other relative references can be resolved against that base address. Hostnames such as `example.com` are still treated as hostnames, not relative URL paths.
-
-The provider can be configured by the host before executing scripts:
-
-```csharp
-engine.PathProvider.BaseDirectory = @"D:\Projects\MyScraper";
-engine.PathProvider.BaseAddress = "https://example.com/catalog/";
-```
-
-For example, `browser.load("./pages/start.html")` opens the local file in Chromium. The browser host must have filesystem access to that path. Local file navigation is subject to Chromium's normal `file://` security restrictions.
-
-### Global Fetch and local files
-
-The global `fetch(...)` remains available because it is an HTTP/data transport API, not a browser-navigation command. Its host transport supports HTTP, HTTPS, and local files. It returns the same DEAL `Response` abstraction for both remote and local reads.
-
-```js
-// Incomplete hostname: resolved to http://example.com/
-const remote = await fetch("example.com");
-const remoteText = await remote.text();
-
-// Relative local file: resolved against PathProvider.BaseDirectory.
-const local = await fetch("./Samples/Local-Page-Smoke-Test.html");
-if (!local.ok) throw new Error("Could not read the local file");
-const html = await local.text();
-
-// Absolute local path is also supported.
-const jsonFile = await fetch("D:/Data/catalog.json");
-const catalog = await jsonFile.json();
-```
-
-Local file Fetch supports `GET` and `HEAD`. It reads the file on the host machine, returns status `200`, the absolute `file://` response URL, a content type inferred from the file extension, and the file bytes. A missing file rejects the Fetch promise. Local file reads do not use HTTP cookies or HTTP request headers.
-
-The host-side Fetch implementation is a compatibility subset, not a complete browser Fetch implementation. HTTP requests support the documented host transport options; browser CORS enforcement, service workers, browser cache modes, streaming response bodies, browser referrer policy, integrity checks, and keepalive semantics are not emulated. The ClearScript V8 host must enable `V8ScriptEngineFlags.EnableTaskPromiseConversion` so .NET `Task` results can be awaited from JavaScript. The engine's `FetchTransport` is initialized lazily by the Fetch bridge.
+The global `fetch(...)` remains available as an HTTP/data transport API. Its host transport supports HTTP, HTTPS, and local files. Local file Fetch supports `GET` and `HEAD`, returns status `200`, an absolute `file://` response URL, an inferred content type, and the file bytes. Missing files reject the Fetch promise. Local file reads do not use HTTP cookies or HTTP request headers.
 
 ### USE and REUSE
 
-`USE` and `REUSE` are compile-time module-loading instructions. They resolve local paths, module names, folders, and remote HTTP(S) addresses through the compiler's resource provider and shared path provider.
+`USE` and `REUSE` are compile-time dependency-loading instructions:
 
-```ts
-USE deal/core;                 // Load the core module.
-USE deal/web;                  // Load the browser and web library.
-USE ./Libraries/Selectors;     // Load a local module or folder.
-USE https://example.com/lib.djs; // Load a remote module.
+```javascript
+USE deal/core;
+USE deal/web;
+USE ./Libraries/Selectors;
 
-USE ./Libraries/Selectors;     // Already-loaded dependency: not evaluated again.
-REUSE ./Libraries/Selectors;   // Force the dependency to be processed again.
-REUSE https://example.com/lib.djs; // Fetch the remote source again, then process it.
+// The dependency is already loaded, so this does not process it again.
+USE ./Libraries/Selectors;
+
+// Force the same dependency to be processed again.
+REUSE ./Libraries/Selectors;
+REUSE https://example.com/lib.djs;
 ```
 
-- `USE` records dependencies and avoids processing a dependency again when it has already been loaded by the current compiler.
-- `REUSE` forces the dependency-processing path even when that dependency is already registered. For remote modules, it also refreshes the cached download before processing.
-- A module path may identify a `.deal`, `.djs`, or `.js` file; when no extension is supplied, the loader checks those extensions. A directory can be loaded as a module folder.
-- Remote module loading requires network access from the host. Remote content is downloaded to the compiler's `download` resource directory before it is processed.
-
-The browser and local Fetch examples are also covered by [Samples/Native-Web-Smoke-Test.js](Samples/Native-Web-Smoke-Test.js), with a local HTML fixture at [Samples/Local-Page-Smoke-Test.html](Samples/Local-Page-Smoke-Test.html).
+Both instructions resolve resources through the compiler's shared path/resource resolution. `USE` skips a dependency already registered by the current compiler; `REUSE` forces that dependency to be processed again. `REUSE` does not imply a separate download or cache-refresh policy for remote modules.
