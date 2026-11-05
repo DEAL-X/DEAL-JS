@@ -492,7 +492,7 @@ namespace MiMFa.Engine.JavaScript.Web
             if (string.IsNullOrWhiteSpace(targetId)) return false;
             await EnsureAvailableAsync(Timeout).ConfigureAwait(false);
             var tabs = await GetTabsAsync().ConfigureAwait(false);
-            int closingIndex = tabs.FindIndex(x => x.Id == targetId);
+            int closingIndex = tabs.Select((tab, index) => new { tab, index }).Where(x => x.tab.Id == targetId).Select(x => x.index).DefaultIfEmpty(-1).First();
             if (closingIndex < 0) return false;
             bool wasCurrent = _currentTargetId == targetId || CurrentPage?.TargetId == targetId;
             await EnsureBrowserConnectionAsync().ConfigureAwait(false);
