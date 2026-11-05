@@ -53,7 +53,7 @@ async function testDealFetchLocalFile() {
 
 async function testDealBrowserLocalFile() {
     await browser.tab.load("./Samples/Local-Page-Smoke-Test.html");
-    const title = browser.tab.document.title;
+    const title = browser.tab.window.document.title;
 
     if (title !== "DEAL local path test")
         throw new Error("Chromium did not load the local file.");
