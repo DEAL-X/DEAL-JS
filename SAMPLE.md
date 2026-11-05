@@ -137,3 +137,31 @@
 			STOP frame				// To stop loading of the inputted iframe
 	*/
 ```
+
+## Current browser and resource API
+
+Browser navigation is performed through the `browser` object, not global `LOAD`/`GO` commands:
+
+```ts
+USE deal/web;
+
+Consider tab be await browser.load "example.com";
+Consider title be await tab.window.document.title;
+await browser.go "example.org";
+await browser.back();
+await browser.reload();
+```
+
+The shared path provider normalizes incomplete web addresses and resolves local paths. For example, `browser.load("./pages/index.html")` opens a local file, while `await fetch("./data/items.json")` reads it through the host Fetch transport and returns a `Response`.
+
+`USE` loads a dependency once per compiler dependency graph; `REUSE` forces it to be processed again. For a remote module, `REUSE` refreshes the downloaded source before processing it:
+
+```ts
+USE deal/core;
+USE deal/web;
+USE ./Libraries/Selectors;
+REUSE ./Libraries/Selectors;
+REUSE https://example.com/modules/selectors.djs;
+```
+
+See [README.md](README.md#browser-navigation-address-resolution-and-fetch) for the full resolution rules, host configuration, and Fetch limitations.
