@@ -168,7 +168,7 @@ In the DEAL:
         * All DEAL or third-party structures, such as BEGIN, USE, RESERVE, etc.
         * All DEAL or third-party commands, such as APPEND, COLLECT, POST, etc.
         * All DEAL or third-party reserveds, such as FROM, AND, WITH etc.
-        * All DEAL or third-party handlers, such as BROWSER, WINDOW, LOAD, etc.
+        * All DEAL or third-party handlers, such as BROWSER, WINDOW, DOCUMENT, etc.
             * Multiple of the most important interface variables, such as DOCUMENT, CONSOLE, SCREEN, etc.
             * Multiple of the most important interface functions, such as ALERT, CONFIRM, PROMPT, etc.
     * Case-sensitive:
@@ -557,7 +557,7 @@ DEAL allows optional readability words that improve the natural flow of the lang
         // Other procedures
         RESTART
         // With the same meaning
-        LOAD "http://mimfa.net";
+        browser.load("http://mimfa.net");
         ```
     * Parser will replace those specified words before parsing by default.
 * Noise-words: All words are ignored semantically while being preserved in the source code.
@@ -580,9 +580,9 @@ DEAL allows optional readability words that improve the natural flow of the lang
         ```ts
         RESERVE a;
         // Other procedures
-        LOAD A "www.example.com"
+        browser.load("www.example.com")
         // With the same meaning
-        LOAD "www.example.com"
+        browser.load("www.example.com")
         ```
     * Parser will skip those specified words before parsing by default.
 
