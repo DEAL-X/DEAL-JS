@@ -65,6 +65,8 @@ namespace MiMFa.Engine.JavaScript.Web
         internal BrowserDocument(BrowserTab tab) : base(tab) { }
         public object title => EvaluateValue("document.title");
         public object url => EvaluateValue("document.URL");
+        public object URL => EvaluateValue("document.URL");
+        public object cookie => EvaluateValue("document.cookie");
         public object readyState => EvaluateValue("document.readyState");
         public object html => EvaluateValue("document.documentElement ? document.documentElement.outerHTML : null");
         public object text => EvaluateValue("document.documentElement ? document.documentElement.innerText : null");
@@ -131,6 +133,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public object languages => EvaluateValue("navigator.languages");
         public object platform => EvaluateValue("navigator.platform");
         public object online => EvaluateValue("navigator.onLine");
+        public object onLine => EvaluateValue("navigator.onLine");
         public object cookieEnabled => EvaluateValue("navigator.cookieEnabled");
         public Task<string> GetUserAgentAsync() => EvaluateAsync("navigator.userAgent");
         public Task<string> GetLanguageAsync() => EvaluateAsync("navigator.language");
