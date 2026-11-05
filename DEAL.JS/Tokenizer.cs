@@ -298,7 +298,7 @@ namespace MiMFa.Engine.DEAL.JS
             if (!Engine.FetchTransport.IsAlive) Engine.FetchTransport.Initial();
             Engine.ResourceProvider.CreateDirectory(".\\download");
             var path = Engine.ResourceProvider.Resolve(".\\download\\"+url.GetHashCode()+(Regex.Match(url, "\\.[a-z]$").Value??".djs"));
-            if(Engine.ResourceProvider.Exists(path)) return UsePath(path, force);
+            if(Engine.ResourceProvider.Exists(path) && !force) return UsePath(path, force);
             var resp = Engine.FetchTransport.Get(url);
             if(!resp.Value<bool>("ok")) return 0;
             Engine.ResourceProvider.SetFileContents(path, resp.Value<string>("data"));
