@@ -745,17 +745,17 @@ When `browser.Tab.Close()` closes the current tab, the provider waits for the cl
 
 The provider scopes tab discovery, activation, and closing to its application-level `WindowId`. A newly opened tab is created after activating an anchor tab, and its resulting window ID is checked. If Chromium creates it in a different window, the operation fails and the stray target is closed rather than mixing tabs from different browser objects.
 
-The native browser tests are in [tests/Browser-Object-Model-Smoke-Test.js](Samples/tests/Browser-Object-Model-Smoke-Test.js). The Fetch and local-file tests are in [tests/Native-Web-Smoke-Test.js](Samples/tests/Native-Web-Smoke-Test.js). The DEAL compiler stress tests, expected JavaScript, and result snapshots are grouped in [tests/](Samples/tests/).
+The native browser tests are in [tests/Browser-Object-Model-Smoke-Test.js](Samples/tests/runtime/Browser-Object-Model-Smoke-Test.js). The Fetch and local-file tests are in [tests/Native-Web-Smoke-Test.js](Samples/tests/runtime/Native-Web-Smoke-Test.js). The DEAL compiler stress tests, expected JavaScript, and result snapshots are grouped in [tests/](Samples/tests/).
 
 #### Address resolution and local files
 
 The shared `PathProvider` normalizes incomplete web addresses and resolves local paths. Browser navigation, Fetch, the legacy `Send` request helper, and remote `USE`/`REUSE` module resolution use the same provider.
 
 ```javascript
-await browser.Tab.Load("./Samples/Local-Page-Smoke-Test.html");
+browser.tab.load("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
 
-const response = await fetch("./Samples/Local-Page-Smoke-Test.html");
-const html = await response.text();
+Consider response is await fetch("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
+Consider html is await response.text();
 ```
 
 Configure the provider from the .NET host when needed:
