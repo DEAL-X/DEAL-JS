@@ -23,7 +23,7 @@ Start DEAL.JS directly using the tutorial sample [here](SAMPLE.md) quickly...
 Also, you can find more examples and their parsed JS versions [here](Samples/).
 
 
-## Main Principles
+## Main principles
 DEAL does not attempt to turn unrestricted natural language into executable programs. Instead, it defines a constrained and extensible grammatical language whose declarative instructions have deterministic JavaScript translations, while allowing ordinary JavaScript to remain embedded in the same source.
 So DEAL has **five** main principles:
 1. **Declarative** and **Abstract**: Every DEAL instruction expresses computational intent in a form resembling natural language.
@@ -694,13 +694,13 @@ The public object hierarchy is:
 - `browser.tab`: the provider's current tab handle.
 - `browser.tabs.current`, `browser.tabs.all`, and `browser.tabs.get(id)`: tab access within this application-level window.
 - `browser.open(url)` opens a new tab; `browser.close()` closes the browser; `browser.activate(tab)` activates a tab.
-- `browser.tab.window`: remote JavaScript Window proxy, with `document`, `location`, `history`, `navigator`, `screen`, `console`, `cookies`, and `storage.local/session`.
-- `browser.tab.windows`: child frames/browsing contexts belonging to the tab.
+- `browser.tab.window`: synchronous Window proxy, with synchronous `document`, `location`, `history`, `navigator`, `screen`, `console`, `cookies`, and `storage.local/session` properties.
+- `browser.tab.windows`: synchronous access to child-frame metadata and frame proxies.
 - `browser.downloads`, `browser.permissions`, and `browser.runtime`: browser-level CDP services.
 
 Every tab returned from `browser.open`, `browser.tabs.get`, or `browser.tabs.all` is a `BrowserTab` with the same interface as `browser.tab`. `browser.tab.window` and its descendants are remote proxies; they do not become local ClearScript DOM objects.
 
-The `browser.tab.open(optionsJson)` and `browser.tab.save(optionsJson)` methods are direct aliases for the native `window.showOpenFilePicker(options)` and `window.showSaveFilePicker(options)` APIs. They do not implement their own dialogs. They return remote file-handle proxies so callers can read metadata/content and create writable streams without attempting to marshal Chromium's native handles into V8. The browser's secure-context, permission, and transient-user-activation requirements still apply.
+The `browser.tab.open(optionsJson)` and `browser.tab.save(optionsJson)` methods are direct aliases for the native `window.showOpenFilePicker(options)` and `window.showSaveFilePicker(options)` APIs. These are asynchronous methods, not properties. They do not implement their own dialogs. They return remote file-handle proxies so callers can read metadata/content and create writable streams without attempting to marshal Chromium's native handles into V8. The browser's secure-context, permission, and transient-user-activation requirements still apply.
 
 ```js
 const handles = await browser.tab.open();
@@ -711,7 +711,7 @@ const output = await browser.tab.save(JSON.stringify({ suggestedName: "result.tx
 await output.writeText("Saved by DEAL.JS");
 ```
 
-CDP does not expose a reliable query for which tab the user has selected manually in the Chrome UI. Accordingly, `browser.tab` tracks the tab most recently opened or activated through this provider; on first discovery it selects the first page target returned by Chromium. Calling `browser.activate(tab)` updates that selection and activates the corresponding tab/window.
+`browser.tab` tracks the tab most recently opened or activated through this provider. When the current tab is closed, the provider activates the adjacent remaining tab (the next tab at the closing position, or the previous tab when the closed tab was last) and updates `browser.tab` to that newly selected tab. The provider cannot detect manual tab switches made directly in the Chrome UI; use `browser.activate(tab)` when changing tabs through the API.
 
 The provider scopes `tabs`, activation, and closing to its application-level `WindowId`. A newly opened tab is created after activating an anchor tab and its resulting window ID is checked. If Chromium creates it in a different window, the operation fails and the stray target is closed rather than silently mixing tabs from different browser objects.
 
@@ -744,7 +744,7 @@ await tab.reload();
 await tab.locate("https://example.org/next#section");
 await tab.relocate("https://example.org/next#details");
 
-// Close the current tab; the provider selects another available tab.
+// Close the current tab; browser.tab becomes the tab Chromium selects next.
 await browser.tab.close();
 
 // Close the Chromium browser process.
@@ -760,12 +760,12 @@ The API is organized by responsibility:
 - `browser.tab.navigate(url)`: navigate the current tab and add a history entry.
 - `browser.tab.back()`, `forward()`, `go(delta)`, and `reload()`: current-tab navigation controls.
 - `browser.tab.locate(url)` and `relocate(url)`: replace or add a same-document history entry.
-- `browser.tab.close()`: close the current tab and select a replacement when one remains.
+- `browser.tab.close()`: close the current tab, activate the adjacent remaining tab, and update `browser.tab` to that tab.
 - `browser.tabs.current`, `browser.tabs.all`, and `browser.tabs.get(id)`: access tabs in the browser instance.
 - `browser.activate(tab)`: activate a tab and make it the current tab.
 - `browser.tab.window`: remote Window proxy, with `document`, `location`, `history`, `navigator`, `screen`, `console`, `cookies`, and `storage.local/session`.
 
-Browser-object properties are synchronous snapshots/proxies: expressions such as `browser.tab.url`, `browser.tab.document.title`, `browser.tab.location.href`, and `browser.tabs.all` do not expose .NET `Task` objects. Browser commands that communicate with Chromium remain awaitable operations. This keeps the V8-facing object model synchronous for property access without pretending that CDP network operations are inherently synchronous.
+All properties beneath `browser.tab` are synchronous and return values rather than .NET `Task` objects. For example, `browser.tab.url`, `browser.tab.document.title`, `browser.tab.location.href`, `browser.tab.history.length`, `browser.tab.navigator.onLine`, `browser.tab.screen.width`, `browser.tab.windows.length`, and `browser.tabs.all` are read without `await`. Primitive values retain their JavaScript types (strings, numbers, and booleans); arrays and objects are returned as CLR arrays and dictionaries that ClearScript can expose to JavaScript. These are remote reads, so the host blocks while Chromium answers. Operations that perform browser actions or use the network—such as `open`, `load`, `navigate`, `back`, `forward`, `reload`, storage methods, and file pickers—remain awaitable.
 
 The shared `PathProvider` normalizes incomplete web addresses and resolves local paths. Browser navigation, Fetch, the legacy `Send` request helper, and remote `USE`/`REUSE` module resolution use the same provider. For example, `browser.tab.load("./pages/start.html")` loads a local file in the current tab. Chromium's normal `file://` security restrictions still apply.
 
