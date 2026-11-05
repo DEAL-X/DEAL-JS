@@ -4,11 +4,11 @@ reserve every = "for";
 
 # scrapeMap
     try to open browser, then
-        EVERY url /* The url of the website */ OF list,
-            * LOAD url,
+        EVERY url /* The URL of the website */ OF list,
+            * await browser.tab.load(url),
             * THEN begin
                 * APPEND ALL keys>table>h2 from document keys, to destination;
-                * log success `The ${url} is laded successfully`;
+                * log success `The ${url} loaded successfully`;
                 * End,
             * otherwise log error `Could not load ${url}`,
             * anyway log message `The ${url} process is finished!`;
