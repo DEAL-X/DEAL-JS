@@ -283,7 +283,7 @@ namespace MiMFa.Engine.DEAL.JS
             if (string.IsNullOrWhiteSpace(path)) return 0;
             var compiler = this.Engine as MiMFa.Engine.Engine;
             if (compiler == null) return 0;
-            var resolved = (compiler as Engine)?.PathProvider?.Resolve(path) ?? path;
+            var resolved = (compiler as Engine)?.PathProvider?.ResolveResource(path) ?? path;
             if (Uri.TryCreate(resolved, UriKind.Absolute, out var address) &&
                 (address.Scheme == Uri.UriSchemeHttp || address.Scheme == Uri.UriSchemeHttps))
                 return UseUrl(resolved, force);
