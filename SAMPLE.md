@@ -125,9 +125,9 @@ The ClearScript V8 host must enable `V8ScriptEngineFlags.EnableTaskPromiseConver
 Browser navigation, Fetch, the legacy `Send` helper, and module resolution share the configured `PathProvider`:
 
 ```deal
-browser.tab.load("./Samples/tutorials/Local-Page.html");
+browser.tab.load("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
 
-Consider response is await fetch("./Samples/tutorials/Local-Page.html");
+Consider response is await fetch("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
 Consider html is await response.text();
 ```
 
