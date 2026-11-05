@@ -17,7 +17,7 @@ async function testDealFetch() {
 }
 
 async function testDealBrowserOpen() {
-    const tab = await browser.Open("example.com");
+    const tab = browser.Open("example.com");
     const title = tab.Window.Document.Title;
     const url = tab.Window.Location.Href;
 
@@ -30,7 +30,7 @@ async function testDealBrowserOpen() {
 }
 
 async function testDealBrowserNavigate() {
-    await browser.Tab.Navigate("example.org");
+    browser.Tab.Navigate("example.org");
     const url = browser.Tab.Url;
 
     if (typeof url !== "string" || !url.includes("example.org"))
@@ -52,7 +52,7 @@ async function testDealFetchLocalFile() {
 }
 
 async function testDealBrowserLocalFile() {
-    await browser.Tab.Load("./Samples/Local-Page-Smoke-Test.html");
+    browser.Tab.Load("./Samples/Local-Page-Smoke-Test.html");
     const title = browser.Tab .Window .Document.Title;
 
     if (title !== "DEAL local path test")
