@@ -40,7 +40,7 @@ var testC = {
 function testD(val = " ") {
     return testC.tkey1(testA + val);
 }
-(loadDef = (() => (url != null ? load(url, "utf8") : load("www.mimfa.net"))))();
+(loadDef = (() => (url != null ? browser.tab.load(url) : browser.tab.load("www.mimfa.net"))))();
 var testE = 4;
 list.insert(teste, "www.mimfa.net");// the testE next word will convert to string
 var testF = 5;
@@ -120,10 +120,10 @@ let gradeNormal = grade[--a][--b][c--].trim(" ", "n", "r").toLowerCase();
         open(base.Browser).then((argument) => {
             handle(argument, true);
 
-            for (const url/* The url of the website */ of list) load(url).then((argument) => {
+            for (const url/* The URL of the website */ of list) browser.tab.load(url).then((argument) => {
                 handle(argument, true);
                 append(all("keys>table>h2", window.document.keys().toArray()), destination);
-                log.success(`The ${url} is laded successfully`);
+                log.success(`The ${url} loaded successfully`);
             }).catch((argument) => {
                 handle(argument, false);
                 log.error(`Could not load ${url}`);
