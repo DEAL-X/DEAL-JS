@@ -70,6 +70,6 @@ async function browserObjectModelSmokeTest() {
 
 // Optional manual checks. These invoke Chromium's native file pickers.
 // const selected = browser.Tab.Open(JSON.stringify({ multiple: true }));
-// const fileInfo = await selected[0].GetFile();
+// const fileInfo = selected[0].GetFile();
 // const saveHandle = browser.Tab.Save(JSON.stringify({ suggestedName: "deal-output.txt" }));
 // saveHandle.WriteText("Created through the native File System Access API.");
