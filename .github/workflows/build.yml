@@ -1,0 +1,47 @@
+name: Build DEAL.JS Engine
+
+on:
+  push:
+    branches:
+      - main
+      - feature/library-completion
+  pull_request:
+    branches:
+      - main
+      - feature/library-completion
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build on Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout DEAL.JS
+        uses: actions/checkout@v4
+        with:
+          path: DEAL-JS
+
+      - name: Checkout shared Engine dependency
+        uses: actions/checkout@v4
+        with:
+          repository: DEAL-X/Engine
+          ref: main
+          path: MiMFa DEAL - Engine
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Display .NET SDK
+        run: dotnet --info
+
+      - name: Restore dependencies
+        run: dotnet restore "DEAL-JS/MiMFa DEAL.JS - Engine.csproj"
+
+      - name: Build DEAL.JS Engine
+        run: dotnet build "DEAL-JS/MiMFa DEAL.JS - Engine.csproj" --configuration Release --no-restore
