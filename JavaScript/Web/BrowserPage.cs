@@ -104,6 +104,37 @@ namespace MiMFa.Engine.JavaScript.Web
             finally { _connection.EventReceived -= handler; }
         }
 
+        internal async Task<object> EvaluateValueAsync(string expression)
+        {
+            var result = await _connection.SendAsync("Runtime.evaluate", new JObject
+            {
+                ["expression"] = expression ?? "undefined",
+                ["awaitPromise"] = true,
+                ["returnByValue"] = true,
+                ["userGesture"] = true
+            }).ConfigureAwait(false);
+            if (result["exceptionDetails"] != null)
+                throw new InvalidOperationException(result["exceptionDetails"].ToString());
+            JObject remote = result["result"] as JObject;
+            if (remote == null) return null;
+            if (remote["subtype"]?.Value<string>() == "error")
+                throw new InvalidOperationException(remote["description"]?.Value<string>() ?? "JavaScript evaluation failed.");
+            return ToClrValue(remote["value"]);
+        }
+
+        private static object ToClrValue(JToken token)
+        {
+            if (token == null || token.Type == JTokenType.Null || token.Type == JTokenType.Undefined)
+                return null;
+            if (token is JObject obj)
+                return obj.Properties().ToDictionary(property => property.Name, property => ToClrValue(property.Value));
+            if (token is JArray array)
+                return array.Select(ToClrValue).ToArray();
+            if (token is JValue value)
+                return value.Value;
+            return token.ToString();
+        }
+
         public async Task<string> EvaluateAsync(string expression)
         {
             var result = await _connection.SendAsync("Runtime.evaluate", new JObject
