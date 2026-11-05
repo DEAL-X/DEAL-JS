@@ -1,13 +1,13 @@
 /*
    ============================================================
-   MiMFa DEAL.JS Compiler Stress Test
+   MiMFa DEAL.JS compiler stress test
    ============================================================
    This file intentionally contains many DEAL.JS structures.
    It should remain semantically correct after compilation.
  */
 
 // ------------------------------------------------------------
-// Use libraries
+// Load libraries
 // ------------------------------------------------------------
 // Used 6 libraries from "deal/core"
 // Used "deal/data/local.djs" library
@@ -16,7 +16,7 @@
 // Used 18 libraries from "deal"
 // Used 4 libraries from "scraper"
 // ------------------------------------------------------------
-// Reserve and noise words
+// Define reserves and noise words
 // ------------------------------------------------------------
 // Reserved "the" as a noise
 // a noise word
@@ -113,7 +113,7 @@ let gradeNormal = grade[--a][--b][c--].trim(" ", "n", "r").toLowerCase();
     }))();
 }))();
 // ------------------------------------------------------------
-// Complex Code
+// Complex code
 // ------------------------------------------------------------
 (scrapeMap = (() => {
     try {
