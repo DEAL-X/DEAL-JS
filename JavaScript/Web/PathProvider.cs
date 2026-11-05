@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace MiMFa.Engine.JavaScript.Web
 {
@@ -14,15 +15,10 @@ namespace MiMFa.Engine.JavaScript.Web
             if (string.IsNullOrWhiteSpace(address))
                 throw new ArgumentException("An address is required.", nameof(address));
             address = Environment.ExpandEnvironmentVariables(address.Trim());
-            if (Uri.TryCreate(address, UriKind.Absolute, out var absolute) &&
+            if (HasExplicitScheme(address) &&
+                Uri.TryCreate(address, UriKind.Absolute, out var absolute) &&
                 !LooksLikeWindowsDrivePath(address))
                 return NormalizeUri(absolute);
-
-            if (Uri.TryCreate(address, UriKind.Relative, out var relative) &&
-                !string.IsNullOrWhiteSpace(BaseAddress) &&
-                Uri.TryCreate(BaseAddress, UriKind.Absolute, out var baseUri) &&
-                (baseUri.Scheme == Uri.UriSchemeHttp || baseUri.Scheme == Uri.UriSchemeHttps))
-                return NormalizeUri(new Uri(baseUri, relative));
 
             if (LooksLikeWebAddress(address))
             {
@@ -32,6 +28,12 @@ namespace MiMFa.Engine.JavaScript.Web
                 if (Uri.TryCreate(webAddress, UriKind.Absolute, out var webUri))
                     return NormalizeUri(webUri);
             }
+
+            if (Uri.TryCreate(address, UriKind.Relative, out var relative) &&
+                !string.IsNullOrWhiteSpace(BaseAddress) &&
+                Uri.TryCreate(BaseAddress, UriKind.Absolute, out var baseUri) &&
+                (baseUri.Scheme == Uri.UriSchemeHttp || baseUri.Scheme == Uri.UriSchemeHttps))
+                return NormalizeUri(new Uri(baseUri, relative));
 
             var localPath = address;
             if (localPath.StartsWith("~/", StringComparison.Ordinal) ||
@@ -56,6 +58,13 @@ namespace MiMFa.Engine.JavaScript.Web
             if (uri.IsFile) return new Uri(Path.GetFullPath(uri.LocalPath)).AbsoluteUri;
             return uri.GetComponents(UriComponents.AbsoluteUri, UriFormat.UriEscaped);
         }
+
+        private static bool HasExplicitScheme(string value) =>
+            Regex.IsMatch(value, @"^[a-z][a-z0-9+.-]*://", RegexOptions.IgnoreCase) ||
+            value.StartsWith("file:", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("data:", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("about:", StringComparison.OrdinalIgnoreCase) ||
+            value.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase);
 
         private static bool LooksLikeWindowsDrivePath(string value) =>
             value.Length >= 3 && char.IsLetter(value[0]) && value[1] == ':' &&
