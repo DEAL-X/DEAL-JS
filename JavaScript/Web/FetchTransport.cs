@@ -124,6 +124,10 @@ namespace MiMFa.Engine.JavaScript.Web
             if (string.IsNullOrWhiteSpace(url))
                 throw new ArgumentException("The request URL is missing.");
 
+            method = string.IsNullOrWhiteSpace(method) ? "GET" : method.ToUpperInvariant();
+            if ((method == "GET" || method == "HEAD") && (data != null || bodyBase64 != null))
+                throw new InvalidOperationException("GET and HEAD requests cannot contain a body.");
+
             if (PathProvider != null) url = PathProvider.Resolve(url);
             if (!Uri.TryCreate(url, UriKind.Absolute, out var requestUri))
                 throw new ArgumentException("The request address could not be resolved to an absolute URL.");
@@ -131,10 +135,6 @@ namespace MiMFa.Engine.JavaScript.Web
                 return await ReadLocalFileAsync(method, requestUri, id).ConfigureAwait(false);
             if (requestUri.Scheme != Uri.UriSchemeHttp && requestUri.Scheme != Uri.UriSchemeHttps)
                 throw new ArgumentException("Only HTTP, HTTPS, and local file addresses are supported.");
-
-            method = string.IsNullOrWhiteSpace(method)
-                ? "GET"
-                : method.ToUpperInvariant();
 
             if (timeout < 0)
                 throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be zero (infinite) or a positive number.");
