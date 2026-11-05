@@ -302,7 +302,7 @@ namespace MiMFa.Engine.DEAL.JS
             var extension = System.IO.Path.GetExtension(uri.AbsolutePath);
             if (!Regex.IsMatch(extension, @"^\.(deal|djs|js)$", RegexOptions.IgnoreCase)) extension = ".djs";
             var path = Engine.ResourceProvider.Resolve(".\\download\\" + resolvedUrl.GetHashCode() + extension);
-            if (!Engine.ResourceProvider.Exists(path) || force)
+            if (!Engine.ResourceProvider.Exists(path))
             {
                 var resp = Engine.FetchTransport.Get(resolvedUrl);
                 if (!resp.Value<bool>("ok")) return 0;
