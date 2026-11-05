@@ -272,7 +272,8 @@ function fetch(input, init) {
             request.signal.addEventListener("abort", abortListener, { once: true });
         }
         const pathProvider = typeof application !== "undefined" && application.Engine && application.Engine.PathProvider;
-        const resolvedUrl = pathProvider ? pathProvider.Resolve(request.url) : request.url;
+        const baseAddress = typeof location !== "undefined" ? location.href : null;
+        const resolvedUrl = pathProvider ? pathProvider.Resolve(request.url, baseAddress) : request.url;
         operation = transport.FetchAsync(request.method, resolvedUrl, null, null, request.timeout, headers, id, bodyBase64, request.credentials);
     } catch (error) {
         if (abortListener) request.signal.removeEventListener("abort", abortListener);
