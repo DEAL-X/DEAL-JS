@@ -281,9 +281,13 @@ namespace MiMFa.Engine.DEAL.JS
         protected virtual int UsePath(string path, bool force = false)
         {
             if (string.IsNullOrWhiteSpace(path)) return 0;
-            if (Regex.IsMatch(path, "^\\w+:\\/\\/.+$", RegexOptions.CultureInvariant)) return UseUrl(path, force);
             var compiler = this.Engine as MiMFa.Engine.Engine;
             if (compiler == null) return 0;
+            var resolved = (compiler as Engine)?.PathProvider?.Resolve(path) ?? path;
+            if (Uri.TryCreate(resolved, UriKind.Absolute, out var address) &&
+                (address.Scheme == Uri.UriSchemeHttp || address.Scheme == Uri.UriSchemeHttps))
+                return UseUrl(resolved, force);
+            if (address != null && address.IsFile) path = address.LocalPath;
             var val = compiler?.ResourceProvider?.Resolve(path);
             if (!string.IsNullOrEmpty(val) && val.EndsWith("\\")) return UseFolder(val, force);
             int num;
