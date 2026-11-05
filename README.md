@@ -18,7 +18,7 @@ DEAL is a **declarative**, **abstract**, **deterministic**, **explicit**, **hybr
 
 DEAL.JS does not attempt to translate unrestricted natural language directly into executable programs. Instead, it defines a constrained grammatical language whose instructions have explicit compilation semantics, while allowing ordinary JavaScript to coexist freely within the same source.
 
-Start DEAL.JS directly using the tutorial sample [here](SAMPLE.md) quickly...
+Start with the [DEAL.JS quick-start sample](SAMPLE.md). More examples and their generated JavaScript are available in the [Samples](Samples/) directory.
 
 Also, you can find more examples and their parsed JS versions [here](Samples/).
 
@@ -153,7 +153,7 @@ So DEAL has **five** main principles:
     * The generated JavaScript will be the executable truth.
 
 
-## Main Syntax
+## Main syntax
 In the DEAL:
 * All instruction based on four fundamental concepts:
     1. **Structures** define the grammar.
@@ -182,7 +182,7 @@ In the DEAL:
 
 ---
 
-### Structures:
+### Structures
 Instead of supporting all JS structures, DEAL engine contains some special structures.
 * Built into the compiler.
 * They define the grammar and cannot be overridden (IF, FOR, COMMAND, USE, RESERVE, WILL, BEGIN, DOING, etc.)
@@ -266,7 +266,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     while(js-condition) doingTask();
     ```
 
-#### Blockings
+#### Blocks
 * To make a DEAL procedures-block
     ```ts
     BEGIN procedures END;
@@ -305,7 +305,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     }
     ```
 
-#### Asynchronisings
+#### Asynchronous blocks
 * To have a multi-thread program, you can make and manage promises
     ```ts
     WILL procedure THEN procedure; OTHERWISE procedure; ANYWAY procedure;
@@ -349,7 +349,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 
 ---
 
-### Commands:
+### Commands
 All commands represent executable operations.
 * That are case-insensitive.
 * Can be overridden in code.
@@ -365,7 +365,7 @@ All commands represent executable operations.
     * Definition
     * Delegation
 
-#### Action Command
+#### Action commands
 * By action command there will make a simple callable, but with these features:
     * All action commands must be defined globally.
     * They will have a special case-insensitive commandName.
@@ -396,7 +396,7 @@ All commands represent executable operations.
     commandName()
     ```
 
-#### Function Command
+#### Function commands
 * Every function command behaves like a JavaScript function while following several conventions:
     * All function commands must be defined globally.
     * They will have a special case-insensitive commandName.
@@ -443,7 +443,7 @@ All commands represent executable operations.
 * You can combine the methods above, depending on your code situations.
 * All of the ways will convert to a simple function call.
 
-#### Definition Command
+#### Definition commands
 * Every definition command behaves like a JavaScript object while following several conventions:
     * All definition commands must be defined globally.
     * They will have a special case-insensitive commandName.
@@ -472,7 +472,7 @@ All commands represent executable operations.
     commandName.js-propertykey1
     ```
 
-#### Delegation Command
+#### Delegation commands
 * The simplest but valuable type of commands.
 * Every delegation command behaves like a simple JavaScript variable while following several conventions:
     * All delegation commands must be defined globally.
@@ -533,7 +533,7 @@ All commands represent executable operations.
     ```
 ---
 
-### Reserves:
+### Reserves
 DEAL allows optional readability words that improve the natural flow of the language. They will affect only the parser and contain no JavaScript code. These can be one of two groups below:
 * Reserved words: All words will be replaced directly in the script while being preserved in the source code.
     * The user can call any one of the codes below freely.
@@ -588,7 +588,7 @@ DEAL allows optional readability words that improve the natural flow of the lang
 
 ---
 
-### Handlers:
+### Handlers
 There are multiple defined variables accessible globally, which users can interact with.
 * A very small set of them defined bult-in (APPLICATION, BROWSER, WINDOW, DOCUMENT, RESPONSE, ITS, ...)
 * Some of the global variables that will update based on the current status are named Handler Identifiers, including:
