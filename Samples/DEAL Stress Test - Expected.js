@@ -117,7 +117,7 @@ let gradeNormal = grade[--a][--b][c--].trim(" ", "n", "r").toLowerCase();
 // ------------------------------------------------------------
 (scrapeMap = (() => {
     try {
-        open(browser).then((data) => {
+        browser.open("about:blank").then((data) => {
             handle(data);
 
             for (const url/* The URL of the website */ of list) browser.tab.load(url).then((data) => {
