@@ -59,7 +59,7 @@ const tab = browser.tab;
 const title = tab.window.document.title;
 const url = tab.window.location.href;
 const width = tab.window.innerWidth;
-const online = tab.navigator.onLine;
+const online = tab.window.navigator.onLine;
 
 // Replace the current document without adding a history entry.
 await tab.load("example.org/start");
