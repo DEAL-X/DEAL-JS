@@ -18,6 +18,7 @@ namespace MiMFa.Engine.JavaScript.Web
         }
 
         internal BrowserPage Page { get; }
+        internal string ResolveAddress(string address) => _browser.PathProvider == null ? address : _browser.PathProvider.Resolve(address, Page.Url);
         public string Id => Page.TargetId;
         public string Url => Page.Url;
         public string Title => Page.Title;
