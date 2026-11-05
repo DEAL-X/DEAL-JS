@@ -78,7 +78,7 @@ namespace MiMFa.Engine.JavaScript.Web
             if (value.StartsWith(".", StringComparison.Ordinal) || value.StartsWith("~", StringComparison.Ordinal) ||
                 value.StartsWith("/", StringComparison.Ordinal) || value.StartsWith(@"\\", StringComparison.Ordinal) ||
                 LooksLikeWindowsDrivePath(value)) return true;
-            string fileName = value.Split('/', '\\\\').Last();
+                        string fileName = value.Split('/', '\\').Last();
             string extension = Path.GetExtension(fileName).ToLowerInvariant();
             return new[] { ".txt", ".md", ".djs", ".js", ".mjs", ".json", ".html", ".htm", ".css", ".xml", ".csv", ".pdf", ".png", ".jpg", ".jpeg", ".gif" }.Contains(extension);
         }
