@@ -1,8 +1,10 @@
 // Run after Environment has initialized the Engine and loaded deal/web/fetch.js.
 async function testDealFetch() {
-    const response = await fetch("https://example.com/");
+    const response = await fetch("example.com");
     if (!(response instanceof Response)) throw new Error("fetch did not return Response");
     if (typeof response.status !== "number") throw new Error("Response.status is missing");
+    if (response.url.indexOf("http://example.com") !== 0)
+        throw new Error("The path provider did not normalize the incomplete hostname.");
     const text = await response.text();
     if (typeof text !== "string") throw new Error("Response.text() did not return a string");
     return { status: response.status, ok: response.ok, length: text.length, url: response.url };
