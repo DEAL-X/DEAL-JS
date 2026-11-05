@@ -12,6 +12,7 @@ namespace MiMFa.Engine.JavaScript
     {
         public Dictionary<string, Token> Keywords { get; } = new Dictionary<string, Token>();
 
+        public PathProvider PathProvider { get; set; }
         public FetchTransport FetchTransport { get; set; }
         public BrowserProvider BrowserProvider { get; set; }
 
@@ -25,8 +26,9 @@ namespace MiMFa.Engine.JavaScript
                     new Generator()
                 }, executeStage, options ?? new Options(), resourceProvider ?? new ResourceProvider())
         {
-            FetchTransport = new FetchTransport();
-            BrowserProvider = new BrowserProvider();
+            PathProvider = new PathProvider();
+            FetchTransport = new FetchTransport { PathProvider = PathProvider };
+            BrowserProvider = new BrowserProvider { PathProvider = PathProvider };
         }
         public override void Dispose()
         {
