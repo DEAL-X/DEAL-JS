@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace MiMFa.Engine.JavaScript.Web
 {
@@ -77,6 +78,9 @@ namespace MiMFa.Engine.JavaScript.Web
                 return false;
             if (File.Exists(value)) return false;
             if (value.Contains(":")) return true;
+            string extension = Path.GetExtension(value).ToLowerInvariant();
+            if (new[] { ".txt", ".md", ".djs", ".js", ".mjs", ".json", ".html", ".htm", ".css", ".xml", ".csv", ".pdf", ".png", ".jpg", ".jpeg", ".gif" }.Contains(extension))
+                return false;
             return value.Contains(".") || string.Equals(value, "localhost", StringComparison.OrdinalIgnoreCase);
         }
     }
