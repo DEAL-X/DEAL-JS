@@ -3,8 +3,8 @@
 // tab Chromium selects next. File picker checks require user activation.
 
 async function browserObjectModelSmokeTest() {
-    const anchor = await browser.Open("about:blank");
-    const opened = await browser.Open("https://example.com/");
+    const anchor = browser.Open("about:blank");
+    const opened = browser.Open("https://example.com/");
 
     if (!opened || !opened.Id)
         throw new Error("browser.open() did not return a BrowserTab.");
@@ -25,8 +25,8 @@ async function browserObjectModelSmokeTest() {
         throw new Error("navigator.onLine did not return a boolean.");
 
     // Methods that communicate with Chromium remain awaitable.
-    await opened.Window.Storage.Local.SetItem("deal.browser.smoke", "ok");
-    const stored = await opened.Window.Storage.Local.GetItem("deal.browser.smoke");
+    opened.Window.Storage.Local.SetItem("deal.browser.smoke", "ok");
+    const stored = opened.Window.Storage.Local.GetItem("deal.browser.smoke");
     if (stored !== "ok")
         throw new Error("The localStorage proxy did not round-trip a value.");
 
@@ -34,21 +34,21 @@ async function browserObjectModelSmokeTest() {
     if (!Array.isArray(tabs) && typeof tabs.Count !== "number")
         throw new Error("browser.tabs.all did not return a synchronous collection.");
 
-    const fetched = await browser.Tabs.Get(opened.Id);
+    const fetched = browser.Tabs.Get(opened.Id);
     if (fetched.Id !== opened.Id)
         throw new Error("browser.tabs.get() returned the wrong tab.");
 
-    await browser.Activate(fetched);
+    browser.Activate(fetched);
     if (browser.Tab.Id !== fetched.Id)
         throw new Error("browser.tab did not follow browser.activate().");
 
     // load() replaces the document; navigate() adds a history entry.
-    await browser.Tab.Load("https://example.com/");
-    await browser.Tab.Navigate("https://example.org/");
-    await browser.Tab.Back();
+    browser.Tab.Load("https://example.com/");
+    browser.Tab.Navigate("https://example.org/");
+    browser.Tab.Back();
 
     // Closing the current tab should make the newly selected tab current.
-    await browser.Tab.Close();
+    browser.Tab.Close();
     if (!browser.Tab || browser.Tab.Id !== anchor.Id)
         throw new Error("browser.tab did not refer to the tab selected after closing the current tab.");
 
@@ -69,7 +69,7 @@ async function browserObjectModelSmokeTest() {
 }
 
 // Optional manual checks. These invoke Chromium's native file pickers.
-// const selected = await browser.Tab.Open(JSON.stringify({ multiple: true }));
+// const selected = browser.Tab.Open(JSON.stringify({ multiple: true }));
 // const fileInfo = await selected[0].GetFile();
-// const saveHandle = await browser.Tab.Save(JSON.stringify({ suggestedName: "deal-output.txt" }));
-// await saveHandle.WriteText("Created through the native File System Access API.");
+// const saveHandle = browser.Tab.Save(JSON.stringify({ suggestedName: "deal-output.txt" }));
+// saveHandle.WriteText("Created through the native File System Access API.");
