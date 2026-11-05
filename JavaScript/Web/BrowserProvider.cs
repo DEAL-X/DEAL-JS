@@ -492,8 +492,19 @@ namespace MiMFa.Engine.JavaScript.Web
             if (string.IsNullOrWhiteSpace(targetId)) return false;
             await EnsureAvailableAsync(Timeout).ConfigureAwait(false);
             var tabs = await GetTabsAsync().ConfigureAwait(false);
-            if (!tabs.Any(x => x.Id == targetId)) return false;
+            int closingIndex = tabs.FindIndex(x => x.Id == targetId);
+            if (closingIndex < 0) return false;
+            bool wasCurrent = _currentTargetId == targetId || CurrentPage?.TargetId == targetId;
             await EnsureBrowserConnectionAsync().ConfigureAwait(false);
+
+            // Keep the browser window alive when its last tab is closed.
+            string replacementId = null;
+            if (wasCurrent && tabs.Count == 1)
+            {
+                var replacement = await OpenTabAsync("about:blank").ConfigureAwait(false);
+                replacementId = replacement.Id;
+            }
+
             JObject result = await _browserConnection.SendAsync("Target.closeTarget",
                 new JObject { ["targetId"] = targetId }).ConfigureAwait(false);
             bool success = result["success"] == null || result["success"].Value<bool>();
@@ -501,11 +512,29 @@ namespace MiMFa.Engine.JavaScript.Web
             if (_pages.TryRemove(targetId, out var page)) page.Dispose();
             _tabs.TryRemove(targetId, out _);
             if (CurrentPage != null && CurrentPage.TargetId == targetId) CurrentPage = null;
-            if (_currentTargetId == targetId)
+
+            if (wasCurrent)
             {
-                _currentTargetId = null;
                 var remaining = await GetTabsAsync().ConfigureAwait(false);
-                _currentTargetId = remaining.FirstOrDefault()?.Id;
+                if (string.IsNullOrEmpty(replacementId))
+                {
+                    // Prefer the next tab in the previous tab order, then the previous one.
+                    replacementId = remaining.ElementAtOrDefault(Math.Min(closingIndex, remaining.Count - 1))?.Id
+                        ?? remaining.LastOrDefault()?.Id;
+                }
+
+                if (!string.IsNullOrEmpty(replacementId))
+                {
+                    await _browserConnection.SendAsync("Target.activateTarget",
+                        new JObject { ["targetId"] = replacementId }).ConfigureAwait(false);
+                    CurrentPage = await GetPageAsync(replacementId).ConfigureAwait(false);
+                    _currentTargetId = replacementId;
+                }
+                else
+                {
+                    CurrentPage = null;
+                    _currentTargetId = null;
+                }
             }
             return true;
         }
