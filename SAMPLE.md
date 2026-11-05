@@ -145,9 +145,9 @@ Browser navigation is performed through the `browser` object, not global `LOAD`/
 ```ts
 USE deal/web;
 
-Consider tab be await browser.load "example.com";
+Consider tab be await browser.open "example.com";
 Consider title be await tab.window.document.title;
-await browser.go "example.org";
+await browser.tab.navigate "example.org";
 await browser.tab.back();
 await browser.tab.reload();
 ```
