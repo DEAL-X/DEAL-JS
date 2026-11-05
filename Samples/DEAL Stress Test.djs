@@ -1,6 +1,6 @@
 /*
  * ============================================================
- * MiMFa DEAL.JS Compiler Stress Test
+ * MiMFa DEAL.JS compiler stress test
  * ============================================================
  * This file intentionally contains many DEAL.JS structures.
  * It should remain semantically correct after compilation.
@@ -38,7 +38,7 @@ command testC = { tkey1: (v)=>v, tkey2: TESTB};
 command testD(val = " ") {  // Function command
     return TESTc tkey1(tESTA+val);
 }
-# loadDef IF url is not null, LOAD url, "utf8", ELSE LOAD the "www.mimfa.net"; // Action Command
+# loadDef IF url is not null, await browser.tab.load(url), ELSE await browser.tab.load("www.mimfa.net"); // Action command
 
 var #testE:int:string = 4;
 list insert testE, www.mimfa.net; // the testE next word will convert to string
@@ -120,11 +120,11 @@ CONSIDER VAR promiseTest WILL BE 18 ** 18, THEN log success its, OTHERWISE log e
 
 # scrapeMap
     try to open browser, then
-        EVERY url /* The url of the website */ OF list,
-            * LOAD url,
+        EVERY url /* The URL of the website */ OF list,
+            * await browser.tab.load(url),
             * THEN begin
                 * APPEND ALL keys>table>h2 from document keys, to destination;
-                * log success `The ${url} is laded successfully`;
+                * log success `The ${url} loaded successfully`;
                 * End,
             * otherwise log error `Could not load ${url}`,
             * anyway log message `The ${url} process is finished!`;
