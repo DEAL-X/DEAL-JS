@@ -14,9 +14,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Library\deal\compliment\**" />
-    <EmbeddedResource Remove="Library\deal\compliment\**" />
-    <None Remove="Library\deal\compliment\**" />
+    <Compile Remove="Resource\deal\compliment\**" />
+    <EmbeddedResource Remove="Resource\deal\compliment\**" />
+    <None Remove="Resource\deal\compliment\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -49,154 +49,151 @@
 
 
   <ItemGroup>
-    <None Update="Library\ChainDoc\ChainedDocument.js">
+    <None Update="Resource\ChainDoc\ChainedDocument.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\ChainDoc\ChainedDocumentCollection.js">
+    <None Update="Resource\ChainDoc\ChainedDocumentCollection.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\ChainDoc\Connector\ConnectorBase.js">
+    <None Update="Resource\ChainDoc\Connector\ConnectorBase.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\ChainDoc\Connector\ExcelFile.js">
+    <None Update="Resource\ChainDoc\Connector\ExcelFile.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\ChainDoc\Connector\PlainTextFile.js">
+    <None Update="Resource\ChainDoc\Connector\PlainTextFile.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\ChainDoc\Filter\FilterCollection.js">
+    <None Update="Resource\ChainDoc\Filter\FilterCollection.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\ChainDoc\Filter\FilterItem.js">
+    <None Update="Resource\ChainDoc\Filter\FilterItem.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\ChainDoc\Matrices\ForceMathMatrixDocument.js">
+    <None Update="Resource\ChainDoc\Matrices\ForceMathMatrixDocument.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\ChainDoc\Matrices\MathMatrixDocument.js">
+    <None Update="Resource\ChainDoc\Matrices\MathMatrixDocument.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\ChainDoc\Matrices\TextMatrixDocument.js">
+    <None Update="Resource\ChainDoc\Matrices\TextMatrixDocument.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\ChainDoc\MatrixDocument.js">
+    <None Update="Resource\ChainDoc\MatrixDocument.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\collect\.djs">
+    <None Update="Resource\deal\collect\.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\data\temp.djs">
+    <None Update="Resource\deal\data\temp.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\make\normal.djs">
+    <None Update="Resource\deal\make\normal.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\collect\collect.djs">
+    <None Update="Resource\deal\collect\collect.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\collect\select.djs">
+    <None Update="Resource\deal\collect\select.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\make\.djs">
+    <None Update="Resource\deal\make\.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\make\string.js">
+    <None Update="Resource\deal\make\string.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\make\number.js">
+    <None Update="Resource\deal\make\number.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\make\logical.js">
+    <None Update="Resource\deal\make\logical.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\core\global.js">
+    <None Update="Resource\deal\core\global.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\core\statements.djs">
+    <None Update="Resource\deal\core\statements.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\data\.djs">
+    <None Update="Resource\deal\data\.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\data\array.js">
+    <None Update="Resource\deal\data\array.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\data\math.js">
+    <None Update="Resource\deal\data\math.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\select\.djs">
+    <None Update="Resource\deal\select\.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\select\selector.djs">
+    <None Update="Resource\deal\select\selector.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\status\.djs">
+    <None Update="Resource\deal\status\.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\status\handler.djs">
+    <None Update="Resource\deal\status\handler.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\core\operators.djs">
+    <None Update="Resource\deal\core\operators.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\core\noises.djs">
+    <None Update="Resource\deal\core\noises.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\core\functions.djs">
+    <None Update="Resource\deal\core\functions.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\core\identifiers.djs">
+    <None Update="Resource\deal\core\identifiers.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\.djs">
+    <None Update="Resource\deal\web\.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\fetch.djs">
+    <None Update="Resource\deal\web\fetch.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\fetch.js">
+    <None Update="Resource\deal\web\~fetch.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\~fetch.js">
+    <None Update="Resource\deal\web\go.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\go.djs">
+    <None Update="Resource\deal\web\~fetch.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\~fetch.djs">
+    <None Update="Resource\deal\web\locate.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\locate.djs">
+    <None Update="Resource\deal\web\load.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\load.djs">
+    <None Update="Resource\deal\web\Download.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\Download.js">
+    <None Update="Resource\deal\web\request.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\request.djs">
+    <None Update="Resource\deal\web\send.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\Send.js">
+    <None Update="Resource\deal\web\Temporary.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\Temporary.js">
+    <None Update="Resource\deal\web\transfer.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\web\transfer.djs">
+    <None Update="Resource\deal\data\local.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\data\local.djs">
+    <None Update="Resource\deal\make\collection.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\deal\make\collection.js">
+    <None Update="Resource\struct\.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Library\struct\.djs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Library\struct\struct.js">
+    <None Update="Resource\struct\struct.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -16,7 +16,7 @@ use deal/make/string;
 //     * L: upper case letters
 //     * u: encode URI component
 //     * U: decode URI component
-Make.normal = function (text = null, method = "NFKCTB", replacement = "") {
+#Make.normal:function = function (text = null, method = "NFKCTB", replacement = "") {
     if (text === null || text === undefined) return text;
 
     const options = String(method);

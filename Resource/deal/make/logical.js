@@ -1,5 +1,6 @@
 Make.encoder = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
 Make.decoder = typeof TextDecoder !== "undefined" ? new TextDecoder() : null;
+Make.base64Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 Make.binary = function (object = null) {
     if (object == null) return null;
@@ -36,8 +37,6 @@ Make.textFromBytes = function (bytes) {
     catch { return binary; }
 };
 
-const MakeBase64Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
 Make.base64FromBytes = function (value) {
     const bytes = Make.uint8Array(value);
     let output = "";
@@ -47,10 +46,10 @@ Make.base64FromBytes = function (value) {
         const hasC = i + 2 < bytes.length;
         const b = hasB ? bytes[i + 1] : 0;
         const c = hasC ? bytes[i + 2] : 0;
-        output += MakeBase64Alphabet[a >> 2];
-        output += MakeBase64Alphabet[((a & 3) << 4) | (b >> 4)];
-        output += hasB ? MakeBase64Alphabet[((b & 15) << 2) | (c >> 6)] : "=";
-        output += hasC ? MakeBase64Alphabet[c & 63] : "=";
+        output += Make.base64Alphabet[a >> 2];
+        output += Make.base64Alphabet[((a & 3) << 4) | (b >> 4)];
+        output += hasB ? Make.base64Alphabet[((b & 15) << 2) | (c >> 6)] : "=";
+        output += hasC ? Make.base64Alphabet[c & 63] : "=";
     }
     return output;
 };
@@ -62,10 +61,10 @@ Make.bytesFromBase64 = function (value) {
 
     const output = [];
     for (let i = 0; i < input.length; i += 4) {
-        const a = MakeBase64Alphabet.indexOf(input[i]);
-        const b = MakeBase64Alphabet.indexOf(input[i + 1]);
-        const c = input[i + 2] === "=" ? 0 : MakeBase64Alphabet.indexOf(input[i + 2]);
-        const d = input[i + 3] === "=" ? 0 : MakeBase64Alphabet.indexOf(input[i + 3]);
+        const a = Make.base64Alphabet.indexOf(input[i]);
+        const b = Make.base64Alphabet.indexOf(input[i + 1]);
+        const c = input[i + 2] === "=" ? 0 : Make.base64Alphabet.indexOf(input[i + 2]);
+        const d = input[i + 3] === "=" ? 0 : Make.base64Alphabet.indexOf(input[i + 3]);
         if (a < 0 || b < 0 || c < 0 || d < 0)
             throw new TypeError("Invalid Base64 input.");
         output.push((a << 2) | (b >> 4));

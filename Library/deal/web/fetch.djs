@@ -1,1 +1,0 @@
-reserve #fetch:start|function as "fetch";
