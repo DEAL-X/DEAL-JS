@@ -1,15 +1,6 @@
-// Load a URL in a new tab of the already-running Chromium/Edge instance.
-// The returned BrowserPage is a host proxy. DOM access remains asynchronous
-// because the actual Window and Document live in the browser process.
-async command #load:start (url = null, timeout = 60000) {
-    if (url == null) return load;
-    if (!application.Engine.BrowserProvider.IsAlive)
-        application.Engine.BrowserProvider.Initial();
-    return await application.Engine.BrowserProvider.LoadAsync(String(url), Number(timeout));
-}
-
-async command #reload:start (page = null) {
-    if (page == null) throw new TypeError("reload requires a loaded BrowserPage.");
-    await page.EvaluateAsync("location.reload()");
-    return page;
-}
+// Browser navigation is exposed by the browser object from deal/web/.djs.
+// Use browser.load(address) to open a new tab.
+// Use browser.go(address) to navigate the current tab.
+// Use browser.reload(), browser.back(), browser.forward(), browser.locate(address),
+// and browser.relocate(address) for navigation and history operations.
+// These files intentionally define no global browser-navigation commands.
