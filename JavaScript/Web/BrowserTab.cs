@@ -23,8 +23,8 @@ namespace MiMFa.Engine.JavaScript.Web
         public string Id => Page.TargetId;
         public string Url => Page.Url;
         public string Title => Page.Title;
-        public Task<string> url => Page.EvaluateAsync("location.href");
-        public Task<string> title => Page.EvaluateAsync("document.title");
+        public string url => Page.EvaluateAsync("location.href").GetAwaiter().GetResult();
+        public string title => Page.EvaluateAsync("document.title").GetAwaiter().GetResult();
         public BrowserWindow Window { get; }
         public BrowserWindows Windows { get; }
         public BrowserWindow window => Window;
