@@ -168,7 +168,7 @@ COMMAND select_Regex(pattern, source) {
 
 // Select all elements or values matching the specified selector
 // from a document, element, object, array, or iterable.
-command #all::string() {
+command #all:start|function:string() {
     let [query, source] = detect_Selector_Arguments(...arguments);
 
     if (query == null) return source;
@@ -224,7 +224,7 @@ command #all::string() {
 
 // Select the first matching element or value.
 // Return null when no match exists.
-command #one::string() {
+command #one:start|function:string() {
     let [query, source] = detect_Selector_Arguments(...arguments);
 
     if (query == null) return source;
@@ -236,7 +236,7 @@ command #one::string() {
 // Select a single match or multiple matches.
 // Return the single value when exactly one match exists;
 // otherwise return the result array.
-command #any::string() {
+command #any:start|function:string() {
     let [query, source] = detect_Selector_Arguments(...arguments);
 
     if (query == null) return source;

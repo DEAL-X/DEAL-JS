@@ -68,8 +68,8 @@ namespace MiMFa.Engine.DEAL.JS
 
                 if(walker.Current == "#")
                 {
-                    var w = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w0-9_$#\\s:|]", RegexOptions.CultureInvariant)).ToArray());
-                    w = Regex.Match(w, @"^#\w+(:\s*[\w|]*)*", RegexOptions.CultureInvariant).Value;
+                    var w = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w\\.$#\\s:|]", RegexOptions.CultureInvariant)).ToArray());
+                    w = Regex.Match(w, @"^#[\w\.$]+(:\s*[\w|]*)*", RegexOptions.CultureInvariant).Value;
                     if (!string.IsNullOrWhiteSpace(w))
                     {
                         var ws = w.Split(new string[] { "#", ":" }, StringSplitOptions.None);
@@ -84,7 +84,7 @@ namespace MiMFa.Engine.DEAL.JS
 
                 location = walker.Position;
                 position = walker.Index;
-                var word = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w0-9_$\\*]", RegexOptions.CultureInvariant)).ToArray());
+                var word = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w\\.$\\*]", RegexOptions.CultureInvariant)).ToArray());
                 var lword = word.ToLower();
 
                 switch (lword)
@@ -153,7 +153,7 @@ namespace MiMFa.Engine.DEAL.JS
                         break;
 
                     default:
-                        if (Regex.IsMatch(word, @"[\w0-9_$]", RegexOptions.CultureInvariant) && word.StartsWith("*") && word.EndsWith("*"))
+                        if (Regex.IsMatch(word, @"[\w\.$]", RegexOptions.CultureInvariant) && word.StartsWith("*") && word.EndsWith("*"))
                         {
                             var cmd = word.Trim('*');
                             SetAcceptedType(cmd);
@@ -167,7 +167,7 @@ namespace MiMFa.Engine.DEAL.JS
                 if (current != null)
                 {
                     location = walker.Position;
-                    word = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w0-9_$]", RegexOptions.CultureInvariant)).ToArray());
+                    word = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w\\.$]", RegexOptions.CultureInvariant)).ToArray());
                     lword = word.ToLower();
 
                     switch (lword)
@@ -254,7 +254,7 @@ namespace MiMFa.Engine.DEAL.JS
                 }
             }
 
-            var wrd = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w0-9_$]", RegexOptions.CultureInvariant)).ToArray());
+            var wrd = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w\\.$]", RegexOptions.CultureInvariant)).ToArray());
             var tk = GetAcceptedToken(TokenType.Unknown, wrd, walker.Position);
             if (tk.Value != wrd)
                 walker.Replace(walker.Position, wrd.Length, tk.Value.ToCharArray().Select(v => v.ToString()).ToArray());
