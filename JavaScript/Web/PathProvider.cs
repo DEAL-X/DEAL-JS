@@ -11,7 +11,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public string BaseDirectory { get; set; } = Environment.CurrentDirectory;
         public string BaseAddress { get; set; }
 
-        public string Resolve(string address)
+        public string Resolve(string address, string baseAddress = null)
         {
             if (string.IsNullOrWhiteSpace(address))
                 throw new ArgumentException("An address is required.", nameof(address));
@@ -30,9 +30,10 @@ namespace MiMFa.Engine.JavaScript.Web
                     return NormalizeUri(webUri);
             }
 
+            var effectiveBaseAddress = string.IsNullOrWhiteSpace(baseAddress) ? BaseAddress : baseAddress;
             if (Uri.TryCreate(address, UriKind.Relative, out var relative) &&
-                !string.IsNullOrWhiteSpace(BaseAddress) &&
-                Uri.TryCreate(BaseAddress, UriKind.Absolute, out var baseUri) &&
+                !string.IsNullOrWhiteSpace(effectiveBaseAddress) &&
+                Uri.TryCreate(effectiveBaseAddress, UriKind.Absolute, out var baseUri) &&
                 (baseUri.Scheme == Uri.UriSchemeHttp || baseUri.Scheme == Uri.UriSchemeHttps))
                 return NormalizeUri(new Uri(baseUri, relative));
 
