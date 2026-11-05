@@ -766,8 +766,8 @@ Resolution rules:
 - `www.example.com/page` becomes `http://www.example.com/page`.
 - Explicit absolute URLs such as `https://example.com` retain their scheme.
 - Absolute local paths and relative paths become absolute `file://` addresses.
-- Relative paths are resolved against `PathProvider.BaseDirectory`, which defaults to the host process's current working directory.
-- When `PathProvider.BaseAddress` is set to an HTTP or HTTPS URL, relative URL references can be resolved against that base address. Hostnames are still treated as hostnames, not relative URL paths.
+- Explicit local relative paths (`./...`, `../...`, and `~/...`) are resolved against `PathProvider.BaseDirectory`, which defaults to the host process's current working directory. Common file extensions such as `.txt`, `.json`, `.html`, `.js`, and `.djs` are also recognized as local-file paths.
+- When `PathProvider.BaseAddress` is set to an HTTP or HTTPS URL, other relative references can be resolved against that base address. Hostnames such as `example.com` are still treated as hostnames, not relative URL paths.
 
 The provider can be configured by the host before executing scripts:
 
