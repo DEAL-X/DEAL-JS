@@ -78,7 +78,7 @@
 										(IF item Count IS 0 "absent" ELSE item.Count) AS Numbers
 										FROM item;
 						ELSE
-							await browser.load("www.market.com/search/merchandise="+row[5]);
+							await browser.tab.navigate("www.market.com/search/merchandise="+row[5]);
 							THEN	// If the loading promise finished
 								IF LOADED, DO	// If the website document is loaded completely
 									FOR EACH item OF ALL ("div table>tbody>tr"),
@@ -148,13 +148,13 @@ USE deal/web;
 Consider tab be await browser.load "example.com";
 Consider title be await tab.window.document.title;
 await browser.go "example.org";
-await browser.back();
-await browser.reload();
+await browser.tab.back();
+await browser.tab.reload();
 ```
 
-The shared path provider normalizes incomplete web addresses and resolves local paths. For example, `browser.load("./pages/index.html")` opens a local file, while `await fetch("./data/items.json")` reads it through the host Fetch transport and returns a `Response`.
+The shared path provider normalizes incomplete web addresses and resolves local paths. `browser.open(url)` opens a new tab; `browser.tab.load(url)` replaces the current document without adding history, while `browser.tab.navigate(url)` performs normal navigation. For example, `await browser.tab.load("./pages/index.html")` loads a local file, while `await fetch("./data/items.json")` reads it through the host Fetch transport and returns a `Response`.
 
-`USE` loads a dependency once per compiler dependency graph; `REUSE` forces it to be processed again. For a remote module, `REUSE` refreshes the downloaded source before processing it:
+`USE` loads a dependency once per compiler dependency graph; `REUSE` forces the same dependency to be processed again. Both use the same resource resolution; `REUSE` does not force a separate download:
 
 ```ts
 USE deal/core;
