@@ -265,7 +265,24 @@ namespace MiMFa.Engine.JavaScript.Web
             string path = uri.LocalPath;
             if (!File.Exists(path))
                 throw new FileNotFoundException("The requested local file was not found.", path);
-            byte[] bytes = method == "HEAD" ? Array.Empty<byte>() : await File.ReadAllBytesAsync(path).ConfigureAwait(false);
+            byte[] bytes = Array.Empty<byte>();
+            if (method != "HEAD")
+            {
+                using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 81920, true))
+                {
+                    if (stream.Length > int.MaxValue)
+                        throw new IOException("The requested local file is too large to fit in a byte array.");
+                    bytes = new byte[(int)stream.Length];
+                    int offset = 0;
+                    while (offset < bytes.Length)
+                    {
+                        int read = await stream.ReadAsync(bytes, offset, bytes.Length - offset).ConfigureAwait(false);
+                        if (read <= 0) break;
+                        offset += read;
+                    }
+                    if (offset != bytes.Length) Array.Resize(ref bytes, offset);
+                }
+            }
             string contentType = GetContentType(path);
             var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
