@@ -233,7 +233,7 @@ namespace MiMFa.Engine.JavaScript.Web
         private readonly BrowserTab _tab;
         internal BrowserWindows(BrowserTab tab) { _tab = tab; }
         public string length => (GetCountAsync()).GetAwaiter().GetResult();
-        public Task<IList<BrowserFrame>> all => GetAllAsync();
+        public IList<BrowserFrame> all => GetAllAsync().GetAwaiter().GetResult();
         public Task<BrowserFrame> get(int index) => GetAsync(index);
         public Task<string> GetCountAsync() => _tab.Page.EvaluateAsync("window.frames.length");
         public Task<string> GetNamesAsync() => _tab.Page.EvaluateAsync("JSON.stringify(Array.from(window.frames).map((w,i)=>({index:i,name:w.name,url:(()=>{try{return w.location.href}catch(e){return null}})()})))");
