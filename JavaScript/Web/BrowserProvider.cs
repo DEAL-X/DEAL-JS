@@ -128,7 +128,7 @@ namespace MiMFa.Engine.JavaScript.Web
             if (string.IsNullOrWhiteSpace(DriverPath))
             {
                 string x86Path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Google", "Chrome", "Application", "chrome.exe");
-                string x64Path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Google", "Chrome", "Application", "chrome.exe");
+                string x64Path = Path.Combine(Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)), "Program Files", "Google", "Chrome", "Application", "chrome.exe");
                 string localPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Google", "Chrome", "Application", "chrome.exe");
 
                 if (File.Exists(x86Path)) DriverPath = x86Path;

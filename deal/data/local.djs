@@ -20,6 +20,11 @@ command Local = {};
 	if(!application.Engine.ResourceProvider.Exists(path)) application.Engine.ResourceProvider.SetFileContents(path, Make.string(object));
 	return application.Engine.ResourceProvider.Exists(path);
 };
+#Local.directory:function = function (path = null) {
+	if(!path) return false;
+	application.Engine.ResourceProvider.CreateDirectory(path);
+	return application.Engine.ResourceProvider.Exists(path);
+};
 #Local.name:function = function (path = null) {
 	if(!path) return null;
 	let ent = application.Engine.ResourceProvider.Entity(path)
@@ -43,11 +48,6 @@ command Local = {};
 #Local.append:function = function (path = null, object = null) {
 	if(!path) return false;
 	return application.Engine.ResourceProvider.AppendFileContents(path, Make.string(object));
-};
-#Local.directory:function = function (path = null) {
-	if(!path) return false;
-	application.Engine.ResourceProvider.CreateDirectory(path);
-	return application.Engine.ResourceProvider.Exists(path);
 };
 #Local.move:function = function (source = null, destination = null, overwrite = false) {
 	if(!source || !destination) return false;

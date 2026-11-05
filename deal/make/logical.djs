@@ -1,6 +1,6 @@
-#Make.encoder:function = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
-#Make.decoder:function = typeof TextDecoder !== "undefined" ? new TextDecoder() : null;
-#Make.base64Alphabet:function = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+#Make.encoder:identifier = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
+#Make.decoder:identifier = typeof TextDecoder !== "undefined" ? new TextDecoder() : null;
+#Make.base64Alphabet:identifier = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 #Make.binary:function = function (object = null) {
     if (object == null) return null;
@@ -56,7 +56,7 @@
 
 #Make.bytesFromBase64:function = function (value) {
     const input = String(value || "").replace(/\\s+/g, "");
-    if (input.length % 4 !== 0 || /[^A-Za-z0-9+/=]/.test(input))
+    if (input.length % 4 !== 0 || /[^A-Za-z0-9+\/=]/.test(input))
         throw new TypeError("Invalid Base64 input.");
 
     const output = [];
