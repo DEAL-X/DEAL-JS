@@ -98,6 +98,7 @@ namespace MiMFa.Engine.JavaScript.Web
             _tabs.Clear();
             CurrentPage = null;
             _currentTargetId = null;
+            _windowId = null;
             _browserConnection?.Dispose();
             _browserConnection = null;
 
