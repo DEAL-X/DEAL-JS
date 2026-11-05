@@ -68,6 +68,8 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> reload() => ReloadAsync();
         public Task<string> back() => GoBackAsync();
         public Task<string> forward() => GoForwardAsync();
+        public Task<string> locate(string address) => SetLocationAsync(address, false);
+        public Task<string> relocate(string address) => SetLocationAsync(address, true);
         public Task<bool> close(BrowserTab tab) => tab == null ? Task.FromResult(false) : CloseAsync(tab.Id);
         public Task<bool> activate(BrowserTab tab) => tab == null ? Task.FromResult(false) : ActivateAsync(tab.Id);
 
@@ -346,6 +348,14 @@ namespace MiMFa.Engine.JavaScript.Web
         {
             if (CurrentPage == null) return null;
             return await CurrentPage.ReloadAsync().ConfigureAwait(false);
+        }
+
+        public async Task<string> SetLocationAsync(string address, bool addHistoryEntry)
+        {
+            if (CurrentPage == null) throw new InvalidOperationException("There is no current browser tab.");
+            string url = PathProvider == null ? address : PathProvider.Resolve(address);
+            string operation = addHistoryEntry ? "pushState" : "replaceState";
+            return await CurrentPage.EvaluateAsync("history." + operation + "(null, null, " + Newtonsoft.Json.JsonConvert.ToString(url) + "); location.href").ConfigureAwait(false);
         }
 
         public Task<string> GoBackAsync() => CurrentPage == null ? Task.FromResult<string>(null) : CurrentPage.GoBackAsync();
