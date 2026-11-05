@@ -515,10 +515,21 @@ namespace MiMFa.Engine.JavaScript.Web
 
             if (wasCurrent)
             {
+                // Wait until Chromium has removed the closed target before choosing
+                // the tab that will become the provider's new current (visible) tab.
                 var remaining = await GetTabsAsync().ConfigureAwait(false);
+                var closeDeadline = DateTime.UtcNow.AddMilliseconds(Timeout > 0 ? Timeout : 60000);
+                while (remaining.Any(item => item.Id == targetId) && DateTime.UtcNow < closeDeadline)
+                {
+                    await Task.Delay(50).ConfigureAwait(false);
+                    remaining = await GetTabsAsync().ConfigureAwait(false);
+                }
+                remaining = remaining.Where(item => item.Id != targetId).ToList();
+
                 if (string.IsNullOrEmpty(replacementId))
                 {
-                    // Prefer the next tab in the previous tab order, then the previous one.
+                    // Chromium selects the tab at the closing position, or the
+                    // previous tab when the closed tab was last in the tab order.
                     replacementId = remaining.ElementAtOrDefault(Math.Min(closingIndex, remaining.Count - 1))?.Id
                         ?? remaining.LastOrDefault()?.Id;
                 }
