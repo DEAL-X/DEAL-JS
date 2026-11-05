@@ -1,167 +1,180 @@
- # A Tuorials Example
- This is just a tutorial scenario and will not work.
- 
- You can find more examples and their parsed JS versions [here](Samples/).
+# DEAL.JS quick-start sample
 
-```ts
-	/*
-		* This is just a tutorial scenario and will not work
-	*/
+This guide introduces the DEAL.JS syntax, its JavaScript interoperability, module loading, and the current browser API. The examples use sentence case for prose and comments; language keywords are intentionally shown in their normal sentence-case form.
 
-	USE scraper;			// Will attach whole of a core library to the JS engine
-	USE deal\data\resource;	// Will attach a special part of a core library to the JS engine
-	/*
-		* You can add a core or third-party library to the JS engine using the USE command.
-		* If there is no spaces between the address, you can write that without any quotes.
-		* This library will be parsed and attached to the JS engine before execution.
-		* The finding package procedure in this command will check one of the three steps:
-			1. If the `deal\data\resource.djs` file exists, it will be parsed and attached to the JS engine.
-			2. If the `deal\data\resource.js` file exists, it will be attached directly to the JS engine.
-			3. If the `deal\data\resource` directory exists, it will USE all files or directories in that.
-	*/
-	USE "D:\My Libs\Text\Normalization";	// Will attach a third-party library using an absolute addressto the JS engine
-	USE .\MyLib;						// Will attach a third-party library using a relative address to the JS engine
+## 1. Write a small DEAL program
 
-	CONSIDER CONST Source IS EQUALS Resource.OPENFILE();																	// Using a command of the `deal\io\resource` library, which will show an open file dialog
-	CONST #Destination = Resource.SAVEFILE("results", "Comma Separated Values Files (*.csv)|*.csv");		// Using a command of the `deal\io\resource` library, which will show a save file dialog
-	/*
-		* All of the JS statements are accessible in a case-insensitive mode.
-		* All of your defined names are case-sensitive.
-			* If the name begins with `#` (delegation command sign), subsequent characters will be case-insensitive.
-	*/
+A DEAL program can express a familiar JavaScript operation using readable instructions:
 
-	const retries = parseInt(prompt("How many retry do you want to do, If it can not fetched?", 2));
-	var days = 100;
-	/*
-		* You can write pure JS everywhere...
-		* You can use a block of pure JS codes between curly-brackets { Pure JS Codes }
-	*/
+```deal
+use deal/core;
 
-	# dailyChack	// Define a label to can do it again
-	/*
-		* All labelled procedures will parse as a function, that will execute immediately too:
-		`
-			(dailyChack = () => {
-				// No returner procedure
-			})()
-		`
-	*/
-
-		FOR EACH row OF FILE(Source) rows,	// A human-readable version of a loop
-		/*
-			* A FILE object will have multiple types of return:
-				* text:		// You can get or set the string of text content in the file
-				* bytes:		// You can get or set the array of bytes in the file
-				* lines:		// You can get or set the array of line strings in the file
-				* rows:		// You can get or set the array of row objects in the file
-				* warps:	// You can get or set the array of vertical line (concatenated cols) strings in the file
-				* cols:		// You can get or set the array of column objects in the file
-				* cells:		// You can get or set a flat array of all cells in the file
-		*/
-		BEGIN
-			## checkItem
-			DO
-				LET trying BE 0;
-				TRY	TO // Start a try block, you can write TRY instead.
-					FETCH "api.market.com/search", { // To make a pure JS object, here you can not write DEAL
-						merchandise:row[5],	// The column index 5, you can use DEAL Selectors in the brackets too
-						type: "json"
-					},
-					THEN // If the fetching promise finished
-						IF FETCHED,	// If the data was received successfully
-							FOR EACH item OF RESPONSE.json()	// Access to the RESPONSE object received in this workspace
-								APPEND destination,		// Store new line, row or object on the selected database or file
-									SELECT	// Collect all the cells of an object into a new object
-										"api.market.com" AS Reference,
-										*,
-										item Main_Price - item Discount AS Price, 	// If there is not a function named the identifier you use, you can chain its properties or functions without using dot('.') too
-										(IF item Count IS 0 "absent" ELSE item.Count) AS Numbers
-										FROM item;
-						ELSE
-							await browser.load("www.market.com/search/merchandise="+row[5]);
-							THEN	// If the loading promise finished
-								IF LOADED, DO	// If the website document is loaded completely
-									FOR EACH item OF ALL ("div table>tbody>tr"),
-										APPEND 	// Store new row or line on the database
-											COLLECT	// Collect all the cells in an object, exactly like { name:value, ... }
-												"www.market.com" AS Reference,
-												NORMALIZE(CONCAT(item[".company-title>*"], " ")) AS Company_Name,	// To normalize, all elements innerTexts of selected children of item using DEAL Selector (in the brackets)
-												(NORMALIZE FIRST SPLIT CONCAT(item[".product-title>*"], " "), /\s+co\s*$/gi) AS Product_Name,		// You can use multiple commands sequentially
-												URLDECODE item["img.product-image"].src AS Image,
-												NUMBER item[7] AS Main_Price,
-												NUMBER(item[":last-child"]) * Main_Price AS Discount,		// You can switch between multiple types of calling commands to solve ambiguities...
-												Main_Price - Discount AS Price,							// You are also able to use the previously named parameters
-												(IF item["td.numbers"] IS 0, "absent", ELSE item["td.numbers"]) AS Numbers,
-												/*
-													* To make your code more human-readable, you can use the following statements too:
-														BE					// Instead of =
-														IS					// Instead of ==
-														IS NOT				// Instead of !=
-														EQUALS				// Instead of ===
-														NOT EQUALS			// Instead of !==
-														AND					// Instead of &&
-														OR					// Instead of ||
-												*/
-												To destination; 	// Some commands like APPEND and PREPEND accept to send unordered arguments too
-									CLICK ANY button#next-page;	// There are able to use css selectors without quotes wrapping
-									/*
-										* There are multiple predefined commands to interact with your browser
-											CLICK		// To click on one or all selected elements
-											HOVER		// To make a mouse hover on one or all selected elements
-											SCROLL		// To scroll on a selected element or specified location
-									*/
-								END;	// Each DO or DOING command needs to indication the ending use an END command
-								ELSE LOG WARNING, `Could not load the page for the ${row[5]} merchandise!`;
-				CATCH DO		// A simple catch block `catch { }` without needing to handle the exception variable
-					LET allow BE trying++ > retries;
-					IF allow, DO
-						LOG WARNING,`Could not fetch data completely for the ${row[5]} merchandise!`;
-						checkItem;
-					END;
-					ELSE LOG ERROR `Could not fetch data completely for the ${row[5]} merchandise!`;
-				END;
-			END;
-		END;
-	IF --days > 0,
-		WAIT (24 * 60 * 60 * 10000)
-		AND	// You can concatenate two procedures or commands using AND/OR commands for more clarity
-		DOING TRY dailyChack CATCH problem, LOG ERROR problem; END()	// To make a callable block then call that
-	ELSE STOP BROWSER;	// To close the current BROWSER of this workspace
-	/*
-		* You can STOP some variables of the workspace too, using:
-			STOP browser			// To close the inputted browser
-			STOP application			// To close the inputted application
-			STOP window			// To close the inputted window
-			STOP tab				// To close the inputted tab
-			STOP document			// To stop loading of the inputted document
-			STOP frame				// To stop loading of the inputted iframe
-	*/
+Consider values is [1, 2, 3];
+For each value of values,
+    print value;
 ```
 
-## Current browser and resource API
+The compiler translates DEAL instructions into deterministic JavaScript. Ordinary JavaScript can appear in the same source whenever it is more suitable:
 
-Browser navigation is performed through the `browser` object, not global `LOAD`/`GO` commands:
-
-```ts
-USE deal/web;
-
-Consider tab be await browser.load "example.com";
-Consider title be await tab.window.document.title;
-await browser.go "example.org";
-await browser.back();
-await browser.reload();
+```javascript
+const values = [1, 2, 3];
+for (const value of values) {
+    console.log(value);
+}
 ```
 
-The shared path provider normalizes incomplete web addresses and resolves local paths. For example, `browser.load("./pages/index.html")` opens a local file, while `await fetch("./data/items.json")` reads it through the host Fetch transport and returns a `Response`.
+## 2. Load libraries
 
-`USE` loads a dependency once per compiler dependency graph; `REUSE` forces it to be processed again. For a remote module, `REUSE` refreshes the downloaded source before processing it:
+Use `USE` to load a library or resource into the compiler:
 
-```ts
-USE deal/core;
-USE deal/web;
-USE ./Libraries/Selectors;
-REUSE ./Libraries/Selectors;
-REUSE https://example.com/modules/selectors.djs;
+```deal
+use deal/core;
+use deal/web;
+use ./Libraries/Selectors;
 ```
 
-See [README.md](README.md#browser-navigation-address-resolution-and-fetch) for the full resolution rules, host configuration, and Fetch limitations.
+A resource can be referenced by a library name, a relative path, an absolute local path, or a remote URL. The shared resource/path provider resolves local paths and normalizes web addresses.
+
+`USE` and `REUSE` have the same resolution rules but different loading behavior:
+
+```deal
+use ./Libraries/Selectors;
+use ./Libraries/Selectors;       // Skipped if already loaded.
+reuse ./Libraries/Selectors;     // Processed again, even if already loaded.
+reuse https://example.com/modules/selectors.djs;
+```
+
+`REUSE` forces the dependency to be processed again. It does not independently force a new download or refresh a remote cache.
+
+## 3. Use the browser object
+
+Browser lifecycle operations belong to `browser`; navigation and history operations belong to the current `browser.tab`:
+
+```javascript
+// Open a new tab.
+const openedTab = await browser.open("example.com");
+
+// Read current-tab properties synchronously.
+const tab = browser.tab;
+const title = tab.window.document.title;
+const url = tab.window.location.href;
+const width = tab.window.innerWidth;
+const online = tab.window.navigator.onLine;
+
+// Replace the current document without adding a history entry.
+await tab.load("example.org/start");
+
+// Navigate normally and add a history entry.
+await tab.navigate("example.org/next");
+await tab.back();
+await tab.forward();
+await tab.reload();
+
+// Replace or add a same-document history entry.
+await tab.locate("example.org/next#section");
+await tab.relocate("example.org/next#details");
+
+// Close the current tab. browser.tab then refers to the tab selected next.
+await browser.tab.close();
+
+// Close the browser instance.
+browser.close();
+```
+
+The API is divided by responsibility:
+
+- `browser.open(url)` opens a new tab.
+- `browser.close()` closes the browser instance.
+- `browser.tab` refers to the current tab.
+- `browser.tab.load(url)` replaces the current document without adding a history entry.
+- `browser.tab.navigate(url)` performs normal navigation and adds a history entry.
+- `browser.tab.back()`, `forward()`, `go(delta)`, and `reload()` control current-tab navigation.
+- `browser.tab.locate(url)` replaces the current history entry; `relocate(url)` adds a same-document history entry.
+- `browser.tab.close()` closes the current tab and updates `browser.tab` to the adjacent tab selected next.
+- `browser.tabs.all` synchronously returns the tabs in the provider's browser window; `browser.tabs.get(id)` retrieves a tab by ID.
+- `browser.activate(tab)` activates a tab and makes it current.
+
+### Synchronous properties and asynchronous operations
+
+Every property beneath `browser.tab` returns a value, not a .NET `Task`. Do not write `await` before property access:
+
+```javascript
+const title = browser.tab.window.document.title;
+const currentUrl = browser.tab.window.location.href;
+const historyLength = browser.tab.window.history.length;
+const isOnline = browser.tab.window.navigator.onLine;
+const screenWidth = browser.tab.window.screen.width;
+const frameCount = browser.tab.windows.length;
+const allTabs = browser.tabs.all;
+```
+
+Primitive values retain their JavaScript types: strings remain strings, numbers remain numbers, and booleans remain booleans. Arrays and objects are returned as CLR arrays and dictionaries that ClearScript exposes to JavaScript. Property reads communicate with Chromium and therefore block the host thread until the value is available; they are synchronous at the JavaScript-facing API boundary, not local in-process DOM reads.
+
+Operations that perform browser actions or communicate asynchronously with Chromium remain awaitable:
+
+```javascript
+await browser.open("example.com");
+await browser.tab.navigate("example.org");
+await browser.tab.window.storage.local.setItem("key", "value");
+const value = await browser.tab.window.storage.local.getItem("key");
+const fileHandles = await browser.tab.open();
+```
+
+## 4. Resolve web addresses and local files
+
+The shared `PathProvider` is used by browser navigation, Fetch, the legacy `Send` request helper, and module/resource resolution.
+
+```javascript
+// Incomplete hostnames are normalized to web addresses.
+await browser.tab.navigate("example.com");
+
+// Relative local paths resolve against PathProvider.BaseDirectory.
+await browser.tab.load("./Samples/Local-Page-Smoke-Test.html");
+
+// Fetch can read a local file through the host transport.
+const response = await fetch("./Samples/Local-Page-Smoke-Test.html");
+const html = await response.text();
+```
+
+Configure the base directory from the .NET host when needed:
+
+```csharp
+engine.PathProvider.BaseDirectory = @"D:\Projects\MyScraper";
+engine.PathProvider.BaseAddress = "https://example.com/app/";
+```
+
+The browser loads local files using Chromium's `file://` support and its normal security restrictions. Host Fetch supports local-file `GET` and `HEAD` requests; local file responses do not use HTTP cookies or request headers.
+
+## 5. Use Fetch
+
+The global `fetch(...)` remains available for HTTP and local-file requests:
+
+```javascript
+const response = await fetch("https://example.com/data", {
+    method: "GET",
+    headers: { "Accept": "application/json" },
+    timeout: 15000
+});
+
+if (!response.ok) {
+    throw new Error("HTTP " + response.status);
+}
+
+const data = await response.json();
+```
+
+The host transport supports HTTP and HTTPS, common request methods, request and response headers, byte-safe request/response bodies, redirects, timeouts, cancellation, and a host cookie jar. It is not a complete browser Fetch implementation: it does not enforce browser CORS policy or implement service workers, browser cache modes, opaque `no-cors` responses, browser referrer policy, integrity checks, keepalive semantics, or streaming response bodies.
+
+The ClearScript V8 host must enable `V8ScriptEngineFlags.EnableTaskPromiseConversion` so .NET `Task` results from asynchronous operations can be awaited in JavaScript.
+
+## 6. Run the samples
+
+The [Samples](Samples/) directory contains compiler stress tests, language examples, browser tests, and a local HTML fixture:
+
+- [Browser object model smoke test](Samples/Browser-Object-Model-Smoke-Test.js) checks synchronous browser properties, tab navigation, and current-tab selection after closing a tab.
+- [Native web smoke test](Samples/Native-Web-Smoke-Test.js) checks Fetch, URL normalization, local files, cancellation, and request-body behavior.
+- [Local page fixture](Samples/Local-Page-Smoke-Test.html) is used by the local browser and Fetch tests.
+- [Simple sample](Samples/SAMPLE%20-%20Simple.md) and [complex sample](Samples/SAMPLE%20-%20Complex.md) demonstrate DEAL programs.
+- The stress-test files exercise DEAL syntax and JavaScript compilation.
+
+Run the browser samples only after the host has initialized the Engine, configured the browser provider, and loaded the required web library.

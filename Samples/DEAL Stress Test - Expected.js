@@ -1,13 +1,13 @@
 /*
    ============================================================
-   MiMFa DEAL.JS Compiler Stress Test
+   MiMFa DEAL.JS compiler stress test
    ============================================================
    This file intentionally contains many DEAL.JS structures.
    It should remain semantically correct after compilation.
  */
 
 // ------------------------------------------------------------
-// Use libraries
+// Load libraries
 // ------------------------------------------------------------
 // Used 5 libraries from "deal/core"
 // Used "deal/data/local.djs" library
@@ -16,7 +16,7 @@
 // Used 14 libraries from "deal"
 // Used 4 libraries from "scraper"
 // ------------------------------------------------------------
-// Reserve and noise words
+// Define reserves and noise words
 // ------------------------------------------------------------
 // Reserved "the" as a noise
 // a noise word
@@ -40,7 +40,7 @@ var testC = {
 function testD(val = " ") {
     return testC.tkey1(testA + val);
 }
-(loadDef = (() => (url != null ? load(url, "utf8") : load("www.mimfa.net"))))();
+(loadDef = (() => (url != null ? browser.tab.load(url) : browser.tab.load("www.mimfa.net"))))();
 var testE = 4;
 list.insert(testE, "www.mimfa.net");// the testE next word will convert to string
 var testF = 5;
@@ -113,17 +113,17 @@ let gradeNormal = grade[--a][--b][c--].trim(" ", "n", "r").toLowerCase();
     }))();
 }))();
 // ------------------------------------------------------------
-// Complex Code
+// Complex code
 // ------------------------------------------------------------
 (scrapeMap = (() => {
     try {
-        open(browser).then((data) => {
+        browser.open("about:blank").then((data) => {
             handle(data);
 
-            for (const url/* The url of the website */ of list) load(url).then((data) => {
+            for (const url/* The URL of the website */ of list) browser.tab.load(url).then((data) => {
                 handle(data);
                 append(all("keys>table>h2", window.document.keys().toArray()), destination);
-                log.success(`The ${url} is laded successfully`);
+                log.success(`The ${url} loaded successfully`);
             }).catch((data) => {
                 handle(data);
                 log.error(`Could not load ${url}`);

@@ -3,13 +3,13 @@
 /* Reserved "every" as the "for" */
 (scrapeMap = (() => {
     try {
-        open(browser).then((data) => {
+        browser.open("about:blank").then((data) => {
             handle(data);
 
-            for (const url/* The url of the website */ of list) LOAD(url).then((data) => {
+            for (const url/* The URL of the website */ of list) browser.tab.load(url).then((data) => {
                 handle(data);
                 append(all("keys>table>h2", window.document.keys().toArray()), destination);
-                log.success(`The ${url} is laded successfully`);
+                log.success(`The ${url} loaded successfully`);
             }).catch((data) => {
                 handle(data);
                 log.error(`Could not load ${url}`);

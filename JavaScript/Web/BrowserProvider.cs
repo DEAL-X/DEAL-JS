@@ -62,15 +62,9 @@ namespace MiMFa.Engine.JavaScript.Web
         // Lower-case aliases form the public JavaScript-facing API.
         public BrowserTabs tabs => Tabs;
         public BrowserTab tab => Tab;
-        public Task<BrowserTab> open(string url) => OpenTabAsync(url);
-        public Task<BrowserTab> load(string url) => OpenTabAsync(url);
-        public Task<string> go(string url) => GoAsync(url);
-        public Task<string> reload() => ReloadAsync();
-        public Task<string> back() => GoBackAsync();
-        public Task<string> forward() => GoForwardAsync();
-        public Task<string> locate(string address) => SetLocationAsync(address, false);
-        public Task<string> relocate(string address) => SetLocationAsync(address, true);
-        public Task<bool> close(BrowserTab tab) => tab == null ? Task.FromResult(false) : CloseAsync(tab.Id);
+        // Browser-level operations. Tab navigation and history belong to BrowserTab.
+        public Task<BrowserTab> open(string url = null) => OpenTabAsync(url ?? "about:blank");
+        public void close() => CloseBrowser();
         public Task<bool> activate(BrowserTab tab) => tab == null ? Task.FromResult(false) : ActivateAsync(tab.Id);
 
         public Process Process;
@@ -104,6 +98,7 @@ namespace MiMFa.Engine.JavaScript.Web
             _tabs.Clear();
             CurrentPage = null;
             _currentTargetId = null;
+            _windowId = null;
             _browserConnection?.Dispose();
             _browserConnection = null;
 
@@ -159,6 +154,37 @@ namespace MiMFa.Engine.JavaScript.Web
             };
             Process = System.Diagnostics.Process.Start(startInfo);
             if (Process == null) throw new InvalidOperationException("Failed to start the browser.");
+        }
+
+        /// <summary>Closes the Chromium browser process while keeping this provider reusable.</summary>
+        public void CloseBrowser()
+        {
+            foreach (var page in _pages.Values) page.Dispose();
+            _pages.Clear();
+            _tabs.Clear();
+            CurrentPage = null;
+            _currentTargetId = null;
+            _windowId = null;
+            if (_browserConnection != null)
+            {
+                try { _browserConnection.SendAsync("Browser.close").GetAwaiter().GetResult(); }
+                catch { /* The browser may already be shutting down. */ }
+                _browserConnection.Dispose();
+                _browserConnection = null;
+            }
+            if (Process != null)
+            {
+                try
+                {
+                    if (!Process.HasExited)
+                    {
+                        Process.CloseMainWindow();
+                        if (!Process.WaitForExit(3000)) Process.Kill();
+                        Process.WaitForExit();
+                    }
+                }
+                finally { Process.Dispose(); Process = null; }
+            }
         }
 
         public void Final() => Dispose();
@@ -466,8 +492,19 @@ namespace MiMFa.Engine.JavaScript.Web
             if (string.IsNullOrWhiteSpace(targetId)) return false;
             await EnsureAvailableAsync(Timeout).ConfigureAwait(false);
             var tabs = await GetTabsAsync().ConfigureAwait(false);
-            if (!tabs.Any(x => x.Id == targetId)) return false;
+            int closingIndex = tabs.Select((tab, index) => new { tab, index }).Where(x => x.tab.Id == targetId).Select(x => x.index).DefaultIfEmpty(-1).First();
+            if (closingIndex < 0) return false;
+            bool wasCurrent = _currentTargetId == targetId || CurrentPage?.TargetId == targetId;
             await EnsureBrowserConnectionAsync().ConfigureAwait(false);
+
+            // Keep the browser window alive when its last tab is closed.
+            string replacementId = null;
+            if (wasCurrent && tabs.Count == 1)
+            {
+                var replacement = await OpenTabAsync("about:blank").ConfigureAwait(false);
+                replacementId = replacement.Id;
+            }
+
             JObject result = await _browserConnection.SendAsync("Target.closeTarget",
                 new JObject { ["targetId"] = targetId }).ConfigureAwait(false);
             bool success = result["success"] == null || result["success"].Value<bool>();
@@ -475,11 +512,40 @@ namespace MiMFa.Engine.JavaScript.Web
             if (_pages.TryRemove(targetId, out var page)) page.Dispose();
             _tabs.TryRemove(targetId, out _);
             if (CurrentPage != null && CurrentPage.TargetId == targetId) CurrentPage = null;
-            if (_currentTargetId == targetId)
+
+            if (wasCurrent)
             {
-                _currentTargetId = null;
+                // Wait until Chromium has removed the closed target before choosing
+                // the tab that will become the provider's new current (visible) tab.
                 var remaining = await GetTabsAsync().ConfigureAwait(false);
-                _currentTargetId = remaining.FirstOrDefault()?.Id;
+                var closeDeadline = DateTime.UtcNow.AddMilliseconds(Timeout > 0 ? Timeout : 60000);
+                while (remaining.Any(item => item.Id == targetId) && DateTime.UtcNow < closeDeadline)
+                {
+                    await Task.Delay(50).ConfigureAwait(false);
+                    remaining = await GetTabsAsync().ConfigureAwait(false);
+                }
+                remaining = remaining.Where(item => item.Id != targetId).ToList();
+
+                if (string.IsNullOrEmpty(replacementId))
+                {
+                    // Chromium selects the tab at the closing position, or the
+                    // previous tab when the closed tab was last in the tab order.
+                    replacementId = remaining.ElementAtOrDefault(Math.Min(closingIndex, remaining.Count - 1))?.Id
+                        ?? remaining.LastOrDefault()?.Id;
+                }
+
+                if (!string.IsNullOrEmpty(replacementId))
+                {
+                    await _browserConnection.SendAsync("Target.activateTarget",
+                        new JObject { ["targetId"] = replacementId }).ConfigureAwait(false);
+                    CurrentPage = await GetPageAsync(replacementId).ConfigureAwait(false);
+                    _currentTargetId = replacementId;
+                }
+                else
+                {
+                    CurrentPage = null;
+                    _currentTargetId = null;
+                }
             }
             return true;
         }

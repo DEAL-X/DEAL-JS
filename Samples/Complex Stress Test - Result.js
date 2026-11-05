@@ -3,14 +3,14 @@
 /* Reserved "every" as the "for" */
 (scrapeMap = (() => {
     try {
-        open(base.Browser).then((argument) => {
+        browser.open("about:blank").then((argument) => {
             handle(argument, true);
 
-            for (const url/* The url of the website */ of list) load(url).then((argument) => {
+            for (const url/* The URL of the website */ of list) browser.tab.load(url).then((argument) => {
                 handle(argument, true);
                 append(all("keys>table>h2", window.document.keys().toArray()), destination);
                 log.success
-                    `The ${url} is laded successfully`;
+                    `The ${url} loaded successfully`;
             }).catch((argument) => {
                 handle(argument, false);
                 log.error;

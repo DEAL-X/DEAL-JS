@@ -18,12 +18,12 @@ DEAL is a **declarative**, **abstract**, **deterministic**, **explicit**, **hybr
 
 DEAL.JS does not attempt to translate unrestricted natural language directly into executable programs. Instead, it defines a constrained grammatical language whose instructions have explicit compilation semantics, while allowing ordinary JavaScript to coexist freely within the same source.
 
-Start DEAL.JS directly using the tutorial sample [here](SAMPLE.md) quickly...
+Start with the [DEAL.JS quick-start sample](SAMPLE.md). More examples and their generated JavaScript are available in the [Samples](Samples/) directory.
 
 Also, you can find more examples and their parsed JS versions [here](Samples/).
 
 
-## Main Principles
+## Main principles
 DEAL does not attempt to turn unrestricted natural language into executable programs. Instead, it defines a constrained and extensible grammatical language whose declarative instructions have deterministic JavaScript translations, while allowing ordinary JavaScript to remain embedded in the same source.
 So DEAL has **five** main principles:
 1. **Declarative** and **Abstract**: Every DEAL instruction expresses computational intent in a form resembling natural language.
@@ -104,7 +104,7 @@ So DEAL has **five** main principles:
 2. **Deterministic** and **Explicit**: Every DEAL instruction has a defined compilation into its destination language.
     * So the previous instructions will compile to the pure JavaScript code below:
     ```js
-    for(const url of list) browser.load(url).then((data) => {
+    for(const url of list) browser.open(url).then((data) => {
         handle(data);
         append(all("h3#title"), destination);
     }).catch((data) => {
@@ -153,7 +153,7 @@ So DEAL has **five** main principles:
     * The generated JavaScript will be the executable truth.
 
 
-## Main Syntax
+## Main syntax
 In the DEAL:
 * All instruction based on four fundamental concepts:
     1. **Structures** define the grammar.
@@ -182,7 +182,7 @@ In the DEAL:
 
 ---
 
-### Structures:
+### Structures
 Instead of supporting all JS structures, DEAL engine contains some special structures.
 * Built into the compiler.
 * They define the grammar and cannot be overridden (IF, FOR, COMMAND, USE, RESERVE, WILL, BEGIN, DOING, etc.)
@@ -266,7 +266,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     while(js-condition) doingTask();
     ```
 
-#### Blockings
+#### Blocks
 * To make a DEAL procedures-block
     ```ts
     BEGIN procedures END;
@@ -305,7 +305,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     }
     ```
 
-#### Asynchronisings
+#### Asynchronous blocks
 * To have a multi-thread program, you can make and manage promises
     ```ts
     WILL procedure THEN procedure; OTHERWISE procedure; ANYWAY procedure;
@@ -349,7 +349,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 
 ---
 
-### Commands:
+### Commands
 All commands represent executable operations.
 * That are case-insensitive.
 * Can be overridden in code.
@@ -365,7 +365,7 @@ All commands represent executable operations.
     * Definition
     * Delegation
 
-#### Action Command
+#### Action commands
 * By action command there will make a simple callable, but with these features:
     * All action commands must be defined globally.
     * They will have a special case-insensitive commandName.
@@ -396,7 +396,7 @@ All commands represent executable operations.
     commandName()
     ```
 
-#### Function Command
+#### Function commands
 * Every function command behaves like a JavaScript function while following several conventions:
     * All function commands must be defined globally.
     * They will have a special case-insensitive commandName.
@@ -443,7 +443,7 @@ All commands represent executable operations.
 * You can combine the methods above, depending on your code situations.
 * All of the ways will convert to a simple function call.
 
-#### Definition Command
+#### Definition commands
 * Every definition command behaves like a JavaScript object while following several conventions:
     * All definition commands must be defined globally.
     * They will have a special case-insensitive commandName.
@@ -472,7 +472,7 @@ All commands represent executable operations.
     commandName.js-propertykey1
     ```
 
-#### Delegation Command
+#### Delegation commands
 * The simplest but valuable type of commands.
 * Every delegation command behaves like a simple JavaScript variable while following several conventions:
     * All delegation commands must be defined globally.
@@ -533,7 +533,7 @@ All commands represent executable operations.
     ```
 ---
 
-### Reserves:
+### Reserves
 DEAL allows optional readability words that improve the natural flow of the language. They will affect only the parser and contain no JavaScript code. These can be one of two groups below:
 * Reserved words: All words will be replaced directly in the script while being preserved in the source code.
     * The user can call any one of the codes below freely.
@@ -553,11 +553,11 @@ DEAL allows optional readability words that improve the natural flow of the lang
         ```
         Or:
         ```ts
-        RESERVE restart AS "browser.load(\"http://mimfa.net\");";
+        RESERVE restart AS "browser.open(\"http://mimfa.net\");";
         // Other procedures
         RESTART
         // With the same meaning
-        browser.load("http://mimfa.net");
+        browser.open("http://mimfa.net");
         ```
     * Parser will replace those specified words before parsing by default.
 * Noise-words: All words are ignored semantically while being preserved in the source code.
@@ -580,15 +580,15 @@ DEAL allows optional readability words that improve the natural flow of the lang
         ```ts
         RESERVE a;
         // Other procedures
-        browser.load("www.example.com")
+        browser.open("www.example.com")
         // With the same meaning
-        browser.load("www.example.com")
+        browser.open("www.example.com")
         ```
     * Parser will skip those specified words before parsing by default.
 
 ---
 
-### Handlers:
+### Handlers
 There are multiple defined variables accessible globally, which users can interact with.
 * A very small set of them defined bult-in (APPLICATION, BROWSER, WINDOW, DOCUMENT, RESPONSE, ITS, ...)
 * Some of the global variables that will update based on the current status are named Handler Identifiers, including:
@@ -680,27 +680,27 @@ The ClearScript host exposes `application.Engine.BrowserProvider` as the DEAL `b
 
 ```js
 const tab = await browser.open("https://example.com/");
-const title = await tab.window.document.title;
-const html = await tab.window.document.html;
+const title = tab.window.document.title;
+const html = tab.window.document.html;
 
-const tabs = await browser.tabs.all;
+const tabs = browser.tabs.all;
 const sameTab = await browser.tabs.get(tab.Id);
 await browser.activate(sameTab);
-await browser.close(tab);
+await browser.tab.close();
 ```
 
 The public object hierarchy is:
 
 - `browser.tab`: the provider's current tab handle.
 - `browser.tabs.current`, `browser.tabs.all`, and `browser.tabs.get(id)`: tab access within this application-level window.
-- `browser.open(url)`, `browser.close(tab)`, and `browser.activate(tab)`: tab lifecycle.
-- `browser.tab.window`: remote JavaScript Window proxy, with `document`, `location`, `history`, `navigator`, `screen`, `console`, `cookies`, and `storage.local/session`.
-- `browser.tab.windows`: child frames/browsing contexts belonging to the tab.
+- `browser.open(url)` opens a new tab; `browser.close()` closes the browser; `browser.activate(tab)` activates a tab.
+- `browser.tab.window`: synchronous Window proxy, with synchronous `document`, `location`, `history`, `navigator`, `screen`, `console`, `cookies`, and `storage.local/session` properties.
+- `browser.tab.windows`: synchronous access to child-frame metadata and frame proxies.
 - `browser.downloads`, `browser.permissions`, and `browser.runtime`: browser-level CDP services.
 
 Every tab returned from `browser.open`, `browser.tabs.get`, or `browser.tabs.all` is a `BrowserTab` with the same interface as `browser.tab`. `browser.tab.window` and its descendants are remote proxies; they do not become local ClearScript DOM objects.
 
-The `browser.tab.open(optionsJson)` and `browser.tab.save(optionsJson)` methods are direct aliases for the native `window.showOpenFilePicker(options)` and `window.showSaveFilePicker(options)` APIs. They do not implement their own dialogs. They return remote file-handle proxies so callers can read metadata/content and create writable streams without attempting to marshal Chromium's native handles into V8. The browser's secure-context, permission, and transient-user-activation requirements still apply.
+The `browser.tab.open(optionsJson)` and `browser.tab.save(optionsJson)` methods are direct aliases for the native `window.showOpenFilePicker(options)` and `window.showSaveFilePicker(options)` APIs. These are asynchronous methods, not properties. They do not implement their own dialogs. They return remote file-handle proxies so callers can read metadata/content and create writable streams without attempting to marshal Chromium's native handles into V8. The browser's secure-context, permission, and transient-user-activation requirements still apply.
 
 ```js
 const handles = await browser.tab.open();
@@ -711,7 +711,7 @@ const output = await browser.tab.save(JSON.stringify({ suggestedName: "result.tx
 await output.writeText("Saved by DEAL.JS");
 ```
 
-CDP does not expose a reliable query for which tab the user has selected manually in the Chrome UI. Accordingly, `browser.tab` tracks the tab most recently opened or activated through this provider; on first discovery it selects the first page target returned by Chromium. Calling `browser.activate(tab)` updates that selection and activates the corresponding tab/window.
+`browser.tab` tracks the tab most recently opened or activated through this provider. When the current tab is closed, the provider activates the adjacent remaining tab (the next tab at the closing position, or the previous tab when the closed tab was last) and updates `browser.tab` to that newly selected tab. The provider cannot detect manual tab switches made directly in the Chrome UI; use `browser.activate(tab)` when changing tabs through the API.
 
 The provider scopes `tabs`, activation, and closing to its application-level `WindowId`. A newly opened tab is created after activating an anchor tab and its resulting window ID is checked. If Chromium creates it in a different window, the operation fails and the stray target is closed rather than silently mixing tabs from different browser objects.
 
@@ -720,105 +720,72 @@ The provider scopes `tabs`, activation, and closing to its application-level `Wi
 
 ## Browser navigation, address resolution, and Fetch
 
-Browser navigation belongs to the `browser` object. The former global browser commands (`load`, `go`, `reload`, `locate`, and `relocate`) are no longer provided. This avoids maintaining two APIs for the same browser operations.
+Browser-level lifecycle and current-tab navigation are deliberately separate:
 
-```js
-// Open a new tab. Incomplete hostnames are normalized automatically.
-const tab = await browser.load("example.com");
+```javascript
+// Open a new tab; close() closes the browser instance.
+const opened = await browser.open("example.com");
 
-// Navigate the current tab.
-await browser.go("https://example.org/docs");
+// The current tab is exposed synchronously.
+const tab = browser.tab;
+const currentUrl = tab.url;
+const title = tab.window.document.title;
 
-// Browser-level navigation and history.
-await browser.reload();
-await browser.back();
-await browser.forward();
+// Replace the current document without adding a history entry.
+await tab.load("example.org/start");
 
-// Update the current URL/history entry without a full navigation.
-await browser.locate("https://example.org/docs#section");
-await browser.relocate("https://example.org/docs#next-section");
+// Navigate normally and create a history entry.
+await tab.navigate("example.org/next");
+await tab.back();
+await tab.forward();
+await tab.reload();
 
-// Tab-level operations and remote document access.
-const current = browser.tab;
-const title = await current.window.document.title;
-await current.reload();
-await browser.close(tab);
+// Update the current history entry or add a same-document entry.
+await tab.locate("https://example.org/next#section");
+await tab.relocate("https://example.org/next#details");
+
+// Close the current tab; browser.tab becomes the tab Chromium selects next.
+await browser.tab.close();
+
+// Close the Chromium browser process.
+browser.close();
 ```
 
-The equivalent DEAL code uses the same object API:
+The API is organized by responsibility:
 
-```ts
-USE deal/web;
+- `browser.open(url)`: open a new tab.
+- `browser.close()`: close the browser instance.
+- `browser.tab`: synchronously access the current tab.
+- `browser.tab.load(url)`: replace the current document without adding a history entry.
+- `browser.tab.navigate(url)`: navigate the current tab and add a history entry.
+- `browser.tab.back()`, `forward()`, `go(delta)`, and `reload()`: current-tab navigation controls.
+- `browser.tab.locate(url)` and `relocate(url)`: replace or add a same-document history entry.
+- `browser.tab.close()`: close the current tab, activate the adjacent remaining tab, and update `browser.tab` to that tab.
+- `browser.tabs.current`, `browser.tabs.all`, and `browser.tabs.get(id)`: access tabs in the browser instance.
+- `browser.activate(tab)`: activate a tab and make it the current tab.
+- `browser.tab.window`: remote Window proxy, with `document`, `location`, `history`, `navigator`, `screen`, `console`, `cookies`, and `storage.local/session`.
 
-Consider tab be await browser.load "example.com";
-Consider title be await tab.window.document.title;
-await browser.go "example.org/docs";
-await browser.reload();
-```
+All properties beneath `browser.tab` are synchronous and return values rather than .NET `Task` objects. For example, `browser.tab.url`, `browser.tab.window.document.title`, `browser.tab.window.location.href`, `browser.tab.window.history.length`, `browser.tab.window.navigator.onLine`, `browser.tab.window.screen.width`, `browser.tab.windows.length`, and `browser.tabs.all` are read without `await`. Primitive values retain their JavaScript types (strings, numbers, and booleans); arrays and objects are returned as CLR arrays and dictionaries that ClearScript can expose to JavaScript. These are remote reads, so the host blocks while Chromium answers. Operations that perform browser actions or use the network—such as `open`, `load`, `navigate`, `back`, `forward`, `reload`, storage methods, and file pickers—remain awaitable.
 
-### Central path provider
+The shared `PathProvider` normalizes incomplete web addresses and resolves local paths. Browser navigation, Fetch, the legacy `Send` request helper, and remote `USE`/`REUSE` module resolution use the same provider. For example, `browser.tab.load("./pages/start.html")` loads a local file in the current tab. Chromium's normal `file://` security restrictions still apply.
 
-The JavaScript Engine owns one shared `PathProvider`, exposed as `application.Engine.PathProvider`. The same instance is assigned to the browser provider and native Fetch transport. Browser navigation, Fetch, the legacy `Send` request helper, and remote `USE`/`REUSE` module resolution pass their addresses through this provider.
-
-Resolution rules:
-
-- `example.com` becomes `http://example.com`.
-- `www.example.com/page` becomes `http://www.example.com/page`.
-- Explicit absolute URLs such as `https://example.com` retain their scheme.
-- Absolute local paths and relative paths become absolute `file://` addresses.
-- Explicit local relative paths (`./...`, `../...`, and `~/...`) are resolved against `PathProvider.BaseDirectory`, which defaults to the host process's current working directory. Common file extensions such as `.txt`, `.json`, `.html`, `.js`, and `.djs` are also recognized as local-file paths.
-- When `PathProvider.BaseAddress` is set to an HTTP or HTTPS URL, other relative references can be resolved against that base address. Hostnames such as `example.com` are still treated as hostnames, not relative URL paths.
-
-The provider can be configured by the host before executing scripts:
-
-```csharp
-engine.PathProvider.BaseDirectory = @"D:\Projects\MyScraper";
-engine.PathProvider.BaseAddress = "https://example.com/catalog/";
-```
-
-For example, `browser.load("./pages/start.html")` opens the local file in Chromium. The browser host must have filesystem access to that path. Local file navigation is subject to Chromium's normal `file://` security restrictions.
-
-### Global Fetch and local files
-
-The global `fetch(...)` remains available because it is an HTTP/data transport API, not a browser-navigation command. Its host transport supports HTTP, HTTPS, and local files. It returns the same DEAL `Response` abstraction for both remote and local reads.
-
-```js
-// Incomplete hostname: resolved to http://example.com/
-const remote = await fetch("example.com");
-const remoteText = await remote.text();
-
-// Relative local file: resolved against PathProvider.BaseDirectory.
-const local = await fetch("./Samples/Local-Page-Smoke-Test.html");
-if (!local.ok) throw new Error("Could not read the local file");
-const html = await local.text();
-
-// Absolute local path is also supported.
-const jsonFile = await fetch("D:/Data/catalog.json");
-const catalog = await jsonFile.json();
-```
-
-Local file Fetch supports `GET` and `HEAD`. It reads the file on the host machine, returns status `200`, the absolute `file://` response URL, a content type inferred from the file extension, and the file bytes. A missing file rejects the Fetch promise. Local file reads do not use HTTP cookies or HTTP request headers.
-
-The host-side Fetch implementation is a compatibility subset, not a complete browser Fetch implementation. HTTP requests support the documented host transport options; browser CORS enforcement, service workers, browser cache modes, streaming response bodies, browser referrer policy, integrity checks, and keepalive semantics are not emulated. The ClearScript V8 host must enable `V8ScriptEngineFlags.EnableTaskPromiseConversion` so .NET `Task` results can be awaited from JavaScript. The engine's `FetchTransport` is initialized lazily by the Fetch bridge.
+The global `fetch(...)` remains available as an HTTP/data transport API. Its host transport supports HTTP, HTTPS, and local files. Local file Fetch supports `GET` and `HEAD`, returns status `200`, an absolute `file://` response URL, an inferred content type, and the file bytes. Missing files reject the Fetch promise. Local file reads do not use HTTP cookies or HTTP request headers.
 
 ### USE and REUSE
 
-`USE` and `REUSE` are compile-time module-loading instructions. They resolve local paths, module names, folders, and remote HTTP(S) addresses through the compiler's resource provider and shared path provider.
+`USE` and `REUSE` are compile-time dependency-loading instructions:
 
-```ts
-USE deal/core;                 // Load the core module.
-USE deal/web;                  // Load the browser and web library.
-USE ./Libraries/Selectors;     // Load a local module or folder.
-USE https://example.com/lib.djs; // Load a remote module.
+```javascript
+USE deal/core;
+USE deal/web;
+USE ./Libraries/Selectors;
 
-USE ./Libraries/Selectors;     // Already-loaded dependency: not evaluated again.
-REUSE ./Libraries/Selectors;   // Force the dependency to be processed again.
-REUSE https://example.com/lib.djs; // Fetch the remote source again, then process it.
+// The dependency is already loaded, so this does not process it again.
+USE ./Libraries/Selectors;
+
+// Force the same dependency to be processed again.
+REUSE ./Libraries/Selectors;
+REUSE https://example.com/lib.djs;
 ```
 
-- `USE` records dependencies and avoids processing a dependency again when it has already been loaded by the current compiler.
-- `REUSE` forces the dependency-processing path even when that dependency is already registered. For remote modules, it also refreshes the cached download before processing.
-- A module path may identify a `.deal`, `.djs`, or `.js` file; when no extension is supplied, the loader checks those extensions. A directory can be loaded as a module folder.
-- Remote module loading requires network access from the host. Remote content is downloaded to the compiler's `download` resource directory before it is processed.
-
-The browser and local Fetch examples are also covered by [Samples/Native-Web-Smoke-Test.js](Samples/Native-Web-Smoke-Test.js), with a local HTML fixture at [Samples/Local-Page-Smoke-Test.html](Samples/Local-Page-Smoke-Test.html).
+Both instructions resolve resources through the compiler's shared path/resource resolution. `USE` skips a dependency already registered by the current compiler; `REUSE` forces that dependency to be processed again. `REUSE` does not imply a separate download or cache-refresh policy for remote modules.

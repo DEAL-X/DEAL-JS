@@ -1,5 +1,6 @@
 using Newtonsoft.Json.Linq;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -78,6 +79,61 @@ namespace MiMFa.Engine.JavaScript.Web
                 return Url;
             }
             finally { _connection.EventReceived -= handler; }
+        }
+
+        /// <summary>Replaces the current document without adding a history entry.</summary>
+        public async Task<string> ReplaceNavigateAsync(string url, int timeoutMilliseconds = 60000)
+        {
+            if (string.IsNullOrWhiteSpace(url)) throw new ArgumentException("A navigation URL is required.", nameof(url));
+            var loaded = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Action<string, JObject> handler = (name, data) =>
+            {
+                if (name == "Page.loadEventFired" || name == "Page.navigatedWithinDocument")
+                    loaded.TrySetResult(true);
+            };
+            _connection.EventReceived += handler;
+            try
+            {
+                await EvaluateAsync("location.replace(" + Newtonsoft.Json.JsonConvert.ToString(url) + ")").ConfigureAwait(false);
+                if (timeoutMilliseconds <= 0) timeoutMilliseconds = 60000;
+                using (var timeout = new CancellationTokenSource(timeoutMilliseconds))
+                using (timeout.Token.Register(() => loaded.TrySetException(new TimeoutException("The page did not finish loading before the navigation timeout."))))
+                    await loaded.Task.ConfigureAwait(false);
+                await RefreshAsync().ConfigureAwait(false);
+                return Url;
+            }
+            finally { _connection.EventReceived -= handler; }
+        }
+
+        internal async Task<object> EvaluateValueAsync(string expression)
+        {
+            var result = await _connection.SendAsync("Runtime.evaluate", new JObject
+            {
+                ["expression"] = expression ?? "undefined",
+                ["awaitPromise"] = true,
+                ["returnByValue"] = true,
+                ["userGesture"] = true
+            }).ConfigureAwait(false);
+            if (result["exceptionDetails"] != null)
+                throw new InvalidOperationException(result["exceptionDetails"].ToString());
+            JObject remote = result["result"] as JObject;
+            if (remote == null) return null;
+            if (remote["subtype"]?.Value<string>() == "error")
+                throw new InvalidOperationException(remote["description"]?.Value<string>() ?? "JavaScript evaluation failed.");
+            return ToClrValue(remote["value"]);
+        }
+
+        internal static object ToClrValue(JToken token)
+        {
+            if (token == null || token.Type == JTokenType.Null || token.Type == JTokenType.Undefined)
+                return null;
+            if (token is JObject obj)
+                return obj.Properties().ToDictionary(property => property.Name, property => ToClrValue(property.Value));
+            if (token is JArray array)
+                return array.Select(ToClrValue).ToArray();
+            if (token is JValue value)
+                return value.Value;
+            return token.ToString();
         }
 
         public async Task<string> EvaluateAsync(string expression)

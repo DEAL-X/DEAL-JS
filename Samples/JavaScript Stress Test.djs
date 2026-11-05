@@ -1,7 +1,7 @@
 use deal;
 /*
  * ============================================================
- * MiMFa DEAL.JS Compiler Stress Test
+ * MiMFa DEAL.JS compiler stress test
  * ============================================================
  * This file intentionally contains many JavaScript structures.
  * It should remain semantically equivalent after compilation.
@@ -137,7 +137,7 @@ const [
     ,
     ,
     third
-] = values;// NOTICE: Do not use multiple separator sequentialy
+] = values;// Notice: Do not use multiple separators sequentially
 
 
 // ------------------------------------------------------------
