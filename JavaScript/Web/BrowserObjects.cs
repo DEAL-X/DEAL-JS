@@ -236,7 +236,7 @@ namespace MiMFa.Engine.JavaScript.Web
     {
         private readonly BrowserTab _tab;
         internal BrowserWindows(BrowserTab tab) { _tab = tab; }
-        public object length => EvaluateValue("window.frames.length");
+        public object length => _tab.Page.EvaluateValueAsync("window.frames.length").GetAwaiter().GetResult();
         public IList<BrowserFrame> all => GetAllAsync().GetAwaiter().GetResult();
         public Task<BrowserFrame> get(int index) => GetAsync(index);
         public Task<string> GetCountAsync() => _tab.Page.EvaluateAsync("window.frames.length");
