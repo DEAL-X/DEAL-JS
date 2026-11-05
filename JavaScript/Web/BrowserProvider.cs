@@ -38,6 +38,7 @@ namespace MiMFa.Engine.JavaScript.Web
             new ConcurrentDictionary<string, BrowserPage>();
         private readonly ConcurrentDictionary<string, BrowserTab> _tabs =
             new ConcurrentDictionary<string, BrowserTab>();
+        public PathProvider PathProvider { get; set; }
         public BrowserTabs Tabs { get; }
         public BrowserDownloads Downloads { get; }
         public BrowserPermissions Permissions { get; }
@@ -62,6 +63,11 @@ namespace MiMFa.Engine.JavaScript.Web
         public BrowserTabs tabs => Tabs;
         public BrowserTab tab => Tab;
         public Task<BrowserTab> open(string url) => OpenTabAsync(url);
+        public Task<BrowserTab> load(string url) => OpenTabAsync(url);
+        public Task<string> go(string url) => GoAsync(url);
+        public Task<string> reload() => ReloadAsync();
+        public Task<string> back() => GoBackAsync();
+        public Task<string> forward() => GoForwardAsync();
         public Task<bool> close(BrowserTab tab) => tab == null ? Task.FromResult(false) : CloseAsync(tab.Id);
         public Task<bool> activate(BrowserTab tab) => tab == null ? Task.FromResult(false) : ActivateAsync(tab.Id);
 
@@ -324,6 +330,27 @@ namespace MiMFa.Engine.JavaScript.Web
             return await LoadAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : Timeout).ConfigureAwait(false);
         }
 
+        public async Task<string> GoAsync(string address, int timeoutMilliseconds = 0)
+        {
+            if (string.IsNullOrWhiteSpace(address)) return await GoBackAsync().ConfigureAwait(false);
+            string url = PathProvider == null ? address : PathProvider.Resolve(address);
+            if (CurrentPage == null)
+            {
+                var page = await LoadAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : Timeout).ConfigureAwait(false);
+                return page.Url;
+            }
+            return await CurrentPage.NavigateAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : Timeout).ConfigureAwait(false);
+        }
+
+        public async Task<string> ReloadAsync()
+        {
+            if (CurrentPage == null) return null;
+            return await CurrentPage.ReloadAsync().ConfigureAwait(false);
+        }
+
+        public Task<string> GoBackAsync() => CurrentPage == null ? Task.FromResult<string>(null) : CurrentPage.GoBackAsync();
+        public Task<string> GoForwardAsync() => CurrentPage == null ? Task.FromResult<string>(null) : CurrentPage.GoForwardAsync();
+
         public BrowserPage Load(string url) => LoadAsync(url).GetAwaiter().GetResult();
 
         public Task<BrowserPage> LoadAsync(string url) => LoadAsync(url, Timeout);
@@ -331,6 +358,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public async Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = -1)
         {
             if (string.IsNullOrWhiteSpace(url)) url = "about:blank";
+            else if (PathProvider != null) url = PathProvider.Resolve(url);
             if (timeoutMilliseconds <= 0) timeoutMilliseconds = Timeout;
             await EnsureAvailableAsync(timeoutMilliseconds).ConfigureAwait(false);
             await EnsureBrowserConnectionAsync().ConfigureAwait(false);
