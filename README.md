@@ -680,10 +680,10 @@ The ClearScript host exposes `application.Engine.BrowserProvider` as the DEAL `b
 
 ```js
 const tab = await browser.open("https://example.com/");
-const title = await tab.window.document.title;
-const html = await tab.window.document.html;
+const title = tab.window.document.title;
+const html = tab.window.document.html;
 
-const tabs = await browser.tabs.all;
+const tabs = browser.tabs.all;
 const sameTab = await browser.tabs.get(tab.Id);
 await browser.activate(sameTab);
 await browser.tab.close();
@@ -693,7 +693,7 @@ The public object hierarchy is:
 
 - `browser.tab`: the provider's current tab handle.
 - `browser.tabs.current`, `browser.tabs.all`, and `browser.tabs.get(id)`: tab access within this application-level window.
-- `browser.open(url)`, `browser.close(tab)`, and `browser.activate(tab)`: tab lifecycle.
+- `browser.open(url)` opens a new tab; `browser.close()` closes the browser; `browser.activate(tab)` activates a tab.
 - `browser.tab.window`: remote JavaScript Window proxy, with `document`, `location`, `history`, `navigator`, `screen`, `console`, `cookies`, and `storage.local/session`.
 - `browser.tab.windows`: child frames/browsing contexts belonging to the tab.
 - `browser.downloads`, `browser.permissions`, and `browser.runtime`: browser-level CDP services.
