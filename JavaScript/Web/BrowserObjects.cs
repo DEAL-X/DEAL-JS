@@ -43,9 +43,9 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> GetNameAsync() => EvaluateAsync("window.name");
         public Task<string> GetInnerWidthAsync() => EvaluateAsync("window.innerWidth");
         public Task<string> GetInnerHeightAsync() => EvaluateAsync("window.innerHeight");
-        public Task<string> Focus() => FocusAsync();
-        public Task<string> ScrollTo(double x, double y) => ScrollToAsync(x, y);
-        public Task<string> Open(string url = null, string target = "_blank") => OpenAsync(url, target);
+        public string Focus() => FocusAsync().GetAwaiter().GetResult();
+        public string ScrollTo(double x, double y) => ScrollToAsync(x, y).GetAwaiter().GetResult();
+        public string Open(string url = null, string target = "_blank") => OpenAsync(url, target).GetAwaiter().GetResult();
         public Task<string> FocusAsync() => EvaluateAsync("(window.focus(), true)");
         public Task<string> ScrollToAsync(double x, double y) => EvaluateAsync("window.scrollTo(" + x.ToString(System.Globalization.CultureInfo.InvariantCulture) + "," + y.ToString(System.Globalization.CultureInfo.InvariantCulture) + ")");
         public Task<string> OpenAsync(string url = null, string target = "_blank") =>
@@ -68,8 +68,8 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> GetHtmlAsync() => EvaluateAsync("document.documentElement ? document.documentElement.outerHTML : null");
         public Task<string> GetTextAsync() => EvaluateAsync("document.documentElement ? document.documentElement.innerText : null");
         public Task<string> GetCookieAsync() => EvaluateAsync("document.cookie");
-        public Task<string> QuerySelector(string selector) => QuerySelectorAsync(selector);
-        public Task<string> QuerySelectorAll(string selector) => QuerySelectorAllAsync(selector);
+        public string QuerySelector(string selector) => QuerySelectorAsync(selector).GetAwaiter().GetResult();
+        public string QuerySelectorAll(string selector) => QuerySelectorAllAsync(selector).GetAwaiter().GetResult();
         public Task<string> QuerySelectorAsync(string selector) =>
             EvaluateAsync("(function(e){return e?e.outerHTML:null})(document.querySelector(" + Json(selector) + "))");
         public Task<string> QuerySelectorAllAsync(string selector) =>
@@ -89,8 +89,8 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> GetPathnameAsync() => EvaluateAsync("location.pathname");
         public Task<string> GetSearchAsync() => EvaluateAsync("location.search");
         public Task<string> GetHashAsync() => EvaluateAsync("location.hash");
-        public Task<string> Assign(string url) => AssignAsync(url);
-        public Task<string> Replace(string url) => ReplaceAsync(url);
+        public string Assign(string url) => AssignAsync(url).GetAwaiter().GetResult();
+        public string Replace(string url) => ReplaceAsync(url).GetAwaiter().GetResult();
         public Task<string> AssignAsync(string url) => EvaluateAsync("(location.assign(" + Json(Tab.ResolveAddress(url)) + "), true)");
         public Task<string> ReplaceAsync(string url) => EvaluateAsync("(location.replace(" + Json(Tab.ResolveAddress(url)) + "), true)");
     }
@@ -102,9 +102,9 @@ namespace MiMFa.Engine.JavaScript.Web
         public object State => EvaluateValue("history.state");
         public Task<string> GetLengthAsync() => EvaluateAsync("history.length");
         public Task<string> GetStateAsync() => EvaluateAsync("JSON.stringify(history.state)");
-        public Task<string> Back() => BackAsync();
-        public Task<string> Forward() => ForwardAsync();
-        public Task<string> Go(int delta) => GoAsync(delta);
+        public string Back() => BackAsync().GetAwaiter().GetResult();
+        public string Forward() => ForwardAsync().GetAwaiter().GetResult();
+        public string Go(int delta) => GoAsync(delta).GetAwaiter().GetResult();
         public Task<string> BackAsync() => Tab.Page.GoBackAsync();
         public Task<string> ForwardAsync() => Tab.Page.GoForwardAsync();
         public Task<string> GoAsync(int delta) => Tab.Page.GoAsync(delta);
@@ -153,11 +153,11 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserConsole : BrowserRemoteObject
     {
         internal BrowserConsole(BrowserTab tab) : base(tab) { }
-        public Task<string> Log(string value) => LogAsync(value);
-        public Task<string> Info(string value) => InfoAsync(value);
-        public Task<string> Warn(string value) => WarnAsync(value);
-        public Task<string> Error(string value) => ErrorAsync(value);
-        public Task<string> Clear() => ClearAsync();
+        public string Log(string value) => LogAsync(value).GetAwaiter().GetResult();
+        public string Info(string value) => InfoAsync(value).GetAwaiter().GetResult();
+        public string Warn(string value) => WarnAsync(value).GetAwaiter().GetResult();
+        public string Error(string value) => ErrorAsync(value).GetAwaiter().GetResult();
+        public string Clear() => ClearAsync().GetAwaiter().GetResult();
         public Task<string> LogAsync(string value) => EvaluateAsync("console.log(" + Json(value) + ")");
         public Task<string> InfoAsync(string value) => EvaluateAsync("console.info(" + Json(value) + ")");
         public Task<string> WarnAsync(string value) => EvaluateAsync("console.warn(" + Json(value) + ")");
@@ -170,9 +170,9 @@ namespace MiMFa.Engine.JavaScript.Web
         internal BrowserCookies(BrowserTab tab) : base(tab) { }
         public object Document => EvaluateValue("document.cookie");
         public object All => BrowserPage.ToClrValue(Tab.Page.SendCommandAsync("Network.getAllCookies").GetAwaiter().GetResult()["cookies"]);
-        public Task<bool> Set(string cookieJson) => SetAsync(cookieJson);
-        public Task<JObject> Delete(string name, string domain = null, string path = null) => DeleteAsync(name, domain, path);
-        public Task<JObject> Clear() => ClearAsync();
+        public bool Set(string cookieJson) => SetAsync(cookieJson).GetAwaiter().GetResult();
+        public JObject Delete(string name, string domain = null, string path = null) => DeleteAsync(name, domain, path).GetAwaiter().GetResult();
+        public JObject Clear() => ClearAsync().GetAwaiter().GetResult();
         public Task<string> GetDocumentCookiesAsync() => EvaluateAsync("document.cookie");
         public Task<string> SetDocumentCookieAsync(string cookie) => EvaluateAsync("(document.cookie=" + Json(cookie) + ")");
         public async Task<string> GetAllAsync()
@@ -209,10 +209,10 @@ namespace MiMFa.Engine.JavaScript.Web
         internal BrowserStorageArea(BrowserTab tab, string storage) : base(tab) { _storage = storage; }
         public object Length => EvaluateValue(_storage + ".length");
         public object Keys => EvaluateValue("Object.keys(" + _storage + ")");
-        public Task<string> GetItem(string key) => GetItemAsync(key);
-        public Task<string> SetItem(string key, string value) => SetItemAsync(key, value);
-        public Task<string> RemoveItem(string key) => RemoveItemAsync(key);
-        public Task<string> Clear() => ClearAsync();
+        public string GetItem(string key) => GetItemAsync(key).GetAwaiter().GetResult();
+        public string SetItem(string key, string value) => SetItemAsync(key, value).GetAwaiter().GetResult();
+        public string RemoveItem(string key) => RemoveItemAsync(key).GetAwaiter().GetResult();
+        public string Clear() => ClearAsync().GetAwaiter().GetResult();
         public Task<string> GetLengthAsync() => EvaluateAsync(_storage + ".length");
         public Task<string> GetItemAsync(string key) => EvaluateAsync(_storage + ".getItem(" + Json(key) + ")");
         public Task<string> SetItemAsync(string key, string value) => EvaluateAsync("(" + _storage + ".setItem(" + Json(key) + "," + Json(value) + "), true)");
@@ -227,7 +227,7 @@ namespace MiMFa.Engine.JavaScript.Web
         internal BrowserWindows(BrowserTab tab) { _tab = tab; }
         public object Length => _tab.Page.EvaluateValueAsync("window.frames.length").GetAwaiter().GetResult();
         public IList<BrowserFrame> All => GetAllAsync().GetAwaiter().GetResult();
-        public Task<BrowserFrame> Get(int index) => GetAsync(index);
+        public BrowserFrame Get(int index) => GetAsync(index).GetAwaiter().GetResult();
         public Task<string> GetCountAsync() => _tab.Page.EvaluateAsync("window.frames.length");
         public Task<string> GetNamesAsync() => _tab.Page.EvaluateAsync("JSON.stringify(Array.from(window.frames).map((w,i)=>({index:i,name:w.name,url:(()=>{try{return w.location.href}catch(e){return null}})()})))");
         public Task<string> GetFrameUrlAsync(int index) => _tab.Page.EvaluateAsync("(function(w){try{return w.location.href}catch(e){return null}})(window.frames[" + index + "])");
