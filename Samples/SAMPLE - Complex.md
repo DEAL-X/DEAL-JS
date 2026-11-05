@@ -1,49 +1,74 @@
-# A Complex Sample
-Consider the following example:
-```ts
-/*
-	This is just a tutorial sample and will not work.
-*/
-use scraper;
+# A complex sample
 
-source = resource openfile();
-destination = resource savefile("results", "comma separated values files (*.csv)|*.csv");
+This example demonstrates a larger workflow with input data, Fetch, browser navigation, and error handling. It is a structural example; configure the source data and destination for your host before running it.
 
-days = 100;
+## DEAL source
 
-# DailyChack:
-For each row of file(source) rows, begin:
-	* Let merchandise be row[5];
-	* Try to fetch "api.market.com/search" with merchandise, then:
-		* If fetched,
-			* For each item of response json(),
-				* Append destination, select
-						"api.market.com" as reference,
-						*,
-						item main_price - item discount as price,
-						(if item count is 0 "absent" else item.count) as numbers
-					From item;
-		* Else load "www.market.com/search/merchandise=" + merchandise, then:
-			* If loaded, do
-				* For each item of all ("div table>tbody>tr"),
-					* Append destination, collect
-							"www.market.com" as reference,
-							normalize(concat(item[".company-title>*"], " ")) as company_name,
-							(normalize first split concat(item[".product-title>*"], " "), /\s+co\s*$/gi) as product_name,
-							urldecode item["img.product-image"].src as image,
-							number item[7] as main_price,
-							number(item[":last-child"]) * main_price as discount,
-							main_price - discount as price,
-							(if item["td.numbers"] is 0, "absent", else item["td.numbers"]) as numbers; 
-				* Click any button#next-page;
-				End;
-			* Else log warning, `Could not load the page for the ${merchandise} merchandise!`;
-	* Catch log error `Could not fetch data completely for the ${merchandise} merchandise!`;
-	* End;
+```deal
+use deal/core;
+use deal/web;
 
-If --days > 0, do:
-	* Wait (24 * 60 * 60 * 10000);
-	* Try DailyChack, catch problem, log error problem;
-	* End;
-Else stop browser;
+Consider products is ["item-1", "item-2", "item-3"];
+Consider destination is [];
+
+For each product of products,
+    Try,
+        Consider response is await fetch("https://example.com/search?q=" + product);
+        If response.ok,
+            Consider data is await response.json();
+            Append destination, data;
+        Else,
+            log warning "The request failed for " + product;
+    Catch problem,
+        log error problem;
+
+Consider tab is await browser.open("https://example.com");
+Consider title is browser.tab.document.title;
+Consider currentUrl is browser.tab.location.href;
+
+await browser.tab.navigate("https://example.org/results");
+await browser.tab.back();
+
+log "Collected " + destination.length + " result sets.";
 ```
+
+## Equivalent JavaScript
+
+```javascript
+const products = ["item-1", "item-2", "item-3"];
+const destination = [];
+
+for (const product of products) {
+    try {
+        const response = await fetch(
+            "https://example.com/search?q=" + encodeURIComponent(product)
+        );
+
+        if (response.ok) {
+            destination.push(await response.json());
+        } else {
+            console.warn("The request failed for " + product);
+        }
+    } catch (problem) {
+        console.error(problem);
+    }
+}
+
+await browser.open("https://example.com");
+const title = browser.tab.document.title;
+const currentUrl = browser.tab.location.href;
+
+await browser.tab.navigate("https://example.org/results");
+await browser.tab.back();
+
+console.log("Collected " + destination.length + " result sets.");
+```
+
+## API notes
+
+- `browser.open(url)` opens a new tab.
+- `browser.tab.load(url)` replaces the current document without adding a history entry.
+- `browser.tab.navigate(url)` performs normal navigation and adds a history entry.
+- `browser.tab.document.title` and `browser.tab.location.href` are synchronous properties.
+- `browser.tab.close()` closes the current tab and updates `browser.tab` to the tab selected next.
+- `USE` skips a dependency that has already been loaded; `REUSE` processes it again.
