@@ -13,9 +13,9 @@ namespace MiMFa.Engine.JavaScript.Web
 
         public BrowserTab Current => _browser.Tab;
         public IList<BrowserTab> All => GetAllAsync().GetAwaiter().GetResult();
-        public Task<BrowserTab> Get(string id) => GetAsync(id);
-        public Task<bool> Close(BrowserTab tab) => CloseAsync(tab);
-        public Task<bool> Activate(BrowserTab tab) => ActivateAsync(tab);
+        public BrowserTab Get(string id) => GetAsync(id).GetAwaiter().GetResult();
+        public bool Close(BrowserTab tab) => CloseAsync(tab).GetAwaiter().GetResult();
+        public bool Activate(BrowserTab tab) => ActivateAsync(tab).GetAwaiter().GetResult();
         public async Task<IList<BrowserTab>> GetAllAsync()
         {
             var infos = await _browser.GetTabsAsync().ConfigureAwait(false);
