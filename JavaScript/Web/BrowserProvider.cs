@@ -43,9 +43,9 @@ namespace MiMFa.Engine.JavaScript.Web
         public BrowserDownloads Downloads { get; }
         public BrowserPermissions Permissions { get; }
         public BrowserRuntime Runtime { get; }
-        public Task<BrowserTab> Open(string url = null) => OpenTabAsync(url ?? "about:blank");
+        public BrowserTab Open(string url = null) => OpenTabAsync(url ?? "about:blank").GetAwaiter().GetResult();
         public void Close() => CloseBrowser();
-        public Task<bool> Activate(BrowserTab tab) => tab == null ? Task.FromResult(false) : ActivateAsync(tab.Id);
+        public bool Activate(BrowserTab tab) => tab == null ? false : ActivateAsync(tab.Id).GetAwaiter().GetResult();
         public BrowserTab Tab
         {
             get
