@@ -18,14 +18,14 @@ namespace MiMFa.Engine.JavaScript.Web
         public string Kind => GetKindAsync().GetAwaiter().GetResult();
         public Task<string> GetNameAsync() => _page.CallFunctionValueAsync(ObjectId, "function(){return this.name}");
         public Task<string> GetKindAsync() => _page.CallFunctionValueAsync(ObjectId, "function(){return this.kind}");
-        public Task<BrowserFileSystemFile> GetFile() => GetFileAsync();
-        public Task<string> Text() => ReadTextAsync();
-        public Task<string> Base64() => ReadBase64Async();
-        public Task<bool> WriteText(string text) => WriteTextAsync(text);
-        public Task<BrowserFileSystemWritable> CreateWritable() => CreateWritableAsync();
-        public Task<string> QueryPermission(string mode = "read") => QueryPermissionAsync(mode);
-        public Task<string> RequestPermission(string mode = "readwrite") => RequestPermissionAsync(mode);
-        public Task<bool> IsSameEntry(BrowserFileSystemFileHandle other) => IsSameEntryAsync(other);
+        public BrowserFileSystemFile GetFile() => GetFileAsync().GetAwaiter().GetResult();
+        public string Text() => ReadTextAsync().GetAwaiter().GetResult();
+        public string Base64() => ReadBase64Async().GetAwaiter().GetResult();
+        public bool WriteText(string text) => WriteTextAsync(text).GetAwaiter().GetResult();
+        public BrowserFileSystemWritable CreateWritable() => CreateWritableAsync().GetAwaiter().GetResult();
+        public string QueryPermission(string mode = "read") => QueryPermissionAsync(mode).GetAwaiter().GetResult();
+        public string RequestPermission(string mode = "readwrite") => RequestPermissionAsync(mode).GetAwaiter().GetResult();
+        public bool IsSameEntry(BrowserFileSystemFileHandle other) => IsSameEntryAsync(other).GetAwaiter().GetResult();
         public Task<BrowserFileSystemFile> GetFileAsync() =>
             _page.CallFunctionObjectAsync(ObjectId, "async function(){return await this.getFile()}")
                 .ContinueWith(t => new BrowserFileSystemFile(_page, t.GetAwaiter().GetResult()), TaskScheduler.Default);
@@ -78,10 +78,10 @@ namespace MiMFa.Engine.JavaScript.Web
             ObjectId = objectId ?? throw new ArgumentNullException(nameof(objectId));
         }
         internal string ObjectId { get; }
-        public Task<bool> WriteText(string text) => WriteTextAsync(text);
-        public Task<bool> WriteBase64(string base64) => WriteBase64Async(base64);
-        public Task<bool> Close() => CloseAsync();
-        public Task<bool> Abort() => AbortAsync();
+        public bool WriteText(string text) => WriteTextAsync(text).GetAwaiter().GetResult();
+        public bool WriteBase64(string base64) => WriteBase64Async(base64).GetAwaiter().GetResult();
+        public bool Close() => CloseAsync().GetAwaiter().GetResult();
+        public bool Abort() => AbortAsync().GetAwaiter().GetResult();
         public async Task<bool> WriteTextAsync(string text)
         {
             string result = await _page.CallFunctionValueAsync(ObjectId,
