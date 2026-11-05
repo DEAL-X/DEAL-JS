@@ -40,7 +40,7 @@ async function testDealBrowserNavigate() {
 }
 
 async function testDealFetchLocalFile() {
-    const response = await fetch("./Samples/Local-Page-Smoke-Test.html");
+    const response = await fetch("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
     if (!response.ok)
         throw new Error("Local file fetch failed: " + response.status);
 
@@ -52,7 +52,7 @@ async function testDealFetchLocalFile() {
 }
 
 async function testDealBrowserLocalFile() {
-    browser.Tab.Load("./Samples/Local-Page-Smoke-Test.html");
+    browser.Tab.Load("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
     const title = browser.Tab .Window .Document.Title;
 
     if (title !== "DEAL local path test")
