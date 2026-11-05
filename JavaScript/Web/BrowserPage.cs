@@ -122,7 +122,7 @@ namespace MiMFa.Engine.JavaScript.Web
             return ToClrValue(remote["value"]);
         }
 
-        private static object ToClrValue(JToken token)
+        internal static object ToClrValue(JToken token)
         {
             if (token == null || token.Type == JTokenType.Null || token.Type == JTokenType.Undefined)
                 return null;
