@@ -27,17 +27,17 @@ namespace MiMFa.Engine.JavaScript.Web
         public BrowserWindows Windows { get; }
         // Navigation and history operations are scoped to the current tab.
 
-        public Task<string> Load(string address) => LoadAsync(address);
-        public Task<string> Navigate(string address) => NavigateAsync(address);
-        public Task<string> Reload() => ReloadAsync();
-        public Task<string> Back() => Page.GoBackAsync();
-        public Task<string> Forward() => Page.GoForwardAsync();
-        public Task<string> Go(int delta) => Page.GoAsync(delta);
-        public Task<string> Locate(string address) => SetLocationAsync(address, false);
-        public Task<string> Relocate(string address) => SetLocationAsync(address, true);
-        public Task<bool> Close() => CloseAsync();
-        public Task<IList<BrowserFileSystemFileHandle>> Open(string optionsJson = null) => OpenAsync(optionsJson);
-        public Task<BrowserFileSystemFileHandle> Save(string optionsJson = null) => SaveAsync(optionsJson);
+        public string Load(string address) => LoadAsync(address).GetAwaiter().GetResult();
+        public string Navigate(string address) => NavigateAsync(address).GetAwaiter().GetResult();
+        public string Reload() => ReloadAsync().GetAwaiter().GetResult();
+        public string Back() => Page.GoBackAsync().GetAwaiter().GetResult();
+        public string Forward() => Page.GoForwardAsync().GetAwaiter().GetResult();
+        public string Go(int delta) => Page.GoAsync(delta).GetAwaiter().GetResult();
+        public string Locate(string address) => SetLocationAsync(address, false).GetAwaiter().GetResult();
+        public string Relocate(string address) => SetLocationAsync(address, true).GetAwaiter().GetResult();
+        public bool Close() => CloseAsync().GetAwaiter().GetResult();
+        public IList<BrowserFileSystemFileHandle> Open(string optionsJson = null) => OpenAsync(optionsJson).GetAwaiter().GetResult();
+        public BrowserFileSystemFileHandle Save(string optionsJson = null) => SaveAsync(optionsJson).GetAwaiter().GetResult();
 
         public Task<string> LoadAsync(string address) => Page.ReplaceNavigateAsync(ResolveAddress(address));
         public Task<string> NavigateAsync(string address) => Page.NavigateAsync(ResolveAddress(address));
