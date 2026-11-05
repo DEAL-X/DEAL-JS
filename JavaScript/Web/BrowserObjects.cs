@@ -175,7 +175,7 @@ namespace MiMFa.Engine.JavaScript.Web
     {
         internal BrowserCookies(BrowserTab tab) : base(tab) { }
         public object document => EvaluateValue("document.cookie");
-        public object all => EvaluateValue("JSON.parse(JSON.stringify(document.cookie.split(';').filter(Boolean)))");
+        public object all => BrowserPage.ToClrValue(Tab.Page.SendCommandAsync("Network.getAllCookies").GetAwaiter().GetResult()["cookies"]);
         public Task<bool> set(string cookieJson) => SetAsync(cookieJson);
         public Task<JObject> delete(string name, string domain = null, string path = null) => DeleteAsync(name, domain, path);
         public Task<JObject> clear() => ClearAsync();
