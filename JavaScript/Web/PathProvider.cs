@@ -47,6 +47,20 @@ namespace MiMFa.Engine.JavaScript.Web
             return new Uri(Path.GetFullPath(localPath)).AbsoluteUri;
         }
 
+        public string ResolveResource(string address)
+        {
+            if (string.IsNullOrWhiteSpace(address))
+                throw new ArgumentException("A resource address is required.", nameof(address));
+            address = Environment.ExpandEnvironmentVariables(address.Trim());
+            if (HasExplicitScheme(address) || LooksLikeWebAddress(address))
+                return Resolve(address);
+            if (address.StartsWith("~/", StringComparison.Ordinal) || address.StartsWith(@"~\\", StringComparison.Ordinal))
+                address = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), address.Substring(2));
+            if (!Path.IsPathRooted(address))
+                address = Path.Combine(string.IsNullOrWhiteSpace(BaseDirectory) ? Environment.CurrentDirectory : BaseDirectory, address);
+            return new Uri(Path.GetFullPath(address)).AbsoluteUri;
+        }
+
         public Uri ResolveUri(string address) => new Uri(Resolve(address), UriKind.Absolute);
 
         public string ResolveLocalPath(string address)
