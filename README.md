@@ -18,7 +18,7 @@ DEAL is a **declarative**, **abstract**, **deterministic**, **explicit**, **hybr
 
 DEAL.JS does not attempt to translate unrestricted natural language directly into executable programs. Instead, it defines a constrained grammatical language whose instructions have explicit compilation semantics, while allowing ordinary JavaScript to coexist freely within the same source.
 
-Start with the [DEAL.JS quick-start sample](SAMPLE.md). More examples and their generated JavaScript are available in the [Samples](Samples/) directory.
+Start with the [DEAL.JS quick-start guide](SAMPLE.md). The [samples](Samples/) are organized into [tests](Samples/tests/), [tutorials](Samples/tutorials/), and [practicals](Samples/practicals/). DEAL source is the primary format throughout; JavaScript snapshots are retained where useful as compiler expectations or results.
 
 
 ## Main principles
@@ -745,7 +745,7 @@ When `browser.Tab.Close()` closes the current tab, the provider waits for the cl
 
 The provider scopes tab discovery, activation, and closing to its application-level `WindowId`. A newly opened tab is created after activating an anchor tab, and its resulting window ID is checked. If Chromium creates it in a different window, the operation fails and the stray target is closed rather than mixing tabs from different browser objects.
 
-The native browser tests are in [Samples/Browser-Object-Model-Smoke-Test.js](Samples/Browser-Object-Model-Smoke-Test.js). The Fetch and local-file tests are in [Samples/Native-Web-Smoke-Test.js](Samples/Native-Web-Smoke-Test.js).
+The native browser tests are in [tests/Browser-Object-Model-Smoke-Test.js](Samples/tests/Browser-Object-Model-Smoke-Test.js). The Fetch and local-file tests are in [tests/Native-Web-Smoke-Test.js](Samples/tests/Native-Web-Smoke-Test.js). The DEAL compiler stress tests, expected JavaScript, and result snapshots are grouped in [tests/](Samples/tests/).
 
 #### Address resolution and local files
 
@@ -785,3 +785,14 @@ Reuse https://example.com/lib.djs;
 ```
 
 Both instructions resolve resources through the compiler's shared path and resource resolution. `USE` skips a dependency already registered by the current compiler; `REUSE` forces that dependency to be processed again. `REUSE` does not imply a separate download or cache-refresh policy for remote modules.
+
+
+## DEAL.JS samples
+
+The sample collection is divided by intent rather than keeping unrelated files together:
+
+- **[Tests](Samples/tests/)** contains DEAL and JavaScript compiler stress inputs, their expected JavaScript and captured result files, plus browser and Fetch smoke tests.
+- **[Tutorials](Samples/tutorials/)** contains progressive, commented DEAL.JS examples intended to teach the language and its browser integration.
+- **[Practicals](Samples/practicals/)** contains larger, adaptable examples for real workflows, including browser-based scraping and batch collection.
+
+For the recommended learning path, begin with [01 - Getting Started](Samples/tutorials/01-Getting-Started.djs), continue with [02 - Browser and Fetch](Samples/tutorials/02-Browser-and-Fetch.djs), and then study [Web Scraper](Samples/practicals/Web-Scraper.djs).
