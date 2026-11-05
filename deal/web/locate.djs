@@ -1,41 +1,6 @@
-command #locate:start|function(url = null) {
-    if (url == null && typeof location !== "undefined") url = location.href;
-    if (typeof NavigationHistoryEntry !== "undefined" && url instanceof NavigationHistoryEntry)
-        url = url.url;
-    if (!url) throw new Error("A URL is required to update the current page location.");
-
-    if (typeof window !== "undefined" && window.history)
-        return window.history.replaceState(null, null, url);
-
-    if (typeof application !== "undefined" &&
-        application.Engine &&
-        application.Engine.BrowserProvider &&
-        application.Engine.BrowserProvider.CurrentPage) {
-        return application.Engine.BrowserProvider.CurrentPage.EvaluateAsync(
-            "history.replaceState(null, null, " + JSON.stringify(url) + "); location.href"
-        );
-    }
-
-    throw new Error("Updating the current page location requires a browser page or an active DEAL CDP page.");
-}
-
-command #relocate:start|function(url = null) {
-    if (url == null && typeof location !== "undefined") url = location.href;
-    if (typeof NavigationHistoryEntry !== "undefined" && url instanceof NavigationHistoryEntry)
-        url = url.url;
-    if (!url) throw new Error("A URL is required to add a page history entry.");
-
-    if (typeof window !== "undefined" && window.history)
-        return window.history.pushState(null, null, url);
-
-    if (typeof application !== "undefined" &&
-        application.Engine &&
-        application.Engine.BrowserProvider &&
-        application.Engine.BrowserProvider.CurrentPage) {
-        return application.Engine.BrowserProvider.CurrentPage.EvaluateAsync(
-            "history.pushState(null, null, " + JSON.stringify(url) + "); location.href"
-        );
-    }
-
-    throw new Error("Updating the current page history requires a browser page or an active DEAL CDP page.");
-}
+// Browser navigation is exposed by the browser object from deal/web/.djs.
+// Use browser.load(address) to open a new tab.
+// Use browser.go(address) to navigate the current tab.
+// Use browser.reload(), browser.back(), browser.forward(), browser.locate(address),
+// and browser.relocate(address) for navigation and history operations.
+// These files intentionally define no global browser-navigation commands.

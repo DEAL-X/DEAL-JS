@@ -281,9 +281,13 @@ namespace MiMFa.Engine.DEAL.JS
         protected virtual int UsePath(string path, bool force = false)
         {
             if (string.IsNullOrWhiteSpace(path)) return 0;
-            if (Regex.IsMatch(path, "^\\w+:\\/\\/.+$", RegexOptions.CultureInvariant)) return UseUrl(path, force);
             var compiler = this.Engine as MiMFa.Engine.Engine;
             if (compiler == null) return 0;
+            var resolved = (compiler as Engine)?.PathProvider?.ResolveResource(path) ?? path;
+            if (Uri.TryCreate(resolved, UriKind.Absolute, out var address) &&
+                (address.Scheme == Uri.UriSchemeHttp || address.Scheme == Uri.UriSchemeHttps))
+                return UseUrl(resolved, force);
+            if (address != null && address.IsFile) path = address.LocalPath;
             var val = compiler?.ResourceProvider?.Resolve(path);
             if (!string.IsNullOrEmpty(val) && val.EndsWith("\\")) return UseFolder(val, force);
             int num;
@@ -293,11 +297,17 @@ namespace MiMFa.Engine.DEAL.JS
         {
             if (!Engine.FetchTransport.IsAlive) Engine.FetchTransport.Initial();
             Engine.ResourceProvider.CreateDirectory(".\\download");
-            var path = Engine.ResourceProvider.Resolve(".\\download\\"+url.GetHashCode()+(Regex.Match(url, "\\.[a-z]$").Value??".djs"));
-            if(Engine.ResourceProvider.Exists(path)) return UsePath(path, force);
-            var resp = Engine.FetchTransport.Get(url);
-            if(!resp.Value<bool>("ok")) return 0;
-            Engine.ResourceProvider.SetFileContents(path, resp.Value<string>("data"));
+            var resolvedUrl = Engine.PathProvider?.Resolve(url) ?? url;
+            var uri = new Uri(resolvedUrl, UriKind.Absolute);
+            var extension = System.IO.Path.GetExtension(uri.AbsolutePath);
+            if (!Regex.IsMatch(extension, @"^\\.(deal|djs|js)$", RegexOptions.IgnoreCase)) extension = ".djs";
+            var path = Engine.ResourceProvider.Resolve(".\\download\\" + resolvedUrl.GetHashCode() + extension);
+            if (Engine.ResourceProvider.Exists(path) && !force) return UsePath(path, force);
+            var resp = Engine.FetchTransport.Get(resolvedUrl);
+            if (!resp.Value<bool>("ok")) return 0;
+            var encoded = resp.Value<string>("data") ?? "";
+            var content = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+            Engine.ResourceProvider.SetFileContents(path, content);
             return UsePath(path, force);
         }
         protected virtual int UseFolder(string folder, bool force = false)

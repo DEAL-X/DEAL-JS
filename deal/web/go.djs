@@ -1,24 +1,6 @@
-command #go:start|function(url = null) {
-    if (url == null) return go;
-    if (typeof NavigationHistoryEntry !== "undefined" && url instanceof NavigationHistoryEntry)
-        url = url.url;
-
-    if (url == null && typeof location !== "undefined")
-        url = location.href;
-
-    // Use the current browser tab when running in a real browser page.
-    if (typeof window !== "undefined" && typeof window.open === "function")
-        return window.open(url, "_blank");
-
-    // ClearScript has no window object. Use the host's Chromium CDP provider
-    // to create a page instead of attempting to access browser globals.
-    if (typeof application !== "undefined" &&
-        application.Engine &&
-        application.Engine.BrowserProvider) {
-        const browser = application.Engine.BrowserProvider;
-        if (!browser.IsAlive) browser.Initial();
-        return browser.LoadAsync(url || "about:blank");
-    }
-
-    throw new Error("Opening a page requires window.open or the DEAL BrowserProvider.");
-}
+// Browser navigation is exposed by the browser object from deal/web/.djs.
+// Use browser.load(address) to open a new tab.
+// Use browser.go(address) to navigate the current tab.
+// Use browser.reload(), browser.back(), browser.forward(), browser.locate(address),
+// and browser.relocate(address) for navigation and history operations.
+// These files intentionally define no global browser-navigation commands.

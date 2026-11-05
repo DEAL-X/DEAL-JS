@@ -1,17 +1,43 @@
 // Run after Environment has initialized the Engine and loaded deal/web/fetch.js.
 async function testDealFetch() {
-    const response = await fetch("https://example.com/");
+    const response = await fetch("example.com");
     if (!(response instanceof Response)) throw new Error("fetch did not return Response");
     if (typeof response.status !== "number") throw new Error("Response.status is missing");
+    if (response.url.indexOf("http://example.com") !== 0)
+        throw new Error("The path provider did not normalize the incomplete hostname.");
     const text = await response.text();
     if (typeof text !== "string") throw new Error("Response.text() did not return a string");
     return { status: response.status, ok: response.ok, length: text.length, url: response.url };
 }
 
-async function testDealLoad() {
-    const page = await load("https://example.com/");
-    const title = await page.EvaluateAsync("document.title");
-    return { url: page.Url, title: title };
+async function testDealBrowserLoad() {
+    const tab = await browser.load("example.com");
+    const title = await tab.window.document.title;
+    return { url: tab.Url, title: title, tabId: tab.Id };
+}
+
+async function testDealBrowserGo() {
+    const url = await browser.go("example.com");
+    if (!url || url.indexOf("example.com") < 0)
+        throw new Error("browser.go() did not navigate the current tab.");
+    return { url: url };
+}
+
+async function testDealFetchLocalFile() {
+    const response = await fetch("./Samples/Local-Page-Smoke-Test.html");
+    if (!response.ok) throw new Error("Local file fetch failed: " + response.status);
+    const html = await response.text();
+    if (html.indexOf("DEAL local path test") < 0)
+        throw new Error("The local file contents were not returned.");
+    return { url: response.url, status: response.status, length: html.length };
+}
+
+async function testDealBrowserLocalFile() {
+    const tab = await browser.load("./Samples/Local-Page-Smoke-Test.html");
+    const title = await tab.window.document.title;
+    if (title !== "DEAL local path test")
+        throw new Error("Chromium did not load the local file.");
+    return { url: tab.Url, title: title };
 }
 
 

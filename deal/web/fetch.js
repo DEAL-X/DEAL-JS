@@ -226,11 +226,6 @@ class Response extends Body {
 // ------------------------------------------------------------
 // Native transport bridge
 // ------------------------------------------------------------
-function createNativeHeaders(headers) {
-    if (typeof Core === "undefined" || !Core.Newtonsoft || !Core.Newtonsoft.Json || !Core.Newtonsoft.Json.Linq)
-        throw new Error("The ClearScript Newtonsoft host types are not available.");
-    return Core.Newtonsoft.Json.Linq.JObject.Parse(JSON.stringify(Object.fromEntries(headers.entries())));
-}
 function getTransport() {
     const transport = typeof application !== "undefined" && application.Engine && application.Engine.FetchTransport;
     if (!transport) throw new Error("The DEAL FetchTransport host is not available.");
@@ -266,12 +261,15 @@ function fetch(input, init) {
         transport = getTransport();
         id = "fetch-" + Date.now() + "-" + Math.random().toString(36).slice(2);
         const bodyBase64 = request._bytes.length ? Make.base64FromBytes(request._bytes) : null;
-        const headers = createNativeHeaders(request.headers);
+        const headersJson = JSON.stringify(Object.fromEntries(request.headers.entries()));
         if (request.signal && typeof request.signal.addEventListener === "function") {
             abortListener = () => transport.Abort(id);
             request.signal.addEventListener("abort", abortListener, { once: true });
         }
-        operation = transport.FetchAsync(request.method, request.url, null, null, request.timeout, headers, id, bodyBase64, request.credentials);
+        const pathProvider = typeof application !== "undefined" && application.Engine && application.Engine.PathProvider;
+        const baseAddress = typeof location !== "undefined" ? location.href : null;
+        const resolvedUrl = pathProvider ? pathProvider.Resolve(request.url, baseAddress) : request.url;
+        operation = transport.FetchJsonAsync(request.method, resolvedUrl, null, null, request.timeout, headersJson, id, bodyBase64, request.credentials);
     } catch (error) {
         if (abortListener) request.signal.removeEventListener("abort", abortListener);
         return Promise.reject(error);

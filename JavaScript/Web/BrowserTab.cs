@@ -18,6 +18,7 @@ namespace MiMFa.Engine.JavaScript.Web
         }
 
         internal BrowserPage Page { get; }
+        internal string ResolveAddress(string address) => _browser.PathProvider == null ? address : _browser.PathProvider.Resolve(address, Page.Url);
         public string Id => Page.TargetId;
         public string Url => Page.Url;
         public string Title => Page.Title;
@@ -26,6 +27,9 @@ namespace MiMFa.Engine.JavaScript.Web
         public BrowserWindow window => Window;
         public BrowserWindows windows => Windows;
         public Task<string> reload() => ReloadAsync();
+        public Task<string> go(int delta) => Page.GoAsync(delta);
+        public Task<string> back() => Page.GoBackAsync();
+        public Task<string> forward() => Page.GoForwardAsync();
         public Task<bool> close() => CloseAsync();
 
         public Task<string> ReloadAsync() => Page.ReloadAsync();

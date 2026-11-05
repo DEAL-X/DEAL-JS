@@ -56,7 +56,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> FocusAsync() => EvaluateAsync("(window.focus(), true)");
         public Task<string> ScrollToAsync(double x, double y) => EvaluateAsync("window.scrollTo(" + x.ToString(System.Globalization.CultureInfo.InvariantCulture) + "," + y.ToString(System.Globalization.CultureInfo.InvariantCulture) + ")");
         public Task<string> OpenAsync(string url = null, string target = "_blank") =>
-            EvaluateAsync("window.open(" + Json(url ?? "about:blank") + "," + Json(target) + ") !== null");
+            EvaluateAsync("window.open(" + Json(url == null ? "about:blank" : Tab.ResolveAddress(url)) + "," + Json(target) + ") !== null");
     }
 
     public sealed class BrowserDocument : BrowserRemoteObject
@@ -94,8 +94,8 @@ namespace MiMFa.Engine.JavaScript.Web
         public Task<string> GetPathnameAsync() => EvaluateAsync("location.pathname");
         public Task<string> GetSearchAsync() => EvaluateAsync("location.search");
         public Task<string> GetHashAsync() => EvaluateAsync("location.hash");
-        public Task<string> AssignAsync(string url) => EvaluateAsync("(location.assign(" + Json(url) + "), true)");
-        public Task<string> ReplaceAsync(string url) => EvaluateAsync("(location.replace(" + Json(url) + "), true)");
+        public Task<string> AssignAsync(string url) => EvaluateAsync("(location.assign(" + Json(Tab.ResolveAddress(url)) + "), true)");
+        public Task<string> ReplaceAsync(string url) => EvaluateAsync("(location.replace(" + Json(Tab.ResolveAddress(url)) + "), true)");
         public Task<string> assign(string url) => AssignAsync(url);
         public Task<string> replace(string url) => ReplaceAsync(url);
     }
@@ -117,9 +117,9 @@ namespace MiMFa.Engine.JavaScript.Web
             string.IsNullOrWhiteSpace(jsonState) ? "null" :
             JToken.Parse(jsonState).ToString(Newtonsoft.Json.Formatting.None);
         public Task<string> PushStateAsync(string jsonState, string title = "", string url = null) =>
-            EvaluateAsync("(history.pushState(" + StateJson(jsonState) + "," + Json(title) + (url == null ? "" : "," + Json(url)) + "), true)");
+            EvaluateAsync("(history.pushState(" + StateJson(jsonState) + "," + Json(title) + (url == null ? "" : "," + Json(Tab.ResolveAddress(url))) + "), true)");
         public Task<string> ReplaceStateAsync(string jsonState, string title = "", string url = null) =>
-            EvaluateAsync("(history.replaceState(" + StateJson(jsonState) + "," + Json(title) + (url == null ? "" : "," + Json(url)) + "), true)");
+            EvaluateAsync("(history.replaceState(" + StateJson(jsonState) + "," + Json(title) + (url == null ? "" : "," + Json(Tab.ResolveAddress(url))) + "), true)");
     }
 
     public sealed class BrowserNavigator : BrowserRemoteObject
