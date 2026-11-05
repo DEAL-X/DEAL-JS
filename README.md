@@ -729,7 +729,7 @@ const opened = await browser.open("example.com");
 // The current tab is exposed synchronously.
 const tab = browser.tab;
 const currentUrl = tab.url;
-const title = tab.document.title;
+const title = tab.window.document.title;
 
 // Replace the current document without adding a history entry.
 await tab.load("example.org/start");
@@ -765,7 +765,7 @@ The API is organized by responsibility:
 - `browser.activate(tab)`: activate a tab and make it the current tab.
 - `browser.tab.window`: remote Window proxy, with `document`, `location`, `history`, `navigator`, `screen`, `console`, `cookies`, and `storage.local/session`.
 
-All properties beneath `browser.tab` are synchronous and return values rather than .NET `Task` objects. For example, `browser.tab.url`, `browser.tab.document.title`, `browser.tab.location.href`, `browser.tab.history.length`, `browser.tab.navigator.onLine`, `browser.tab.screen.width`, `browser.tab.windows.length`, and `browser.tabs.all` are read without `await`. Primitive values retain their JavaScript types (strings, numbers, and booleans); arrays and objects are returned as CLR arrays and dictionaries that ClearScript can expose to JavaScript. These are remote reads, so the host blocks while Chromium answers. Operations that perform browser actions or use the network—such as `open`, `load`, `navigate`, `back`, `forward`, `reload`, storage methods, and file pickers—remain awaitable.
+All properties beneath `browser.tab` are synchronous and return values rather than .NET `Task` objects. For example, `browser.tab.url`, `browser.tab.window.document.title`, `browser.tab.window.location.href`, `browser.tab.window.history.length`, `browser.tab.window.navigator.onLine`, `browser.tab.window.screen.width`, `browser.tab.windows.length`, and `browser.tabs.all` are read without `await`. Primitive values retain their JavaScript types (strings, numbers, and booleans); arrays and objects are returned as CLR arrays and dictionaries that ClearScript can expose to JavaScript. These are remote reads, so the host blocks while Chromium answers. Operations that perform browser actions or use the network—such as `open`, `load`, `navigate`, `back`, `forward`, `reload`, storage methods, and file pickers—remain awaitable.
 
 The shared `PathProvider` normalizes incomplete web addresses and resolves local paths. Browser navigation, Fetch, the legacy `Send` request helper, and remote `USE`/`REUSE` module resolution use the same provider. For example, `browser.tab.load("./pages/start.html")` loads a local file in the current tab. Chromium's normal `file://` security restrictions still apply.
 
