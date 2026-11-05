@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -29,6 +30,7 @@ namespace MiMFa.Engine.JavaScript.Web
             _requests = new ConcurrentDictionary<string, CancellationTokenSource>();
 
         public Encoding Encoding = Encoding.UTF8;
+        public PathProvider PathProvider { get; set; }
 
         public bool IsAlive { get; private set; } = false;
 
@@ -122,13 +124,13 @@ namespace MiMFa.Engine.JavaScript.Web
             if (string.IsNullOrWhiteSpace(url))
                 throw new ArgumentException("The request URL is missing.");
 
-            if (!Uri.TryCreate(url, UriKind.Absolute, out var requestUri) ||
-                (requestUri.Scheme != Uri.UriSchemeHttp &&
-                 requestUri.Scheme != Uri.UriSchemeHttps))
-            {
-                throw new ArgumentException(
-                    "Only absolute HTTP and HTTPS URLs are supported.");
-            }
+            if (PathProvider != null) url = PathProvider.Resolve(url);
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var requestUri))
+                throw new ArgumentException("The request address could not be resolved to an absolute URL.");
+            if (requestUri.IsFile)
+                return await ReadLocalFileAsync(method, requestUri, id).ConfigureAwait(false);
+            if (requestUri.Scheme != Uri.UriSchemeHttp && requestUri.Scheme != Uri.UriSchemeHttps)
+                throw new ArgumentException("Only HTTP, HTTPS, and local file addresses are supported.");
 
             method = string.IsNullOrWhiteSpace(method)
                 ? "GET"
@@ -253,6 +255,54 @@ namespace MiMFa.Engine.JavaScript.Web
             {
                 _requests.TryRemove(id, out _);
                 cancellation.Dispose();
+            }
+        }
+
+        private async Task<JObject> ReadLocalFileAsync(string method, Uri uri, string id)
+        {
+            if (method != "GET" && method != "HEAD")
+                throw new InvalidOperationException("Local file requests support GET and HEAD only.");
+            string path = uri.LocalPath;
+            if (!File.Exists(path))
+                throw new FileNotFoundException("The requested local file was not found.", path);
+            byte[] bytes = method == "HEAD" ? Array.Empty<byte>() : await File.ReadAllBytesAsync(path).ConfigureAwait(false);
+            string contentType = GetContentType(path);
+            var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Content-Type"] = contentType,
+                ["Content-Length"] = new FileInfo(path).Length.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["Last-Modified"] = File.GetLastWriteTimeUtc(path).ToString("R", System.Globalization.CultureInfo.InvariantCulture)
+            };
+            return JObject.FromObject(new
+            {
+                id = id,
+                type = "basic",
+                url = uri.AbsoluteUri,
+                status = 200,
+                statusText = "OK",
+                ok = true,
+                redirected = false,
+                data = bytes,
+                headers = headers
+            });
+        }
+
+        private static string GetContentType(string path)
+        {
+            switch (Path.GetExtension(path).ToLowerInvariant())
+            {
+                case ".html": case ".htm": return "text/html; charset=utf-8";
+                case ".css": return "text/css; charset=utf-8";
+                case ".js": case ".mjs": return "text/javascript; charset=utf-8";
+                case ".json": return "application/json; charset=utf-8";
+                case ".xml": return "application/xml; charset=utf-8";
+                case ".txt": case ".md": case ".djs": return "text/plain; charset=utf-8";
+                case ".svg": return "image/svg+xml";
+                case ".png": return "image/png";
+                case ".jpg": case ".jpeg": return "image/jpeg";
+                case ".gif": return "image/gif";
+                case ".pdf": return "application/pdf";
+                default: return "application/octet-stream";
             }
         }
 
