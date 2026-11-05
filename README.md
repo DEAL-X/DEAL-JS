@@ -553,7 +553,7 @@ DEAL allows optional readability words that improve the natural flow of the lang
         ```
         Or:
         ```ts
-        RESERVE restart AS "LOAD \"http://mimfa.net\";";
+        RESERVE restart AS "browser.load(\\\"http://mimfa.net\\\");";
         // Other procedures
         RESTART
         // With the same meaning
@@ -772,7 +772,7 @@ Resolution rules:
 The provider can be configured by the host before executing scripts:
 
 ```csharp
-engine.PathProvider.BaseDirectory = @"D:\\Projects\\MyScraper";
+engine.PathProvider.BaseDirectory = @"D:\Projects\MyScraper";
 engine.PathProvider.BaseAddress = "https://example.com/catalog/";
 ```
 
