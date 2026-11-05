@@ -1,4 +1,6 @@
 use deal/core;
+use deal/make;
+use deal/make/logical;
 
 command #download:identifier = Download;
 command #send:identifier = Send;
