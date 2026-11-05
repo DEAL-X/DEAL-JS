@@ -1,6 +1,6 @@
 use deal/core;
-use deal/make;
-use deal/make/logical;
+use deal/make/.djs;
+use deal/make/logical.djs;
 
 command #download:identifier = Download;
 command #send:identifier = Send;
