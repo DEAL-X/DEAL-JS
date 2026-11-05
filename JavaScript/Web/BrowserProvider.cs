@@ -353,7 +353,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public async Task<string> SetLocationAsync(string address, bool addHistoryEntry)
         {
             if (CurrentPage == null) throw new InvalidOperationException("There is no current browser tab.");
-            string url = PathProvider == null ? address : PathProvider.Resolve(address);
+            string url = PathProvider == null ? address : PathProvider.Resolve(address, CurrentPage.Url);
             string operation = addHistoryEntry ? "pushState" : "replaceState";
             return await CurrentPage.EvaluateAsync("history." + operation + "(null, null, " + Newtonsoft.Json.JsonConvert.ToString(url) + "); location.href").ConfigureAwait(false);
         }
