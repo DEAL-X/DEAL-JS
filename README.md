@@ -553,7 +553,7 @@ DEAL allows optional readability words that improve the natural flow of the lang
         ```
         Or:
         ```ts
-        RESERVE restart AS "browser.load(\\\"http://mimfa.net\\\");";
+        RESERVE restart AS "browser.load(\"http://mimfa.net\");";
         // Other procedures
         RESTART
         // With the same meaning
