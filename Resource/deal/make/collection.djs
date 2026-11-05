@@ -1,4 +1,4 @@
-Make.array = function (value, mapper = null) {
+#Make.array:function = function (value, mapper = null) {
     let result;
     if (value == null) result = [];
     else if (Array.isArray(value)) result = value.slice();
@@ -9,7 +9,7 @@ Make.array = function (value, mapper = null) {
     return typeof mapper === "function" ? result.map(mapper) : result;
 };
 
-Make.matrix = function (object) {
+#Make.matrix:function = function (object) {
     if (object == null) return [];
     if (!Array.isArray(object)) {
         if (typeof object !== "object") return [[object]];

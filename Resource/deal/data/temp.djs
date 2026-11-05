@@ -1,4 +1,4 @@
-command Temp = {};
+command #Temp:namespace = {};
 
-Temp.folder = 'temp\\';
-Temp.file = 'temp.tmp';
+#Temp.folder:function = 'temp\\';
+#Temp.file:function = 'temp.tmp';

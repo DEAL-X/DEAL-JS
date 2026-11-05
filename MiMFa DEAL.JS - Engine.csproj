@@ -100,13 +100,13 @@
     <None Update="Resource\deal\make\.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resource\deal\make\string.js">
+    <None Update="Resource\deal\make\string.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resource\deal\make\number.js">
+    <None Update="Resource\deal\make\number.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resource\deal\make\logical.js">
+    <None Update="Resource\deal\make\logical.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resource\deal\core\global.js">
@@ -187,7 +187,7 @@
     <None Update="Resource\deal\data\local.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resource\deal\make\collection.js">
+    <None Update="Resource\deal\make\collection.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resource\struct\.djs">

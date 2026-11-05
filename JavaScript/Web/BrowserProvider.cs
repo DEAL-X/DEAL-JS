@@ -328,7 +328,7 @@ namespace MiMFa.Engine.JavaScript.Web
 
         public Task<BrowserPage> LoadAsync(string url) => LoadAsync(url, Timeout);
 
-        public async Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds)
+        public async Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = -1)
         {
             if (string.IsNullOrWhiteSpace(url)) url = "about:blank";
             if (timeoutMilliseconds <= 0) timeoutMilliseconds = Timeout;
