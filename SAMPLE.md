@@ -78,7 +78,7 @@
 										(IF item Count IS 0 "absent" ELSE item.Count) AS Numbers
 										FROM item;
 						ELSE
-							LOAD "www.market.com/search/merchandise="+row[5],
+							await browser.load("www.market.com/search/merchandise="+row[5]);
 							THEN	// If the loading promise finished
 								IF LOADED, DO	// If the website document is loaded completely
 									FOR EACH item OF ALL ("div table>tbody>tr"),
