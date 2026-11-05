@@ -323,6 +323,22 @@ namespace MiMFa.Engine.JavaScript.Web
             }
         }
 
+        /// <summary>JSON bridge for script hosts that do not expose Newtonsoft types.</summary>
+        public Task<JObject> FetchJsonAsync(
+            string method,
+            string url,
+            string data = null,
+            string contentType = "application/json",
+            int timeout = 30000,
+            string headersJson = null,
+            string id = null,
+            string bodyBase64 = null,
+            string credentials = "same-origin")
+        {
+            JObject headers = string.IsNullOrWhiteSpace(headersJson) ? null : JObject.Parse(headersJson);
+            return FetchAsync(method, url, data, contentType, timeout, headers, id, bodyBase64, credentials);
+        }
+
         // ------------------------------------------------------------
         // Synchronous methods
         // ------------------------------------------------------------
