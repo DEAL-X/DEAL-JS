@@ -19,6 +19,7 @@ namespace MiMFa.Engine.JavaScript.Web
 
         internal BrowserPage Page { get; }
         internal string ResolveAddress(string address) => _browser.PathProvider == null ? address : _browser.PathProvider.Resolve(address, Page.Url);
+        private static string Json(string value) => Newtonsoft.Json.JsonConvert.ToString(value);
         public string Id => Page.TargetId;
         public string Url => Page.Url;
         public string Title => Page.Title;
@@ -26,11 +27,24 @@ namespace MiMFa.Engine.JavaScript.Web
         public BrowserWindows Windows { get; }
         public BrowserWindow window => Window;
         public BrowserWindows windows => Windows;
+        // Navigation and history operations are scoped to the current tab.
+        public Task<string> load(string address) => LoadAsync(address);
+        public Task<string> navigate(string address) => NavigateAsync(address);
         public Task<string> reload() => ReloadAsync();
-        public Task<string> go(int delta) => Page.GoAsync(delta);
         public Task<string> back() => Page.GoBackAsync();
         public Task<string> forward() => Page.GoForwardAsync();
+        public Task<string> go(int delta) => Page.GoAsync(delta);
+        public Task<string> locate(string address) => SetLocationAsync(address, false);
+        public Task<string> relocate(string address) => SetLocationAsync(address, true);
         public Task<bool> close() => CloseAsync();
+
+        public Task<string> LoadAsync(string address) => Page.ReplaceNavigateAsync(ResolveAddress(address));
+        public Task<string> NavigateAsync(string address) => Page.NavigateAsync(ResolveAddress(address));
+        public Task<string> SetLocationAsync(string address, bool addHistoryEntry)
+        {
+            string operation = addHistoryEntry ? "pushState" : "replaceState";
+            return Page.EvaluateAsync("history." + operation + "(null, null, " + Json(address == null ? null : ResolveAddress(address)) + "); location.href");
+        }
 
         public Task<string> ReloadAsync() => Page.ReloadAsync();
         public Task<bool> CloseAsync() => _browser.CloseAsync(Id);
