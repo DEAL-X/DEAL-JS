@@ -62,15 +62,9 @@ namespace MiMFa.Engine.JavaScript.Web
         // Lower-case aliases form the public JavaScript-facing API.
         public BrowserTabs tabs => Tabs;
         public BrowserTab tab => Tab;
-        public Task<BrowserTab> open(string url) => OpenTabAsync(url);
-        public Task<BrowserTab> load(string url) => OpenTabAsync(url);
-        public Task<string> go(string url) => GoAsync(url);
-        public Task<string> reload() => ReloadAsync();
-        public Task<string> back() => GoBackAsync();
-        public Task<string> forward() => GoForwardAsync();
-        public Task<string> locate(string address) => SetLocationAsync(address, false);
-        public Task<string> relocate(string address) => SetLocationAsync(address, true);
-        public Task<bool> close(BrowserTab tab) => tab == null ? Task.FromResult(false) : CloseAsync(tab.Id);
+        // Browser-level operations. Tab navigation and history belong to BrowserTab.
+        public Task<BrowserTab> open(string url = null) => OpenTabAsync(url ?? "about:blank");
+        public void close() => CloseBrowser();
         public Task<bool> activate(BrowserTab tab) => tab == null ? Task.FromResult(false) : ActivateAsync(tab.Id);
 
         public Process Process;
@@ -159,6 +153,31 @@ namespace MiMFa.Engine.JavaScript.Web
             };
             Process = System.Diagnostics.Process.Start(startInfo);
             if (Process == null) throw new InvalidOperationException("Failed to start the browser.");
+        }
+
+        /// <summary>Closes the Chromium browser process while keeping this provider reusable.</summary>
+        public void CloseBrowser()
+        {
+            foreach (var page in _pages.Values) page.Dispose();
+            _pages.Clear();
+            _tabs.Clear();
+            CurrentPage = null;
+            _currentTargetId = null;
+            _browserConnection?.Dispose();
+            _browserConnection = null;
+            if (Process != null)
+            {
+                try
+                {
+                    if (!Process.HasExited)
+                    {
+                        Process.CloseMainWindow();
+                        if (!Process.WaitForExit(3000)) Process.Kill();
+                        Process.WaitForExit();
+                    }
+                }
+                finally { Process.Dispose(); Process = null; }
+            }
         }
 
         public void Final() => Dispose();
