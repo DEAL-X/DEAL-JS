@@ -31,7 +31,8 @@ namespace MiMFa.Engine.JavaScript.Web
             }
 
             var effectiveBaseAddress = string.IsNullOrWhiteSpace(baseAddress) ? BaseAddress : baseAddress;
-            if (Uri.TryCreate(address, UriKind.Relative, out var relative) &&
+            if (!LooksLikeLocalPath(address) &&
+                Uri.TryCreate(address, UriKind.Relative, out var relative) &&
                 !string.IsNullOrWhiteSpace(effectiveBaseAddress) &&
                 Uri.TryCreate(effectiveBaseAddress, UriKind.Absolute, out var baseUri) &&
                 (baseUri.Scheme == Uri.UriSchemeHttp || baseUri.Scheme == Uri.UriSchemeHttps))
@@ -71,6 +72,16 @@ namespace MiMFa.Engine.JavaScript.Web
         private static bool LooksLikeWindowsDrivePath(string value) =>
             value.Length >= 3 && char.IsLetter(value[0]) && value[1] == ':' &&
             (value[2] == '\\' || value[2] == '/');
+
+        private static bool LooksLikeLocalPath(string value)
+        {
+            if (value.StartsWith(".", StringComparison.Ordinal) || value.StartsWith("~", StringComparison.Ordinal) ||
+                value.StartsWith("/", StringComparison.Ordinal) || value.StartsWith(@"\\", StringComparison.Ordinal) ||
+                LooksLikeWindowsDrivePath(value)) return true;
+            string fileName = value.Split('/', '\\\\').Last();
+            string extension = Path.GetExtension(fileName).ToLowerInvariant();
+            return new[] { ".txt", ".md", ".djs", ".js", ".mjs", ".json", ".html", ".htm", ".css", ".xml", ".csv", ".pdf", ".png", ".jpg", ".jpeg", ".gif" }.Contains(extension);
+        }
 
         private static bool LooksLikeWebAddress(string value)
         {
