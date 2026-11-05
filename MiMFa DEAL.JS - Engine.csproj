@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <None Remove="deal\struct\struct.djs" />
+    <None Remove="deal\web\browser.djs" />
     <None Remove="Newtonsoft.Json.dll" />
     <None Remove="deal\collect\.djs" />
     <None Remove="deal\collect\collect.djs" />
@@ -43,9 +44,6 @@
     <None Remove="deal\web\.djs" />
     <None Remove="deal\web\download.js" />
     <None Remove="deal\web\fetch.js" />
-    <None Remove="deal\web\go.djs" />
-    <None Remove="deal\web\load.djs" />
-    <None Remove="deal\web\locate.djs" />
     <None Remove="deal\web\request.djs" />
     <None Remove="deal\web\send.js" />
     <None Remove="deal\web\temporary.js" />
@@ -127,19 +125,13 @@
     <Content Include="deal\web\.djs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="deal\web\browser.djs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="deal\web\download.js">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="deal\web\fetch.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="deal\web\go.djs">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="deal\web\load.djs">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="deal\web\locate.djs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="deal\web\request.djs">
@@ -257,15 +249,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <Resource Include="deal\web\fetch.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="deal\web\go.djs">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="deal\web\load.djs">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="deal\web\locate.djs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <Resource Include="deal\web\request.djs">
