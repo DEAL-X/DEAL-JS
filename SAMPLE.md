@@ -56,8 +56,8 @@ const openedTab = await browser.open("example.com");
 
 // Read current-tab properties synchronously.
 const tab = browser.tab;
-const title = tab.document.title;
-const url = tab.location.href;
+const title = tab.window.document.title;
+const url = tab.window.location.href;
 const width = tab.window.innerWidth;
 const online = tab.navigator.onLine;
 
@@ -99,11 +99,11 @@ The API is divided by responsibility:
 Every property beneath `browser.tab` returns a value, not a .NET `Task`. Do not write `await` before property access:
 
 ```javascript
-const title = browser.tab.document.title;
-const currentUrl = browser.tab.location.href;
-const historyLength = browser.tab.history.length;
-const isOnline = browser.tab.navigator.onLine;
-const screenWidth = browser.tab.screen.width;
+const title = browser.tab.window.document.title;
+const currentUrl = browser.tab.window.location.href;
+const historyLength = browser.tab.window.history.length;
+const isOnline = browser.tab.window.navigator.onLine;
+const screenWidth = browser.tab.window.screen.width;
 const frameCount = browser.tab.windows.length;
 const allTabs = browser.tabs.all;
 ```
@@ -115,8 +115,8 @@ Operations that perform browser actions or communicate asynchronously with Chrom
 ```javascript
 await browser.open("example.com");
 await browser.tab.navigate("example.org");
-await browser.tab.storage.local.setItem("key", "value");
-const value = await browser.tab.storage.local.getItem("key");
+await browser.tab.window.storage.local.setItem("key", "value");
+const value = await browser.tab.window.storage.local.getItem("key");
 const fileHandles = await browser.tab.open();
 ```
 
