@@ -113,7 +113,7 @@ namespace MiMFa.Engine.JavaScript
             {
                 if (next == "*") return TokenizeCommentBlock(walker, location);
                 else if (next == "/") return TokenizeComment(walker, location);
-                else if (!string.IsNullOrWhiteSpace(next)) return TokenizeRegExPath(walker, location);
+                else if (!string.IsNullOrEmpty(next)) return TokenizeRegExPath(walker, location);
             }
 
             if (Regex.IsMatch(current.ToString(), @"[0-9]") || (Regex.IsMatch(current.ToString(), @"[\-\+]") && Regex.IsMatch(next.ToString(), @"[0-9\.]")))
@@ -151,7 +151,20 @@ namespace MiMFa.Engine.JavaScript
         protected virtual Token TokenizeRegExPath(CodeWalker walker, Position location)
         {
             walker.Walk(); // consume '/'
-            var value = string.Concat(walker.WalkUntil(ch => ch == "/" && walker.Peek(-1) != (this.Engine?.Options?.Escape ?? "\\")[0].ToString()).ToArray());
+            bool indent = false;
+            var escapedch = (this.Engine?.Options?.Escape ?? "\\")[0].ToString();
+            var value = string.Concat(walker.WalkUntil(ch => {
+                switch (ch)
+                {
+                    case "[":
+                        indent = true;
+                        break;
+                    case "]":
+                        indent = false;
+                        break;
+                }
+                return ch == "/" && !indent && walker.Peek(-1) != escapedch; 
+            }).ToArray());
             walker.Walk(); // consume closing '/'
             value = "/" + value + "/" + string.Concat(walker.WalkWhile(ch => Regex.IsMatch(ch.ToString(), "[gimsuy]", RegexOptions.IgnoreCase)).ToArray());
             return new Token(TokenType.PatternData, value, location);

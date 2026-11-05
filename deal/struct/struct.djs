@@ -1,5 +1,5 @@
 ﻿//Html Tag Creator Function
-const Struct = function (content = null, tagName = "div", attributes = {}) {
+command Struct = function (content = null, tagName = "div", attributes = {}) {
     let isSingle = typeof tagName === 'object';
     if (isSingle) {
         attributes = tagName;

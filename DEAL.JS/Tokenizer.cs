@@ -284,10 +284,7 @@ namespace MiMFa.Engine.DEAL.JS
             if (Regex.IsMatch(path, "^\\w+:\\/\\/.+$", RegexOptions.CultureInvariant)) return UseUrl(path, force);
             var compiler = this.Engine as MiMFa.Engine.Engine;
             if (compiler == null) return 0;
-            var baseDirectory = Regex.IsMatch(path, "^\\.[\\/\\\\]", RegexOptions.CultureInvariant) ?
-                compiler?.ResourceProvider?.ParentDirectory(compiler.Input?.Source ?? compiler.ResourceDirectory+"index") :
-                compiler?.ResourceProvider?.ParentDirectory(compiler.ResourceDirectory + "index");
-            var val = compiler?.ResourceProvider?.Resolve(path, baseDirectory);
+            var val = compiler?.ResourceProvider?.Resolve(path);
             if (!string.IsNullOrEmpty(val) && val.EndsWith("\\")) return UseFolder(val, force);
             int num;
             return (num = UseFile(val, force)) > 0 ? num : UseFolder(val, force);
@@ -295,7 +292,8 @@ namespace MiMFa.Engine.DEAL.JS
         protected virtual int UseUrl(string url, bool force = false)
         {
             if (!Engine.FetchTransport.IsAlive) Engine.FetchTransport.Initial();
-            var path = Engine.ResourceDirectory + url.GetHashCode()+(Regex.Match(url, "\\.[a-z]$").Value??".djs");
+            Engine.ResourceProvider.CreateDirectory(".\\download");
+            var path = Engine.ResourceProvider.Resolve(".\\download\\"+url.GetHashCode()+(Regex.Match(url, "\\.[a-z]$").Value??".djs"));
             if(Engine.ResourceProvider.Exists(path)) return UsePath(path, force);
             var resp = Engine.FetchTransport.Get(url);
             if(!resp.Value<bool>("ok")) return 0;
