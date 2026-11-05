@@ -12,6 +12,7 @@ namespace MiMFa.Engine.JavaScript.Web
         protected readonly BrowserTab Tab;
         protected BrowserRemoteObject(BrowserTab tab) { Tab = tab ?? throw new ArgumentNullException(nameof(tab)); }
         protected Task<string> EvaluateAsync(string expression) => Tab.Page.EvaluateAsync(expression);
+        protected object EvaluateValue(string expression) => Tab.Page.EvaluateValueAsync(expression).GetAwaiter().GetResult();
         protected static string Json(string value) => Newtonsoft.Json.JsonConvert.SerializeObject(value);
     }
 
@@ -44,9 +45,9 @@ namespace MiMFa.Engine.JavaScript.Web
         public BrowserConsole console => Console;
         public BrowserCookies cookies => Cookies;
         public BrowserStorage storage => Storage;
-        public string name => GetNameAsync().GetAwaiter().GetResult();
-        public string innerWidth => GetInnerWidthAsync().GetAwaiter().GetResult();
-        public string innerHeight => GetInnerHeightAsync().GetAwaiter().GetResult();
+        public object name => EvaluateValue("window.name");
+        public object innerWidth => EvaluateValue("window.innerWidth");
+        public object innerHeight => EvaluateValue("window.innerHeight");
         public Task<string> GetNameAsync() => EvaluateAsync("window.name");
         public Task<string> GetInnerWidthAsync() => EvaluateAsync("window.innerWidth");
         public Task<string> GetInnerHeightAsync() => EvaluateAsync("window.innerHeight");
@@ -62,11 +63,11 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserDocument : BrowserRemoteObject
     {
         internal BrowserDocument(BrowserTab tab) : base(tab) { }
-        public string title => GetTitleAsync().GetAwaiter().GetResult();
-        public string url => GetUrlAsync().GetAwaiter().GetResult();
-        public string readyState => GetReadyStateAsync().GetAwaiter().GetResult();
-        public string html => GetHtmlAsync().GetAwaiter().GetResult();
-        public string text => GetTextAsync().GetAwaiter().GetResult();
+        public object title => EvaluateValue("document.title");
+        public object url => EvaluateValue("document.URL");
+        public object readyState => EvaluateValue("document.readyState");
+        public object html => EvaluateValue("document.documentElement ? document.documentElement.outerHTML : null");
+        public object text => EvaluateValue("document.documentElement ? document.documentElement.innerText : null");
         public Task<string> GetTitleAsync() => EvaluateAsync("document.title");
         public Task<string> GetUrlAsync() => EvaluateAsync("document.URL");
         public Task<string> GetReadyStateAsync() => EvaluateAsync("document.readyState");
@@ -84,11 +85,11 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserLocation : BrowserRemoteObject
     {
         internal BrowserLocation(BrowserTab tab) : base(tab) { }
-        public string href => GetHrefAsync().GetAwaiter().GetResult();
-        public string origin => GetOriginAsync().GetAwaiter().GetResult();
-        public string pathname => GetPathnameAsync().GetAwaiter().GetResult();
-        public string search => GetSearchAsync().GetAwaiter().GetResult();
-        public string hash => GetHashAsync().GetAwaiter().GetResult();
+        public object href => EvaluateValue("location.href");
+        public object origin => EvaluateValue("location.origin");
+        public object pathname => EvaluateValue("location.pathname");
+        public object search => EvaluateValue("location.search");
+        public object hash => EvaluateValue("location.hash");
         public Task<string> GetHrefAsync() => EvaluateAsync("location.href");
         public Task<string> GetOriginAsync() => EvaluateAsync("location.origin");
         public Task<string> GetPathnameAsync() => EvaluateAsync("location.pathname");
@@ -103,8 +104,8 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserHistory : BrowserRemoteObject
     {
         internal BrowserHistory(BrowserTab tab) : base(tab) { }
-        public string length => GetLengthAsync().GetAwaiter().GetResult();
-        public string state => GetStateAsync().GetAwaiter().GetResult();
+        public object length => EvaluateValue("history.length");
+        public object state => EvaluateValue("history.state");
         public Task<string> back() => BackAsync();
         public Task<string> forward() => ForwardAsync();
         public Task<string> go(int delta) => GoAsync(delta);
@@ -125,12 +126,12 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserNavigator : BrowserRemoteObject
     {
         internal BrowserNavigator(BrowserTab tab) : base(tab) { }
-        public string userAgent => GetUserAgentAsync().GetAwaiter().GetResult();
-        public string language => GetLanguageAsync().GetAwaiter().GetResult();
-        public string languages => GetLanguagesAsync().GetAwaiter().GetResult();
-        public string platform => GetPlatformAsync().GetAwaiter().GetResult();
-        public string online => GetOnlineAsync().GetAwaiter().GetResult();
-        public string cookieEnabled => GetCookieEnabledAsync().GetAwaiter().GetResult();
+        public object userAgent => EvaluateValue("navigator.userAgent");
+        public object language => EvaluateValue("navigator.language");
+        public object languages => EvaluateValue("navigator.languages");
+        public object platform => EvaluateValue("navigator.platform");
+        public object online => EvaluateValue("navigator.onLine");
+        public object cookieEnabled => EvaluateValue("navigator.cookieEnabled");
         public Task<string> GetUserAgentAsync() => EvaluateAsync("navigator.userAgent");
         public Task<string> GetLanguageAsync() => EvaluateAsync("navigator.language");
         public Task<string> GetLanguagesAsync() => EvaluateAsync("JSON.stringify(navigator.languages)");
@@ -142,11 +143,11 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserScreen : BrowserRemoteObject
     {
         internal BrowserScreen(BrowserTab tab) : base(tab) { }
-        public string width => GetWidthAsync().GetAwaiter().GetResult();
-        public string height => GetHeightAsync().GetAwaiter().GetResult();
-        public string availWidth => GetAvailableWidthAsync().GetAwaiter().GetResult();
-        public string availHeight => GetAvailableHeightAsync().GetAwaiter().GetResult();
-        public string colorDepth => GetColorDepthAsync().GetAwaiter().GetResult();
+        public object width => EvaluateValue("screen.width");
+        public object height => EvaluateValue("screen.height");
+        public object availWidth => EvaluateValue("screen.availWidth");
+        public object availHeight => EvaluateValue("screen.availHeight");
+        public object colorDepth => EvaluateValue("screen.colorDepth");
         public Task<string> GetWidthAsync() => EvaluateAsync("screen.width");
         public Task<string> GetHeightAsync() => EvaluateAsync("screen.height");
         public Task<string> GetAvailableWidthAsync() => EvaluateAsync("screen.availWidth");
@@ -173,8 +174,8 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserCookies : BrowserRemoteObject
     {
         internal BrowserCookies(BrowserTab tab) : base(tab) { }
-        public string document => GetDocumentCookiesAsync().GetAwaiter().GetResult();
-        public string all => GetAllAsync().GetAwaiter().GetResult();
+        public object document => EvaluateValue("document.cookie");
+        public object all => EvaluateValue("JSON.parse(JSON.stringify(document.cookie.split(';').filter(Boolean)))");
         public Task<bool> set(string cookieJson) => SetAsync(cookieJson);
         public Task<JObject> delete(string name, string domain = null, string path = null) => DeleteAsync(name, domain, path);
         public Task<JObject> clear() => ClearAsync();
@@ -214,8 +215,8 @@ namespace MiMFa.Engine.JavaScript.Web
     {
         private readonly string _storage;
         internal BrowserStorageArea(BrowserTab tab, string storage) : base(tab) { _storage = storage; }
-        public string length => GetLengthAsync().GetAwaiter().GetResult();
-        public string keys => GetKeysAsync().GetAwaiter().GetResult();
+        public object length => EvaluateValue(_storage + ".length");
+        public object keys => EvaluateValue("Object.keys(" + _storage + ")");
         public Task<string> GetLengthAsync() => EvaluateAsync(_storage + ".length");
         public Task<string> getItem(string key) => GetItemAsync(key);
         public Task<string> setItem(string key, string value) => SetItemAsync(key, value);
@@ -232,7 +233,7 @@ namespace MiMFa.Engine.JavaScript.Web
     {
         private readonly BrowserTab _tab;
         internal BrowserWindows(BrowserTab tab) { _tab = tab; }
-        public string length => GetCountAsync().GetAwaiter().GetResult();
+        public object length => EvaluateValue("window.frames.length");
         public IList<BrowserFrame> all => GetAllAsync().GetAwaiter().GetResult();
         public Task<BrowserFrame> get(int index) => GetAsync(index);
         public Task<string> GetCountAsync() => _tab.Page.EvaluateAsync("window.frames.length");
@@ -260,9 +261,9 @@ namespace MiMFa.Engine.JavaScript.Web
         public int Index { get; }
         internal BrowserFrame(BrowserTab tab, int index) { _tab = tab; Index = index; }
         private string Prefix => "window.frames[" + Index.ToString(System.Globalization.CultureInfo.InvariantCulture) + "]";
-        public string name => _tab.Page.EvaluateAsync(Prefix + ".name").GetAwaiter().GetResult();
-        public string url => _tab.Page.EvaluateAsync("(function(w){try{return w.location.href}catch(e){return null}})(" + Prefix + ")").GetAwaiter().GetResult();
-        public string title => _tab.Page.EvaluateAsync("(function(w){try{return w.document.title}catch(e){return null}})(" + Prefix + ")").GetAwaiter().GetResult();
+        public object name => _tab.Page.EvaluateValueAsync(Prefix + ".name").GetAwaiter().GetResult();
+        public object url => _tab.Page.EvaluateValueAsync("(function(w){try{return w.location.href}catch(e){return null}})(" + Prefix + ")").GetAwaiter().GetResult();
+        public object title => _tab.Page.EvaluateValueAsync("(function(w){try{return w.document.title}catch(e){return null}})(" + Prefix + ")").GetAwaiter().GetResult();
         public Task<string> EvaluateAsync(string expression) =>
             _tab.Page.EvaluateAsync("(function(w){return w.eval(" + (expression ?? "undefined") + ")})(" + Prefix + ")");
     }
