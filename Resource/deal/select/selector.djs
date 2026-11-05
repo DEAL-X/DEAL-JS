@@ -38,13 +38,13 @@ function detect_Selector_Arguments() {
 }
 
 // Determine whether a string represents an XPath expression.
-COMMAND is_XPath(query) {
+command is_XPath(query) {
     return typeof query == "string"
         && /^(\.\/|\.\/\/|\/|\/\/|\().*/.test(query);
 }
 
 // Return the XPath matches relative to a document or element.
-COMMAND select_XPath(query, source) {
+command select_XPath(query, source) {
     let result = [];
     let root = source;
 
@@ -74,7 +74,7 @@ COMMAND select_XPath(query, source) {
 }
 
 // Select using a CSS selector from a DOM document or element.
-COMMAND select_CSS(query, source) {
+command select_CSS(query, source) {
     if (!source) return [];
 
     if (typeof source.querySelectorAll == "function") {
@@ -85,7 +85,7 @@ COMMAND select_CSS(query, source) {
 }
 
 // Resolve a property or index path through objects and arrays.
-COMMAND select_Path(path, source) {
+command select_Path(path, source) {
     let current = [source];
 
     for (let part of path) {
@@ -133,7 +133,7 @@ COMMAND select_Path(path, source) {
 
 // Match a regular expression against strings, object keys,
 // or values contained in arrays and iterable objects.
-COMMAND select_Regex(pattern, source) {
+command select_Regex(pattern, source) {
     let result = [];
     let values = source != null
         && typeof source != "string"

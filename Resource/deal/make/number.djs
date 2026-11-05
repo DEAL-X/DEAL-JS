@@ -1,8 +1,8 @@
-Make.float = function(val = null, def = 0) {
+#Make.float:function = function(val = null, def = 0) {
 	return parseFloat(val ?? def) ?? def;
 };
 
-Make.int = function(val = null, def = 0) {
+#Make.int:function = function(val = null, def = 0) {
 	return parseInt(val ?? def) ?? def;
 };
 

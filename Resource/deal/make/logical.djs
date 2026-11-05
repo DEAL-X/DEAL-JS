@@ -1,13 +1,13 @@
-Make.encoder = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
-Make.decoder = typeof TextDecoder !== "undefined" ? new TextDecoder() : null;
-Make.base64Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+#Make.encoder:function = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
+#Make.decoder:function = typeof TextDecoder !== "undefined" ? new TextDecoder() : null;
+#Make.base64Alphabet:function = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-Make.binary = function (object = null) {
+#Make.binary:function = function (object = null) {
     if (object == null) return null;
     return Array.from(String(object), char => char.charCodeAt(0).toString(2)).join(" ");
 };
 
-Make.uint8Array = function (value = null) {
+#Make.uint8Array:function = function (value = null) {
     if (value == null) return new Uint8Array(0);
     if (value instanceof Uint8Array) return value.slice();
     if (typeof ArrayBuffer !== "undefined" && value instanceof ArrayBuffer)
@@ -25,7 +25,7 @@ Make.uint8Array = function (value = null) {
     throw new TypeError("Unsupported body type. Expected a string, byte array, or ArrayBuffer.");
 };
 
-Make.textFromBytes = function (bytes) {
+#Make.textFromBytes:function = function (bytes) {
     bytes = Make.uint8Array(bytes);
     if (Make.decoder) return Make.decoder.decode(bytes);
 
@@ -37,7 +37,7 @@ Make.textFromBytes = function (bytes) {
     catch { return binary; }
 };
 
-Make.base64FromBytes = function (value) {
+#Make.base64FromBytes:function = function (value) {
     const bytes = Make.uint8Array(value);
     let output = "";
     for (let i = 0; i < bytes.length; i += 3) {
@@ -54,7 +54,7 @@ Make.base64FromBytes = function (value) {
     return output;
 };
 
-Make.bytesFromBase64 = function (value) {
+#Make.bytesFromBase64:function = function (value) {
     const input = String(value || "").replace(/\\s+/g, "");
     if (input.length % 4 !== 0 || /[^A-Za-z0-9+/=]/.test(input))
         throw new TypeError("Invalid Base64 input.");
