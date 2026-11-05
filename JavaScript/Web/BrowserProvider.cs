@@ -335,7 +335,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public async Task<string> GoAsync(string address, int timeoutMilliseconds = 0)
         {
             if (string.IsNullOrWhiteSpace(address)) return await GoBackAsync().ConfigureAwait(false);
-            string url = PathProvider == null ? address : PathProvider.Resolve(address);
+            string url = PathProvider == null ? address : PathProvider.Resolve(address, CurrentPage?.Url);
             if (CurrentPage == null)
             {
                 var page = await LoadAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : Timeout).ConfigureAwait(false);
