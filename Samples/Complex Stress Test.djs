@@ -1,20 +1,20 @@
-use scraper;
-reserve the;
-reserve every = "for";
+Use scraper;
+Reserve the;
+Reserve every = "for";
 
 # scrapeMap
-    try to open browser, then
-        EVERY url /* The URL of the website */ OF list,
+    Try to open browser, then
+        Every url /* The URL of the website */ of list,
             * await browser.tab.load(url),
-            * THEN begin
-                * APPEND ALL keys>table>h2 from document keys, to destination;
-                * log success `The ${url} loaded successfully`;
+            * Then begin
+                * Append all keys>table>h2 from document keys, to destination;
+                * Log success `The ${url} loaded successfully`;
                 * End,
-            * otherwise log error `Could not load ${url}`,
-            * anyway log message `The ${url} process is finished!`;
-        log subject `The process of all ${list.length} urls are finished!`;
-    catch msg, log error msg;
-    finally log subject "The process finished!";
+            * Otherwise log error `Could not load ${url}`,
+            * Anyway log message `The ${url} process is finished!`;
+        Log subject `The process of all ${list.length} urls are finished!`;
+    Catch msg, Log error msg;
+    Finally Log subject "The process finished!";
 
 grade.convertTo(a++ + 1 *2, 3 << ++b - 1, c++ * 2 >> 5);
 let gradeNormal = grade[--a][--b][c--].trim(" ", "n", "r").toLowerCase();
@@ -100,4 +100,4 @@ var func3 = async function (inp) {
 }
 const car = {type : "Fiat", model : "500", color : "white"};
 let **myCar** = new Model(car ?? {firstName : "John", lastName : "Doe", age : 50});
-window.document.getElementById("demo").innerHTML = await FUNC2(MYCar show);
+window.document.getElementById("demo").innerHTML = await func2(myCar show);

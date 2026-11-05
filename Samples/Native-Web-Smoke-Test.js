@@ -17,24 +17,24 @@ async function testDealFetch() {
 }
 
 async function testDealBrowserOpen() {
-    const tab = await browser.open("example.com");
-    const title = tab.window.document.title;
-    const url = tab.window.location.href;
+    const tab = await browser.Open("example.com");
+    const title = tab.Window.Document.Title;
+    const url = tab.Window.Location.Href;
 
     if (typeof title !== "string" || !title)
         throw new Error("The document title property did not return a synchronous string.");
     if (typeof url !== "string" || !url.includes("example.com"))
         throw new Error("The location href property did not return a synchronous URL.");
 
-    return { url: tab.url, title: title, tabId: tab.Id };
+    return { url: tab.Url, title: title, tabId: tab.Id };
 }
 
 async function testDealBrowserNavigate() {
-    await browser.tab.navigate("example.org");
-    const url = browser.tab.url;
+    await browser.Tab.Navigate("example.org");
+    const url = browser.Tab.Url;
 
     if (typeof url !== "string" || !url.includes("example.org"))
-        throw new Error("browser.tab.navigate() did not navigate the current tab.");
+        throw new Error("browser.Tab.Navigate() did not navigate the current tab.");
 
     return { url: url };
 }
@@ -52,13 +52,13 @@ async function testDealFetchLocalFile() {
 }
 
 async function testDealBrowserLocalFile() {
-    await browser.tab.load("./Samples/Local-Page-Smoke-Test.html");
-    const title = browser.tab.window.document.title;
+    await browser.Tab.Load("./Samples/Local-Page-Smoke-Test.html");
+    const title = browser.Tab .Window .Document.Title;
 
     if (title !== "DEAL local path test")
         throw new Error("Chromium did not load the local file.");
 
-    return { url: browser.tab.url, title: title };
+    return { url: browser.Tab.Url, title: title };
 }
 
 async function testDealFetchAbort() {

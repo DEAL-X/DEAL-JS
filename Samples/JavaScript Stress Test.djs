@@ -1,4 +1,4 @@
-use deal;
+Use deal;
 /*
  * ============================================================
  * MiMFa DEAL.JS compiler stress test

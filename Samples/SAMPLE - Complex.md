@@ -5,8 +5,8 @@ This example demonstrates a larger workflow with input data, Fetch, browser navi
 ## DEAL source
 
 ```deal
-use deal/core;
-use deal/web;
+Use deal/core;
+Use deal/web;
 
 Consider products is ["item-1", "item-2", "item-3"];
 Consider destination is [];
@@ -18,9 +18,9 @@ For each product of products,
             Consider data is await response.json();
             Append destination, data;
         Else,
-            log warning "The request failed for " + product;
+            Log warning "The request failed for " + product;
     Catch problem,
-        log error problem;
+        Log error problem;
 
 Consider tab is await browser.open("https://example.com");
 Consider title is browser.tab.window.document.title;
@@ -29,7 +29,7 @@ Consider currentUrl is browser.tab.window.location.href;
 await browser.tab.navigate("https://example.org/results");
 await browser.tab.back();
 
-log "Collected " + destination.length + " result sets.";
+Log "Collected " + destination.length + " result sets.";
 ```
 
 ## Equivalent JavaScript

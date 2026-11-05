@@ -5,8 +5,8 @@ This example shows a small DEAL workflow with a browser tab and the current brow
 ## DEAL source
 
 ```deal
-use deal/core;
-use deal/web;
+Use deal/core;
+Use deal/web;
 
 Consider targetUrl is "https://example.com";
 Consider headings is [];
@@ -15,9 +15,9 @@ Try,
     await browser.open(targetUrl);
     Consider pageTitle is browser.tab.window.document.title;
     Consider pageUrl is browser.tab.window.location.href;
-    log "Loaded " + pageTitle + " from " + pageUrl;
+    Log "Loaded " + pageTitle + " from " + pageUrl;
 Catch problem,
-    log error problem;
+    Log error problem;
 ```
 
 ## Equivalent JavaScript

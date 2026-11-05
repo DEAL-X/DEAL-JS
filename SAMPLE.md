@@ -7,11 +7,11 @@ This guide introduces the DEAL.JS syntax, its JavaScript interoperability, modul
 A DEAL program can express a familiar JavaScript operation using readable instructions:
 
 ```deal
-use deal/core;
+Use deal/core;
 
 Consider values is [1, 2, 3];
 For each value of values,
-    print value;
+    Print value;
 ```
 
 The compiler translates DEAL instructions into deterministic JavaScript. Ordinary JavaScript can appear in the same source whenever it is more suitable:
@@ -28,9 +28,9 @@ for (const value of values) {
 Use `USE` to load a library or resource into the compiler:
 
 ```deal
-use deal/core;
-use deal/web;
-use ./Libraries/Selectors;
+Use deal/core;
+Use deal/web;
+Use ./Libraries/Selectors;
 ```
 
 A resource can be referenced by a library name, a relative path, an absolute local path, or a remote URL. The shared resource/path provider resolves local paths and normalizes web addresses.
@@ -38,10 +38,10 @@ A resource can be referenced by a library name, a relative path, an absolute loc
 `USE` and `REUSE` have the same resolution rules but different loading behavior:
 
 ```deal
-use ./Libraries/Selectors;
-use ./Libraries/Selectors;       // Skipped if already loaded.
-reuse ./Libraries/Selectors;     // Processed again, even if already loaded.
-reuse https://example.com/modules/selectors.djs;
+Use ./Libraries/Selectors;
+Use ./Libraries/Selectors;       // Skipped if already loaded.
+Reuse ./Libraries/Selectors;     // Processed again, even if already loaded.
+Reuse https://example.com/modules/selectors.djs;
 ```
 
 `REUSE` forces the dependency to be processed again. It does not independently force a new download or refresh a remote cache.
@@ -74,7 +74,7 @@ await tab.reload();
 await tab.locate("example.org/next#section");
 await tab.relocate("example.org/next#details");
 
-// Close the current tab. browser.tab then refers to the tab selected next.
+// Close the current tab. browser.tab then refers to the tab Chromium displays next.
 await browser.tab.close();
 
 // Close the browser instance.
@@ -90,7 +90,7 @@ The API is divided by responsibility:
 - `browser.tab.navigate(url)` performs normal navigation and adds a history entry.
 - `browser.tab.back()`, `forward()`, `go(delta)`, and `reload()` control current-tab navigation.
 - `browser.tab.locate(url)` replaces the current history entry; `relocate(url)` adds a same-document history entry.
-- `browser.tab.close()` closes the current tab and updates `browser.tab` to the adjacent tab selected next.
+- `browser.tab.close()` closes the current tab and updates `browser.tab` to the tab Chromium actually shows next.
 - `browser.tabs.all` synchronously returns the tabs in the provider's browser window; `browser.tabs.get(id)` retrieves a tab by ID.
 - `browser.activate(tab)` activates a tab and makes it current.
 
@@ -178,3 +178,17 @@ The [Samples](Samples/) directory contains compiler stress tests, language examp
 - The stress-test files exercise DEAL syntax and JavaScript compilation.
 
 Run the browser samples only after the host has initialized the Engine, configured the browser provider, and loaded the required web library.
+
+
+## 7. Public browser API naming
+
+The public .NET properties and methods in the browser object model use PascalCase. ClearScript resolves member names without regard to casing, so the JavaScript-style spellings used in DEAL examples remain valid:
+
+```javascript
+const title = browser.tab.window.document.title;
+const sameTitle = browser.Tab.Window.Document.Title;
+```
+
+Both expressions access the same synchronous property. Browser properties return values, not .NET `Task` objects. Browser actions and operations that communicate asynchronously with Chromium remain awaitable.
+
+When the current tab is closed, the provider checks `document.visibilityState` on the remaining pages and updates `browser.tab` to the page Chromium actually displays. This is not based solely on the order of available tab records. The same visibility check also lets `browser.tab` follow tab switches made directly in the browser UI.

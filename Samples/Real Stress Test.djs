@@ -38,13 +38,13 @@ function detect_Selector_Arguments() {
 }
 
 // Determine whether a string represents an XPath expression.
-COMMAND is_XPath(query) {
+Command is_XPath(query) {
     return typeof query == "string"
         && /^(\.\/|\.\/\/|\/|\/\/|\().*/.test(query);
 }
 
 // Return the XPath matches relative to a document or element.
-COMMAND select_XPath(query, source) {
+Command select_XPath(query, source) {
     let result = [];
     let root = source;
 
@@ -69,7 +69,7 @@ COMMAND select_XPath(query, source) {
 }
 
 // Select using a CSS selector from a DOM document or element.
-COMMAND select_CSS(query, source) {
+Command select_CSS(query, source) {
     if (!source) return [];
 
     if (typeof source.querySelectorAll == "function") {
@@ -80,7 +80,7 @@ COMMAND select_CSS(query, source) {
 }
 
 // Resolve a property or index path through objects and arrays.
-COMMAND select_Path(path, source) {
+Command select_Path(path, source) {
     let current = [source];
 
     for (let part of path) {
@@ -128,7 +128,7 @@ COMMAND select_Path(path, source) {
 
 // Match a regular expression against strings, object keys,
 // or values contained in arrays and iterable objects.
-COMMAND select_Regex(pattern, source) {
+Command select_Regex(pattern, source) {
     let result = [];
     let values = source != null
         && typeof source != "string"
@@ -163,7 +163,7 @@ COMMAND select_Regex(pattern, source) {
 
 // Select all elements or values matching the specified selector
 // from a document, element, object, array, or iterable.
-command #all::string() {
+Command #all::string() {
     let [query, source] = detect_Selector_Arguments(...arguments);
 
     if (query == null) return source;
@@ -219,7 +219,7 @@ command #all::string() {
 
 // Select the first matching element or value.
 // Return null when no match exists.
-command #one::string() {
+Command #one::string() {
     let [query, source] = detect_Selector_Arguments(...arguments);
 
     if (query == null) return source;
@@ -231,7 +231,7 @@ command #one::string() {
 // Select a single match or multiple matches.
 // Return the single value when exactly one match exists;
 // otherwise return the result array.
-command #any::string() {
+Command #any::string() {
     let [query, source] = detect_Selector_Arguments(...arguments);
 
     if (query == null) return source;

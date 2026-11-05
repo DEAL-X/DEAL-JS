@@ -8,12 +8,12 @@
 // ------------------------------------------------------------
 // Use libraries
 // ------------------------------------------------------------
-use deal/core;
-use deal/data/local.djs;
-use deal/data/resource;
-use deal/data/notExist;
-use deal;
-use scraper;
+Use deal/core;
+Use deal/data/local.djs;
+Use deal/data/resource;
+Use deal/data/notExist;
+Use deal;
+Use scraper;
 
 // ------------------------------------------------------------
 // Reserve and noise words
@@ -24,21 +24,21 @@ Reserve every = "for";
 // ------------------------------------------------------------
 // Definitions
 // ------------------------------------------------------------
-CONSIDER myConstant CONSTANT IS procedure;
-CONSIDER myVariable VARIABLE IS EQUAL procedure;
-CONSIDER LET letVariable BE procedure;
-CONSIDER directVariable EQUALS procedure;
+Consider myConstant constant is procedure;
+Consider myVariable variable is equal procedure;
+Consider let letVariable be procedure;
+Consider directVariable equals procedure;
 
 // ------------------------------------------------------------
 // Commands
 // ------------------------------------------------------------
-command testA = "A"; // Definition command
+Command testA = "A"; // Definition command
 const #testB = "B"; // Delegation command
-command testC = { tkey1: (v)=>v, tkey2: TESTB};
-command testD(val = " ") {  // Function command
+Command testC = { tkey1: (v)=>v, tkey2: TESTB};
+Command testD(val = " ") {  // Function command
     return TESTc tkey1(tESTA+val);
 }
-# loadDef IF url is not null, await browser.tab.load(url), ELSE await browser.tab.load("www.mimfa.net"); // Action command
+# loadDef If url is not null, await browser.tab.load(url), Else await browser.tab.load("www.mimfa.net"); // Action command
 
 var #testE:int:string = 4;
 list insert testE, www.mimfa.net; // the testE next word will convert to string
@@ -57,22 +57,22 @@ Consider title const is equal:
 // ------------------------------------------------------------
 // Try / Catch / Finally blocks
 // ------------------------------------------------------------
-try to
+Try to
     start browser;
     For each item in objs, 
-        Begin try:
+        Begin Try:
                 console log item.name + " grade is:";
-                if item.score equals greater than 19,
+                If item.score equals greater than 19,
                     console log "A";
-                else if item.score equals greater than 17,
+                Else if item.score equals greater than 17,
                     console log "B";
-                else if item.score is lesser than 10,
+                Else if item.score is lesser than 10,
                     console log "Not graded";
-                else console log "C";
-            catch msg, log error msg;
+                Else console log "C";
+            Catch msg, Log error msg;
         End;
-catch msg, log error "A problem is occured!\n" + msg;
-finally log subject "The scoring finished!";
+Catch msg, Log error "A problem is occured!\n" + msg;
+Finally Log subject "The scoring finished!";
 
 // ------------------------------------------------------------
 // Operations
@@ -107,7 +107,7 @@ Begin,
             + ReadFile;
             + UseFile;
             + End;
-        * Else log success "Process finished successfully!";
+        * Else* Log success "Process finished successfully!";
     Catch err,
         * Log error "Could not finish the process because: " + err;
 
@@ -116,18 +116,18 @@ End;
 // ------------------------------------------------------------
 // Complex Code
 // ------------------------------------------------------------
-CONSIDER VAR promiseTest WILL BE 18 ** 18, THEN log success its, OTHERWISE log error data;
+Consider VAR promiseTest will be 18 ** 18, then* Log success its, otherwise* Log error data;
 
 # scrapeMap
-    try to open browser, then
-        EVERY url /* The URL of the website */ OF list,
+    Try to open browser, then
+        Every url /* The URL of the website */ of list,
             * await browser.tab.load(url),
-            * THEN begin
-                * APPEND ALL keys>table>h2 from document keys, to destination;
-                * log success `The ${url} loaded successfully`;
+            * then begin
+                * Append all keys>table>h2 from document keys, to destination;
+                ** Log success `The ${url} loaded successfully`;
                 * End,
-            * otherwise log error `Could not load ${url}`,
+            * otherwise* Log error `Could not load ${url}`,
             * anyway log message `The ${url} process is finished!`;
-        log subject `The process of all ${list.length} urls are finished!`;
-    catch msg, log error msg;
-    finally log subject "The process finished!";
+        Log subject `The process of all ${list.length} urls are finished!`;
+    Catch msg, Log error msg;
+    Finally Log subject "The process finished!";
