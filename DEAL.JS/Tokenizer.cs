@@ -283,32 +283,32 @@ namespace MiMFa.Engine.DEAL.JS
             if (string.IsNullOrWhiteSpace(path)) return 0;
             var compiler = this.Engine as MiMFa.Engine.Engine;
             if (compiler == null) return 0;
-            var resolved = (compiler as Engine)?.PathProvider?.ResolveResource(path) ?? path;
+            var resolved = (compiler as Engine)?.Router?.ResolveResource(path) ?? path;
             if (Uri.TryCreate(resolved, UriKind.Absolute, out var address) &&
                 (address.Scheme == Uri.UriSchemeHttp || address.Scheme == Uri.UriSchemeHttps))
                 return UseUrl(resolved, force);
             if (address != null && address.IsFile) path = address.LocalPath;
-            var val = compiler?.ResourceProvider?.Resolve(path);
+            var val = compiler?.Resource?.Resolve(path);
             if (!string.IsNullOrEmpty(val) && val.EndsWith("\\")) return UseFolder(val, force);
             int num;
             return (num = UseFile(val, force)) > 0 ? num : UseFolder(val, force);
         }
         protected virtual int UseUrl(string url, bool force = false)
         {
-            if (!Engine.FetchTransport.IsAlive) Engine.FetchTransport.Initial();
-            Engine.ResourceProvider.CreateDirectory(".\\download");
-            var resolvedUrl = Engine.PathProvider?.Resolve(url) ?? url;
+            if (!Engine.Transfer.IsAlive) Engine.Transfer.Initial();
+            Engine.Resource.CreateDirectory(".\\download");
+            var resolvedUrl = Engine.Router?.Resolve(url) ?? url;
             var uri = new Uri(resolvedUrl, UriKind.Absolute);
             var extension = System.IO.Path.GetExtension(uri.AbsolutePath);
             if (!Regex.IsMatch(extension, @"^\.(deal|djs|js)$", RegexOptions.IgnoreCase)) extension = ".djs";
-            var path = Engine.ResourceProvider.Resolve(".\\download\\" + resolvedUrl.GetHashCode() + extension);
-            if (!Engine.ResourceProvider.Exists(path))
+            var path = Engine.Resource.Resolve(".\\download\\" + resolvedUrl.GetHashCode() + extension);
+            if (!Engine.Resource.Exists(path))
             {
-                var resp = Engine.FetchTransport.Get(resolvedUrl);
+                var resp = Engine.Transfer.Get(resolvedUrl);
                 if (!resp.Value<bool>("ok")) return 0;
                 var encoded = resp.Value<byte[]>("data") ?? null;
                 var content = System.Text.Encoding.UTF8.GetString(encoded);
-                Engine.ResourceProvider.SetFileContents(path, content);
+                Engine.Resource.SetFileContents(path, content);
             }
             return UsePath(path, force);
         }
@@ -319,7 +319,7 @@ namespace MiMFa.Engine.DEAL.JS
             int results = 0;
             try
             {
-                var rp = Engine.ResourceProvider;
+                var rp = Engine.Resource;
                 if (rp != null && rp.Exists(folder))
                 {
                     var res = UseFile(folder + "\\index", force);
@@ -347,7 +347,7 @@ namespace MiMFa.Engine.DEAL.JS
             try
             {
                 var compiler = this.Engine as MiMFa.Engine.Engine;
-                var rp = compiler?.ResourceProvider;
+                var rp = compiler?.Resource;
                 if (!force && (compiler as Engine).HasDependency(file)) return 1;
                 if (rp != null && rp.Exists(file))
                 {

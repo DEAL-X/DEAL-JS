@@ -122,7 +122,7 @@ The ClearScript V8 host must enable `V8ScriptEngineFlags.EnableTaskPromiseConver
 
 ## 6. Work with local files
 
-Browser navigation, Fetch, the legacy `Send` helper, and module resolution share the configured `PathProvider`:
+Browser navigation, Fetch, the legacy `Send` helper, and module resolution share the configured `Router`:
 
 ```deal
 browser.tab.load("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
@@ -134,8 +134,8 @@ Consider html is await response.text();
 Configure the base directory from the .NET host when needed:
 
 ```csharp
-engine.PathProvider.BaseDirectory = @"D:\Projects\MyScraper";
-engine.PathProvider.BaseAddress = "https://example.com/app/";
+engine.Router.BaseDirectory = @"D:\Projects\MyScraper";
+engine.Router.BaseAddress = "https://example.com/app/";
 ```
 
 Chromium loads local files through `file://` and applies its normal security restrictions. Host Fetch supports local-file `GET` and `HEAD` requests. Local file reads do not use HTTP cookies or HTTP request headers.

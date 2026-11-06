@@ -7,9 +7,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MiMFa.Engine.JavaScript.Web
+namespace MiMFa.Net.Browsers.Drivers
 {
-    internal sealed class CdpConnection : IDisposable
+    internal sealed class Connection : IDisposable
     {
         private readonly ClientWebSocket _socket = new ClientWebSocket();
         private readonly ConcurrentDictionary<int, TaskCompletionSource<JObject>> _pending =
@@ -135,7 +135,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public void Dispose()
         {
             _shutdown.Cancel();
-            var closed = new ObjectDisposedException(nameof(CdpConnection));
+            var closed = new ObjectDisposedException(nameof(Connection));
             foreach (var item in _pending.Values)
                 item.TrySetException(closed);
             try

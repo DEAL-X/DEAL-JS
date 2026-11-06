@@ -3,7 +3,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -13,7 +12,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace MiMFa.Engine.JavaScript.Web
+namespace MiMFa.Net
 {
     /// <summary>
     /// Provides the native HTTP transport for the JavaScript Fetch API.
@@ -21,7 +20,7 @@ namespace MiMFa.Engine.JavaScript.Web
     /// JavaScript communicates with this class through method arguments.
     /// Binary request and response bodies are transferred using Base64.
     /// </summary>
-    public sealed class FetchTransport : IDisposable
+    public sealed class Transfer : IDisposable
     {
         private HttpClient _client;
         private CookieContainer _cookies;
@@ -30,11 +29,11 @@ namespace MiMFa.Engine.JavaScript.Web
             _requests = new ConcurrentDictionary<string, CancellationTokenSource>();
 
         public Encoding Encoding = Encoding.UTF8;
-        public PathProvider PathProvider { get; set; }
+        public Router Router { get; set; }
 
         public bool IsAlive { get; private set; } = false;
 
-        public FetchTransport()
+        public Transfer()
         {
         }
 
@@ -117,7 +116,7 @@ namespace MiMFa.Engine.JavaScript.Web
             string credentials = "same-origin")
         {
             if (!IsAlive || _client == null)
-                throw new ObjectDisposedException(nameof(FetchTransport));
+                throw new ObjectDisposedException(nameof(Transfer));
 
             id = id ?? Guid.NewGuid().ToString("N");
 
@@ -128,7 +127,7 @@ namespace MiMFa.Engine.JavaScript.Web
             if ((method == "GET" || method == "HEAD") && (data != null || bodyBase64 != null))
                 throw new InvalidOperationException("GET and HEAD requests cannot contain a body.");
 
-            if (PathProvider != null) url = PathProvider.Resolve(url);
+            if (Router != null) url = Router.Resolve(url);
             if (!Uri.TryCreate(url, UriKind.Absolute, out var requestUri))
                 throw new ArgumentException("The request address could not be resolved to an absolute URL.");
             if (requestUri.IsFile)

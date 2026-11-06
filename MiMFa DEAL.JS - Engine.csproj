@@ -311,4 +311,9 @@
     </None>
   </ItemGroup>
 
+
+  <ItemGroup>
+    <Folder Include="Net\Commons\" />
+  </ItemGroup>
+
 </Project>

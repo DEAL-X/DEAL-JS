@@ -10,27 +10,20 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using MiMFa.Net.Browsers.Services;
+using MiMFa.Net.Browsers.Objects;
+using MiMFa.Net.Browsers.Drivers;
 
-namespace MiMFa.Engine.JavaScript.Web
+namespace MiMFa.Net
 {
-    public sealed class BrowserTabInfo
-    {
-        public string Id { get; set; }
-        public string Type { get; set; }
-        public string Title { get; set; }
-        public string Url { get; set; }
-        public string WebSocketDebuggerUrl { get; set; }
-        public bool IsCurrent { get; set; }
-    }
-
     /// <summary>
     /// Controls Chromium page targets (browser tabs) through the DevTools Protocol.
     /// </summary>
-    public sealed class BrowserProvider : IDisposable
+    public sealed class Browser : IDisposable
     {
         private readonly HttpClient _http = new HttpClient();
         private readonly SemaphoreSlim _browserConnectionLock = new SemaphoreSlim(1, 1);
-        private CdpConnection _browserConnection;
+        private Connection _browserConnection;
         private int? _windowId;
         private string _currentTargetId;
         public int? WindowId => _windowId;
@@ -38,7 +31,7 @@ namespace MiMFa.Engine.JavaScript.Web
             new ConcurrentDictionary<string, BrowserPage>();
         private readonly ConcurrentDictionary<string, BrowserTab> _tabs =
             new ConcurrentDictionary<string, BrowserTab>();
-        public PathProvider PathProvider { get; set; }
+        public Router Router { get; set; }
         public BrowserTabs Tabs { get; }
         public BrowserDownloads Downloads { get; }
         public BrowserPermissions Permissions { get; }
@@ -72,7 +65,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public BrowserPage CurrentPage { get; private set; }
         public bool IsAlive => Process != null && !Process.HasExited;
 
-        public BrowserProvider(string host = null, int? port = null, string driverPath = null, int? windowId = null)
+        public Browser(string host = null, int? port = null, string driverPath = null, int? windowId = null)
         {
             Host = host ?? "http://127.0.0.1";
             Port = port ?? 0;
@@ -228,7 +221,7 @@ namespace MiMFa.Engine.JavaScript.Web
                     string websocket = (string)version["webSocketDebuggerUrl"];
                     if (!Uri.TryCreate(websocket, UriKind.Absolute, out Uri uri))
                         throw new InvalidOperationException("Chromium did not provide a browser-level DevTools WebSocket URL.");
-                    var connection = new CdpConnection();
+                    var connection = new Connection();
                     try
                     {
                         await connection.ConnectAsync(uri, CancellationToken.None).ConfigureAwait(false);
@@ -345,7 +338,7 @@ namespace MiMFa.Engine.JavaScript.Web
             if (!Uri.TryCreate(tab.WebSocketDebuggerUrl, UriKind.Absolute, out Uri wsUri))
                 throw new InvalidOperationException("The browser returned an invalid DevTools WebSocket URL.");
 
-            var connection = new CdpConnection();
+            var connection = new Connection();
             try
             {
                 await connection.ConnectAsync(wsUri, CancellationToken.None).ConfigureAwait(false);
@@ -402,7 +395,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public async Task<string> GoAsync(string address, int timeoutMilliseconds = 0)
         {
             if (string.IsNullOrWhiteSpace(address)) return await GoBackAsync().ConfigureAwait(false);
-            string url = PathProvider == null ? address : PathProvider.Resolve(address, CurrentPage?.Url);
+            string url = Router == null ? address : Router.Resolve(address, CurrentPage?.Url);
             if (CurrentPage == null)
             {
                 var page = await LoadAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : Timeout).ConfigureAwait(false);
@@ -420,7 +413,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public async Task<string> SetLocationAsync(string address, bool addHistoryEntry)
         {
             if (CurrentPage == null) throw new InvalidOperationException("There is no current browser tab.");
-            string url = PathProvider == null ? address : PathProvider.Resolve(address, CurrentPage.Url);
+            string url = Router == null ? address : Router.Resolve(address, CurrentPage.Url);
             string operation = addHistoryEntry ? "pushState" : "replaceState";
             return await CurrentPage.EvaluateAsync("history." + operation + "(null, null, " + Newtonsoft.Json.JsonConvert.ToString(url) + "); location.href").ConfigureAwait(false);
         }
@@ -435,7 +428,7 @@ namespace MiMFa.Engine.JavaScript.Web
         public async Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = -1)
         {
             if (string.IsNullOrWhiteSpace(url)) url = "about:blank";
-            else if (PathProvider != null) url = PathProvider.Resolve(url);
+            else if (Router != null) url = Router.Resolve(url);
             if (timeoutMilliseconds <= 0) timeoutMilliseconds = Timeout;
             await EnsureAvailableAsync(timeoutMilliseconds).ConfigureAwait(false);
             await EnsureBrowserConnectionAsync().ConfigureAwait(false);
@@ -443,7 +436,7 @@ namespace MiMFa.Engine.JavaScript.Web
                 await GetTabsAsync().ConfigureAwait(false);
 
             // Activate an anchor tab first so Chromium creates the new tab in this
-            // BrowserProvider's application-level window, not another window.
+            // Browser's application-level window, not another window.
             if (!string.IsNullOrEmpty(_currentTargetId))
                 await _browserConnection.SendAsync("Target.activateTarget",
                     new JObject { ["targetId"] = _currentTargetId }).ConfigureAwait(false);
@@ -486,7 +479,7 @@ namespace MiMFa.Engine.JavaScript.Web
                 if (info == null || !Uri.TryCreate(info.WebSocketDebuggerUrl, UriKind.Absolute, out Uri wsUri))
                     throw new TimeoutException("The new tab did not become available through the DevTools endpoint.");
 
-                var connection = new CdpConnection();
+                var connection = new Connection();
                 try
                 {
                     await connection.ConnectAsync(wsUri, CancellationToken.None).ConfigureAwait(false);

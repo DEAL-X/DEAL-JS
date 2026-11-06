@@ -3,13 +3,13 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Linq;
 
-namespace MiMFa.Engine.JavaScript.Web
+namespace MiMFa.Net
 {
     /// <summary>Resolves web addresses and local filesystem paths to absolute addresses.</summary>
-    public sealed class PathProvider
+    public sealed class Router
     {
-        public string BaseDirectory { get; set; } = Environment.CurrentDirectory;
-        public string BaseAddress { get; set; }
+        public string RootDirectory { get; set; } = Environment.CurrentDirectory;
+        public string RootAddress { get; set; }
 
         public string Resolve(string address, string baseAddress = null)
         {
@@ -30,7 +30,7 @@ namespace MiMFa.Engine.JavaScript.Web
                     return NormalizeUri(webUri);
             }
 
-            var effectiveBaseAddress = string.IsNullOrWhiteSpace(baseAddress) ? BaseAddress : baseAddress;
+            var effectiveBaseAddress = string.IsNullOrWhiteSpace(baseAddress) ? RootAddress : baseAddress;
             if (!LooksLikeLocalPath(address) &&
                 Uri.TryCreate(address, UriKind.Relative, out var relative) &&
                 !string.IsNullOrWhiteSpace(effectiveBaseAddress) &&
@@ -43,7 +43,7 @@ namespace MiMFa.Engine.JavaScript.Web
                 localPath.StartsWith(@"~\", StringComparison.Ordinal))
                 localPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), localPath.Substring(2));
             if (!Path.IsPathRooted(localPath))
-                localPath = Path.Combine(string.IsNullOrWhiteSpace(BaseDirectory) ? Environment.CurrentDirectory : BaseDirectory, localPath);
+                localPath = Path.Combine(string.IsNullOrWhiteSpace(RootDirectory) ? Environment.CurrentDirectory : RootDirectory, localPath);
             return new Uri(Path.GetFullPath(localPath)).AbsoluteUri;
         }
 
@@ -57,7 +57,7 @@ namespace MiMFa.Engine.JavaScript.Web
             if (address.StartsWith("~/", StringComparison.Ordinal) || address.StartsWith(@"~\", StringComparison.Ordinal))
                 address = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), address.Substring(2));
             if (!Path.IsPathRooted(address))
-                address = Path.Combine(string.IsNullOrWhiteSpace(BaseDirectory) ? Environment.CurrentDirectory : BaseDirectory, address);
+                address = Path.Combine(string.IsNullOrWhiteSpace(RootDirectory) ? Environment.CurrentDirectory : RootDirectory, address);
             return new Uri(Path.GetFullPath(address)).AbsoluteUri;
         }
 
