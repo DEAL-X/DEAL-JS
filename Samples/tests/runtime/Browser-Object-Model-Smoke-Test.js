@@ -31,9 +31,9 @@ async function browserObjectModelSmokeTest() {
     if (stored !== "ok")
         throw new Error("The localStorage proxy did not round-trip a value.");
 
-    const tabs = browser.Tabs.All;
+    const tabs = browser.Tabs;
     if (!Array.isArray(tabs) && typeof tabs.Count !== "number")
-        throw new Error("browser.tabs.all did not return a synchronous collection.");
+        throw new Error("browser.tabs did not return a synchronous collection.");
 
     const fetched = browser.Tabs.Get(opened.Id);
     if (fetched.Id !== opened.Id)
