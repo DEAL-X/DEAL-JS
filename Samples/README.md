@@ -8,4 +8,6 @@ The sample collection is organized by purpose:
 
 Recommended path: [Getting started](tutorials/01-Getting-Started.djs) → [Browser and Fetch](tutorials/02-Browser-and-Fetch.djs) → [Web scraper](practicals/Web-Scraper.djs).
 
-The browser collection is exposed directly as `browser.Tabs`, a `BrowserTabs` collection of `BrowserTab` handles; no separate tab-info objects are used.\n\nThe expected and result JavaScript files in `tests/` are compiler test artifacts. They are intentionally JavaScript because they are compared with the compiler's generated target output; they are not intended as the primary language examples.
+The browser collection is exposed directly as `browser.Tabs`, a `BrowserTabs` collection of `BrowserTab` handles; no separate tab-info objects are used.
+
+The expected and result JavaScript files in `tests/` are compiler test artifacts. They are intentionally JavaScript because they are compared with the compiler's generated target output; they are not intended as the primary language examples.
