@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MiMFa.Net.Browsers;
 
 namespace MiMFa.Net.Browsers.Objects
 {
