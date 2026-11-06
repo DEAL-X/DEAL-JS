@@ -14,9 +14,9 @@
 
 ```text
 Net/
-├── Transfers/
+├── Fetch/
 │   ├── Transfer.cs
-│   ├── TransferRequest.cs
+│   ├── FetchRequest.cs
 │   └── ...
 └── Browsers/
     ├── Browser.cs
@@ -42,6 +42,9 @@ Net/
     │   ├── ChromiumBrowserSession.cs
     │   └── FirefoxBrowserSession.cs
     ├── Objects/
+    │   ├── BrowserTab.cs
+    │   ├── BrowserTabs.cs
+    │   ├── BrowserPage.cs
     │   └── Files/
     └── Services/
 ```
@@ -49,7 +52,7 @@ Net/
 ```text
 DEAL Engine
     |
-    +-- Transfers.Transfer --> Fetch transport implementation
+    +-- Fetch.Transfer --> Fetch transport implementation
     |
     +-- Browsers.Browser --> BrowserSession
                                |
@@ -80,7 +83,7 @@ Its public synchronous methods are convenience wrappers placed immediately above
 
 `BrowserPageSession` represents one tab and provides the common operations used by browser objects: navigation, history, JavaScript evaluation, URL/title/document state, and disposal. Protocol-specific implementations may derive from it.
 
-The public BrowserPage and BrowserTab objects are facades over these session abstractions. They do not know whether the implementation is CDP or BiDi.
+The public `BrowserPage` and `BrowserTab` objects are facades over these session abstractions. They do not know whether the implementation is CDP or BiDi. `BrowserTabs` is the collection of `BrowserTab` handles itself; there is no parallel `BrowserTabInfo` DTO. A tab handle stores its identity and resolves its `BrowserPage` lazily, so listing tabs does not require eagerly creating a page session for every tab.
 
 ### Protocol adapters
 
@@ -128,7 +131,7 @@ Every class follows this order:
 4. Instance methods
 5. Static methods
 
-For each asynchronous public or internal operation, provide the synchronous convenience counterpart immediately above it unless blocking would be unsafe or the operation is inherently asynchronous (for example, event streams). The synchronous counterpart delegates to the async implementation with `GetAwaiter().GetResult()`; it must not duplicate the operation logic.
+For each asynchronous public or internal operation, provide the synchronous convenience counterpart immediately above it unless blocking would be unsafe or the operation is inherently asynchronous (for example, event streams). Prefer optional/default parameter values over multiple overloads when the overloads differ only by omitted arguments; keep the sync and async pair aligned with the same defaults. The synchronous counterpart delegates to the async implementation with `GetAwaiter().GetResult()`; it must not duplicate the operation logic.
 
 ## Migration sequence
 
@@ -139,7 +142,7 @@ For each asynchronous public or internal operation, provide the synchronous conv
 5. [x] Add `FirefoxDriver`, the BiDi transport, and Firefox browser/page sessions for common operations.
 6. [x] Move Fetch transport to `Net/Fetch` and update engine wiring/namespaces.
 7. [x] Audit the migrated Browser and Fetch classes for file separation, namespace/folder alignment, member ordering, synchronous/async pairs, and synchronous properties.
-8. [x] Update README.md, SAMPLE.md, sample directory guides, and add a cross-driver browser smoke test. The smoke test still needs to be executed against real Chrome, Edge, and Firefox installations.
+8. [x] Update README.md, SAMPLE.md, sample directory guides, and add a cross-driver browser smoke test. The smoke test still needs to be executed against real Chrome, Edge, and Firefox installations.\n9. [x] Replace `BrowserTabInfo` with lazy `BrowserTab` handles and consolidate duplicate timeout overloads.
 
 ## Implementation status
 
