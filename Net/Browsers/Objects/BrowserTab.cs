@@ -23,7 +23,7 @@ namespace MiMFa.Net.Browsers.Objects
         public BrowserWindow Window { get; }
         public BrowserWindows Windows { get; }
 
-        internal BrowserTab(Browser browser, string id, string type = "page", string url = null, string title = null, string webSocketDebuggerUrl = null, bool isCurrent = false)
+        internal BrowserTab(Browser browser, string id, string type = "page", string webSocketDebuggerUrl = null, bool isCurrent = false)
         {
             _browser = browser ?? throw new ArgumentNullException(nameof(browser));
             Id = id ?? throw new ArgumentNullException(nameof(id));
