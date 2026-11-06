@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace MiMFa.Engine.JavaScript.Web
+namespace MiMFa.Net.Browsers.Objects
 {
     /// <summary>Tabs belonging to one application-level Chromium browser instance.</summary>
     public sealed class BrowserTabs
     {
-        private readonly BrowserProvider _browser;
-        internal BrowserTabs(BrowserProvider browser) { _browser = browser; }
+        private readonly Browser _browser;
+        internal BrowserTabs(Browser browser) { _browser = browser; }
 
         public BrowserTab Current => _browser.Tab;
         public IList<BrowserTab> All => GetAllAsync().GetAwaiter().GetResult();

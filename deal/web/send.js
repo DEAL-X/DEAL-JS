@@ -45,7 +45,7 @@ static _prepare(method, url, data) {
     method = String(method || "POST").toUpperCase();
     url = url || (typeof location !== "undefined" ? location.href : null);
     if (!url) throw new TypeError("A request URL is required outside a browser page.");
-    const pathProvider = typeof application !== "undefined" && application.Engine && application.Engine.PathProvider;
+    const pathProvider = typeof application !== "undefined" && application.Engine && application.Engine.Router;
     if (pathProvider) url = pathProvider.Resolve(url, typeof location !== "undefined" ? location.href : null);
 
     let contentType = "application/x-www-form-urlencoded; charset=utf-8";

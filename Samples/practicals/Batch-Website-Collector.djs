@@ -8,17 +8,17 @@ Consider sources is [
     "https://example.com/data.json",
     "https://example.org/data.json"
 ];
-Consider collected is [];
+Consider collection is [];
 
 For each address of sources,
     Try,
         Consider response is await fetch(address, { headers: { "Accept": "application/json" } });
         If response.ok,
             Consider record is await response.json();
-            Append collected, { source: address, data: record };
+            Append collection, { source: address, data: record };
         Otherwise,
             Log warning "HTTP " + response.status + " from " + address;
     Catch problem,
         Log error "Could not collect " + address + ": " + problem;
 
-Print collected;
+Print collection;

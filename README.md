@@ -676,7 +676,7 @@ The ClearScript V8 host must enable `V8ScriptEngineFlags.EnableTaskPromiseConver
 
 #### Chromium browser object model
 
-The ClearScript host exposes `application.Engine.BrowserProvider` as the DEAL `browser` object. One `BrowserProvider` is scoped to one application-level Chromium window. Its `WindowId` is discovered through the Chrome DevTools Protocol (CDP), or can be supplied when attaching to an existing debugging endpoint. Create a separate provider instance for each application-level browser window.
+The ClearScript host exposes `application.Engine.Browser` as the DEAL `browser` object. One `Browser` is scoped to one application-level Chromium window. Its `WindowId` is discovered through the Chrome DevTools Protocol (CDP), or can be supplied when attaching to an existing debugging endpoint. Create a separate provider instance for each application-level browser window.
 
 The public .NET API uses **PascalCase** names only. Duplicate lower-case C# aliases have been removed. ClearScript resolves member names without regard to casing, so both the familiar JavaScript-style spelling and the canonical .NET spelling address the same member:
 
@@ -692,7 +692,7 @@ These are synchronous property reads. They return values rather than .NET `Task`
 
 The main object hierarchy is:
 
-- `browser`: the `BrowserProvider`.
+- `browser`: the `Browser`.
 - `browser.Tab`: the currently visible tab in the provider's browser window.
 - `browser.Tabs.Current` and `browser.Tabs.All`: the current tab and the synchronous collection of tabs in that window.
 - `browser.Tab.Window`: the remote Window proxy.
@@ -749,7 +749,7 @@ The native browser tests are in [tests/Browser-Object-Model-Smoke-Test.js](Sampl
 
 #### Address resolution and local files
 
-The shared `PathProvider` normalizes incomplete web addresses and resolves local paths. Browser navigation, Fetch, the legacy `Send` request helper, and remote `USE`/`REUSE` module resolution use the same provider.
+The shared `Router` normalizes incomplete web addresses and resolves local paths. Browser navigation, Fetch, the legacy `Send` request helper, and remote `USE`/`REUSE` module resolution use the same provider.
 
 ```javascript
 browser.tab.load("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
@@ -761,8 +761,8 @@ Consider html is await response.text();
 Configure the provider from the .NET host when needed:
 
 ```csharp
-engine.PathProvider.BaseDirectory = @"D:\Projects\MyScraper";
-engine.PathProvider.BaseAddress = "https://example.com/app/";
+engine.Router.BaseDirectory = @"D:\Projects\MyScraper";
+engine.Router.BaseAddress = "https://example.com/app/";
 ```
 
 Chromium loads local files through `file://` and applies its normal security restrictions. Host Fetch supports local-file `GET` and `HEAD` requests, returns status `200`, an absolute `file://` response URL, an inferred content type, and the file bytes. Missing files reject the Fetch promise. Local file reads do not use HTTP cookies or HTTP request headers.

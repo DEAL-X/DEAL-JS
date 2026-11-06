@@ -2,14 +2,15 @@ using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using MiMFa.Net.Browsers.Files;
 
-namespace MiMFa.Engine.JavaScript.Web
+namespace MiMFa.Net.Browsers.Objects
 {
     /// <summary>A tab handle. Its Window and related objects are remote Chromium proxies.</summary>
     public sealed class BrowserTab : IDisposable
     {
-        private readonly BrowserProvider _browser;
-        internal BrowserTab(BrowserProvider browser, BrowserPage page)
+        private readonly Browser _browser;
+        internal BrowserTab(Browser browser, BrowserPage page)
         {
             _browser = browser ?? throw new ArgumentNullException(nameof(browser));
             Page = page ?? throw new ArgumentNullException(nameof(page));
@@ -18,7 +19,7 @@ namespace MiMFa.Engine.JavaScript.Web
         }
 
         internal BrowserPage Page { get; }
-        internal string ResolveAddress(string address) => _browser.PathProvider == null ? address : _browser.PathProvider.Resolve(address, Page.Url);
+        internal string ResolveAddress(string address) => _browser.Router == null ? address : _browser.Router.Resolve(address, Page.Url);
         private static string Json(string value) => Newtonsoft.Json.JsonConvert.ToString(value);
         public string Id => Page.TargetId;
         public object Url => Page.EvaluateValueAsync("location.href").GetAwaiter().GetResult();

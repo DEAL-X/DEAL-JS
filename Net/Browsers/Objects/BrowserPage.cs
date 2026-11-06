@@ -1,10 +1,11 @@
+using MiMFa.Net.Browsers.Drivers;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MiMFa.Engine.JavaScript.Web
+namespace MiMFa.Net.Browsers.Objects
 {
     /// <summary>
     /// A host-side handle to a remote Chromium page. The actual Window and Document
@@ -12,10 +13,10 @@ namespace MiMFa.Engine.JavaScript.Web
     /// </summary>
     public sealed class BrowserPage : IDisposable
     {
-        private readonly CdpConnection _connection;
+        private readonly Connection _connection;
         private bool _disposed;
 
-        internal BrowserPage(string targetId, CdpConnection connection)
+        internal BrowserPage(string targetId, Connection connection)
         {
             TargetId = targetId ?? throw new ArgumentNullException(nameof(targetId));
             _connection = connection ?? throw new ArgumentNullException(nameof(connection));

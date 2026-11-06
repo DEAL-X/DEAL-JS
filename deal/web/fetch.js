@@ -1,5 +1,5 @@
 // DEAL Fetch compatibility layer for the ClearScript host.
-// This implements the supported Fetch request/response subset over FetchTransport.
+// This implements the supported Fetch request/response subset over Transfer.
 // The hosting V8ScriptEngine must enable EnableTaskPromiseConversion so the
 // .NET Task<JObject> returned by FetchAsync becomes awaitable by JavaScript.
 // Browser-only features (CORS enforcement, service workers, streaming bodies,
@@ -14,7 +14,7 @@ function abortError() { return createError("AbortError", "The operation was abor
 function timeoutError() { return createError("TimeoutError", "The request timed out."); }
 
 // ClearScript does not provide AbortController by default. Supply the small
-// EventTarget subset required by Request.signal and FetchTransport.Abort().
+// EventTarget subset required by Request.signal and Transfer.Abort().
 class DealAbortSignal {
     constructor() {
         this.aborted = false;
@@ -227,8 +227,8 @@ class Response extends Body {
 // Native transport bridge
 // ------------------------------------------------------------
 function getTransport() {
-    const transport = typeof application !== "undefined" && application.Engine && application.Engine.FetchTransport;
-    if (!transport) throw new Error("The DEAL FetchTransport host is not available.");
+    const transport = typeof application !== "undefined" && application.Engine && application.Engine.Transfer;
+    if (!transport) throw new Error("The DEAL Transfer host is not available.");
     if (!transport.IsAlive) transport.Initial();
     return transport;
 }
@@ -246,7 +246,7 @@ function fetch(input, init) {
     if (request.credentials !== "omit" && request.credentials !== "same-origin" && request.credentials !== "include")
         return Promise.reject(new TypeError("Invalid credentials mode."));
     // There is no browser-origin context in ClearScript. The host treats
-    // same-origin and include identically; omit is enforced by FetchTransport.
+    // same-origin and include identically; omit is enforced by Transfer.
     if (request.cache !== "default")
         return Promise.reject(new TypeError("The host Fetch transport does not implement browser cache modes."));
     if (request.integrity)
@@ -266,7 +266,7 @@ function fetch(input, init) {
             abortListener = () => transport.Abort(id);
             request.signal.addEventListener("abort", abortListener, { once: true });
         }
-        const pathProvider = typeof application !== "undefined" && application.Engine && application.Engine.PathProvider;
+        const pathProvider = typeof application !== "undefined" && application.Engine && application.Engine.Router;
         const baseAddress = typeof location !== "undefined" ? location.href : null;
         const resolvedUrl = pathProvider ? pathProvider.Resolve(request.url, baseAddress) : request.url;
         operation = transport.FetchJsonAsync(request.method, resolvedUrl, null, null, request.timeout, headersJson, id, bodyBase64, request.credentials);
