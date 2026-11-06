@@ -18,20 +18,18 @@ DEAL is a **declarative**, **abstract**, **deterministic**, **explicit**, **hybr
 
 DEAL.JS does not attempt to translate unrestricted natural language directly into executable programs. Instead, it defines a constrained grammatical language whose instructions have explicit compilation semantics, while allowing ordinary JavaScript to coexist freely within the same source.
 
-Start with the [DEAL.JS quick-start sample](SAMPLE.md). More examples and their generated JavaScript are available in the [Samples](Samples/) directory.
-
-Also, you can find more examples and their parsed JS versions [here](Samples/).
+Start with the [DEAL.JS quick-start guide](SAMPLE.md). The [samples](Samples/) are organized into [tests](Samples/tests/), [tutorials](Samples/tutorials/), and [practicals](Samples/practicals/). DEAL source is the primary format throughout; JavaScript snapshots are retained where useful as compiler expectations or results.
 
 
 ## Main principles
 DEAL does not attempt to turn unrestricted natural language into executable programs. Instead, it defines a constrained and extensible grammatical language whose declarative instructions have deterministic JavaScript translations, while allowing ordinary JavaScript to remain embedded in the same source.
-So DEAL has **five** main principles:
+DEAL follows **five** main principles:
 1. **Declarative** and **Abstract**: Every DEAL instruction expresses computational intent in a form resembling natural language.
     * Its syntax is designed around constrained English-like grammatical structures.
     * While retaining the precision required for deterministic compilation.
     * DEAL codes are readable as a simple Markdown document.
     ```md
-    use deal;
+    Use deal;
     # FillList
     Begin,
 
@@ -39,24 +37,24 @@ So DEAL has **five** main principles:
         Begin,
             * MyFile = resource file open();
             * Log subject "Process started!";
-            * If **MyFile** not be null, begin:
+            * If **MyFile** not be null, Begin:
                 - The #Text be myFile content;
                 - The successful be true;
-                - end;
-            * Else, begin:
+                - End;
+            * Else, Begin:
                 - The text be empty;
                 - The successful be false;
-                - end;
+                - End;
         End;
 
     ## UseFile
         Try,
             * The list = text split "\n";
-            * If list length be lesser than 1, do:
+            * If list length be lesser than 1, Do:
                 + ReadFile;
                 + UseFile;
                 + End;
-            * Else log success "Process finished successfully!";
+            * Else Log success "Process finished successfully!";
         Catch err,
             * Log error "Could not finish the process because: " + err;
         Finally,
@@ -98,8 +96,8 @@ So DEAL has **five** main principles:
     * Also, the written DEAL code can be read as a simple document.
     * For example:
     ```ts
-    For each url of the list, load the url, then append all h3#title, to the destination;
-    otherwise log the error `Could not load the ${url}!`;
+    For each url of the list, Load the url, then append all h3#title, to the destination;
+    Otherwise log the error `Could not load the ${url}!`;
     ```
 2. **Deterministic** and **Explicit**: Every DEAL instruction has a defined compilation into its destination language.
     * So the previous instructions will compile to the pure JavaScript code below:
@@ -122,7 +120,7 @@ So DEAL has **five** main principles:
     for(const url of list)
         load url,
         then append(all("h3#title") to destination),
-        otherwise log the error `Could not load the ${url}!`;
+        Otherwise log the error `Could not load the ${url}!`;
     ```
     * Without any conflict.
 4. **Modular** and **Extensible**: Every DEAL instruction can be extended through modules while its fundamental grammar remains stable.
@@ -130,9 +128,9 @@ So DEAL has **five** main principles:
     * Modules can also provide alternative vocabularies for different natural languages (Spanish, German, ...).
     * For example:
     ```ts
-    use deal;
+    Use deal;
     use Scraper; // All libraries needed to scrape the web
-    use Spanish; // Contains all Spanish alternative reserved words.
+    Use Spanish; // Contains all Spanish alternative reserved words.
     // ...
     Para cada url de la lista, carga la url, luego añade todos h3#title, al destino; 
     de lo contrario, registra el error `¡No se pudo cargar ${url}!`;
@@ -162,7 +160,7 @@ In the DEAL:
     4. **Handlers** of the workspace represent the current execution context.
 * Predefined DEAL structures, commands, reserves and handlers allow for clearer, more human-readable, and more flexible procedures.
 * A DEAL document can also be read as a simple Markdown document.
-* Case statements of DEAL are very flexible (case-relieve), instead of being somewhere:
+* Case statements of DEAL are very flexible (case-insensitive), instead of being somewhere:
     * Case-insensitive:
         * All target programming language ordinary structures, such as IF, FUNCTION, LET, etc.
         * All DEAL or third-party structures, such as BEGIN, USE, RESERVE, etc.
@@ -177,7 +175,7 @@ In the DEAL:
 * To display code clearly, use `+`, `-`, or `*`, with just one space, before each line, similar to Markdown lists.
 * Use single or double asterisks for highlighting in your code, similar to Markdown's italics or bolds.
 
-*Noice*: To keep your code more readable and avoid conflicts with DEAL, you should not use `"use strict";` phrase anywhere.
+*Note*: To keep your code more readable and avoid conflicts with DEAL, you should not use `"use strict";` phrase anywhere.
 * Because in the strict mode, using a variable without declaring it will not be allowed, then it makes it difficult for the DEAL code writer to use some instructions.
 
 ---
@@ -191,10 +189,10 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 #### Definition
 * To define constant or variables:
     ```ts
-    CONSIDER CONST constant IS procedure;
-    CONSIDER VAR variable IS EQUAL procedure;
-    CONSIDER LET letVariable BE procedure;
-    CONSIDER directVariable EQUALS procedure;
+    Consider const constant is procedure;
+    Consider var variable is equal procedure;
+    Consider let letVariable be procedure;
+    Consider directVariable equals procedure;
     ```
     They will compile to:
     ```js
@@ -208,7 +206,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 #### Conditions
 * To work in a special conditions
     ```ts
-    IF condition, procedure; ELSE procedure;
+    If condition, procedure; Else procedure;
     ```
     It will compile to:
     ```js
@@ -217,15 +215,15 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     else 
         js-procedure;
     ```
-* All other of JS conditonal structures (such as switch/case, ternary) are available as the same.
+* All other JavaScript conditional structures (such as switch/case, ternary) are available as the same.
 
 #### Iterations
 * Working with a collection based iterations
     ```ts
-    FOR item OF/IN collection/object, procedure;
+    For item of/in collection/object, procedure;
     ```
     ```ts
-    FOR EACH item OF/IN collection/object, procedure;
+    For each item of/in collection/object, procedure;
     ```
     All of them will compile to:
     ```js
@@ -239,7 +237,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     ```
 * Using a conditional iterations
     ```ts
-    WHILE condition, procedure;
+    While condition, procedure;
     ```
     It will compile to:
     ```js
@@ -248,7 +246,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     ```
 * Using a post conditional iterations
     ```ts
-    DO { procedures } WHILE condition;
+    Do { procedures } while condition;
     ```
     It will compile to:
     ```js
@@ -269,10 +267,10 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 #### Blocks
 * To make a DEAL procedures-block
     ```ts
-    BEGIN procedures END;
+    Begin procedures End;
     ```
     ```ts
-    DO procedures END;
+    Do procedures End;
     ```
     They will compile to:
     ```js
@@ -282,7 +280,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     ```
 * To make a DEAL callable procedures-block
     ```ts
-    DOING procedures END;
+    Doing procedures End;
     ```
     It will compile to:
     ```js
@@ -292,7 +290,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     ```
 * To make a tryable block
     ```ts
-    TRY procedures; CATCH problem, procedure; FINALLY procedure;
+    Try procedures; Catch problem, procedure; Finally procedure;
     ```
     It will compile to:
     ```js
@@ -308,7 +306,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 #### Asynchronous blocks
 * To have a multi-thread program, you can make and manage promises
     ```ts
-    WILL procedure THEN procedure; OTHERWISE procedure; ANYWAY procedure;
+    Will procedure then procedure; otherwise procedure; anyway procedure;
     ```
     It will compile to:7
     ```js
@@ -321,7 +319,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 #### Collections
 * To filter collections
     ```ts
-    array WHERE condition
+    array Where condition
     ```
     It will compile to:
     ```js
@@ -329,7 +327,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     ```
 * To sort collections
     ```ts
-    array ORDER BY key1, key2
+    array Order by key1, key2
     ```
     It will compile to:
     ```js
@@ -339,7 +337,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     ```
 * To slice collections
     ```ts
-    array LIMIT number, count
+    array Limit number, count
     ```
     It will compile to:
     ```js
@@ -404,7 +402,7 @@ All commands represent executable operations.
     * If the command has no returned output, it should return itself (specially when there is not inputted arguments). 
 * The main syntax to define a special function commands:
     ```ts
-    COMMAND commandName(input1=value1, ...) {	// All inputs of each command must have a default value
+    Command commandName(input1=value1, ...) {	// All inputs of each command must have a default value
         procedures
         /*
             // Should return one of the following
@@ -449,7 +447,7 @@ All commands represent executable operations.
     * They will have a special case-insensitive commandName.
 * The main syntax to define a special definition commands:
     ```ts
-    COMMAND commandName = {
+    Command commandName = {
         propertykey1 : propertyValue1,
         propertykey2 : propertyValue2,
         /* Exactly same to an object... */
@@ -502,7 +500,7 @@ All commands represent executable operations.
     ```
 * The type of each keyword can also be specified using `:commandType` next to use a delegation command, for instance:
     ```ts
-    var #test1Var:string = "The test value number 1"; // Can define the identifier's type in the defination time
+    var #test1Var:string = "The test value number 1"; // Can define the identifier's type at definition time
     console.log(test1Var);
 
     var test2Var = "The test value number 2";
@@ -541,21 +539,21 @@ DEAL allows optional readability words that improve the natural flow of the lang
     * It can improve the readability of the code with a predefined replacement for them.
     * You can add a reserved-word to the parser using the following syntax:
         ```ts
-        RESERVE reservedWordName AS "replacement";       // This line affects only the parser, and will replace the used reservedWordName by replacement everywhere it used.
+        Reserve reservedWordName as "replacement";       // This line affects only the parser, and will replace the used reservedWordName by replacement everywhere it used.
         ```
     * For example, you can write any one of the bellow codes, without any effects in meaning:
         ```ts
-        RESERVE into AS ",";
+        Reserve into as ",";
         // Other procedures
-        SAVE "hello world!" INTO "index.html";
+        Save "hello world!" into "index.html";
         // With the same meaning
-        SAVE "hello world!" , "index.html";
+        Save "hello world!" , "index.html";
         ```
         Or:
         ```ts
-        RESERVE restart AS "browser.open(\"http://mimfa.net\");";
+        Reserve restart as "browser.open(\"http://mimfa.net\");";
         // Other procedures
-        RESTART
+        Restart
         // With the same meaning
         browser.open("http://mimfa.net");
         ```
@@ -566,19 +564,19 @@ DEAL allows optional readability words that improve the natural flow of the lang
     * It can improve the readability of the code without carrying any semantic meaning on them.
     * You can add a noise word to the parser using the following syntax:
         ```ts
-        RESERVE noiseWordName;       // This line affects only the parser, not JavaScript.
+        Reserve noiseWordName;       // This line affects only the parser, not JavaScript.
         ```
     * For example, you can write any one of the bellow codes, without any effects in meaning:
         ```ts
-        RESERVE the;
+        Reserve the;
         // Other procedures
-        CLICK ALL THE #nextbutton
+        Click all the #nextbutton
         // With the same meaning
-        CLICK ALL #nextbutton
+        Click all #nextbutton
         ```
         Or:
         ```ts
-        RESERVE a;
+        Reserve a;
         // Other procedures
         browser.open("www.example.com")
         // With the same meaning
@@ -637,13 +635,13 @@ There are multiple defined variables accessible globally, which users can intera
 
 ### Native web runtime
 
-DEAL.JS separates HTTP transport from browser-page control so the same web library can be used in a browser environment or from the DEAL.JS host.
+DEAL.JS separates HTTP transport from browser-page control. The same web library can be used by a ClearScript host without pretending that the host has a native browser DOM.
 
 #### HTTP requests
 
 The JavaScript `fetch` compatibility layer converts request bodies to bytes, transfers binary data through Base64, and converts the native response into a JavaScript `Response`.
 
-```ts
+```deal
 Consider response constant be await fetch "https://example.com/data", {
     method: "GET",
     headers: { "Accept": "application/json" },
@@ -654,8 +652,10 @@ If response ok is not true, throw new Error "HTTP " + response.status;
 
 Consider data constant be await response.json();
 ```
-It will compile to:
-```js
+
+It compiles to ordinary JavaScript:
+
+```javascript
 const response = await fetch("https://example.com/data", {
     method: "GET",
     headers: { "Accept": "application/json" },
@@ -668,7 +668,7 @@ if (response.ok != true)
 const data = await response.json();
 ```
 
-The host transport supports HTTP and HTTPS, common request methods, request and response headers, byte-safe request/response bodies, redirect following, request timeouts, cancellation, and a host cookie jar. `credentials: "omit"` disables cookie sending and storage for that request. Because the host has no browser-origin context, `same-origin` and `include` both use the host cookie jar.
+The host transport supports HTTP and HTTPS, common request methods, request and response headers, byte-safe request and response bodies, redirects, request timeouts, cancellation, and a host cookie jar. `credentials: "omit"` disables cookie sending and storage for that request. Because the host has no browser-origin context, `same-origin` and `include` both use the host cookie jar.
 
 This is a host-side Fetch compatibility layer, not a complete browser Fetch implementation. It does not enforce browser CORS policy or implement service workers, browser cache modes, opaque `no-cors` responses, browser referrer policy, integrity checks, keepalive semantics, or streaming response bodies. Unsupported request options are rejected rather than silently ignored. URL-encoded `formData()` parsing is supported; multipart `FormData` uploads require a browser XHR runtime.
 
@@ -676,116 +676,123 @@ The ClearScript V8 host must enable `V8ScriptEngineFlags.EnableTaskPromiseConver
 
 #### Chromium browser object model
 
-The ClearScript host exposes `application.Engine.BrowserProvider` as the DEAL `browser` object. One `BrowserProvider` is scoped to one application-level Chromium window; its `WindowId` is discovered from CDP or can be supplied when attaching to an existing debugging endpoint. Create a separate provider instance for each application-level browser window. There is deliberately no `browser.windows` alias.
+The ClearScript host exposes `application.Engine.Browser` as the DEAL `browser` object. One `Browser` is scoped to one application-level Chromium window. Its `WindowId` is discovered through the Chrome DevTools Protocol (CDP), or can be supplied when attaching to an existing debugging endpoint. Create a separate provider instance for each application-level browser window.
 
-```js
-const tab = await browser.open("https://example.com/");
-const title = tab.window.document.title;
-const html = tab.window.document.html;
-
-const tabs = browser.tabs.all;
-const sameTab = await browser.tabs.get(tab.Id);
-await browser.activate(sameTab);
-await browser.tab.close();
-```
-
-The public object hierarchy is:
-
-- `browser.tab`: the provider's current tab handle.
-- `browser.tabs.current`, `browser.tabs.all`, and `browser.tabs.get(id)`: tab access within this application-level window.
-- `browser.open(url)` opens a new tab; `browser.close()` closes the browser; `browser.activate(tab)` activates a tab.
-- `browser.tab.window`: synchronous Window proxy, with synchronous `document`, `location`, `history`, `navigator`, `screen`, `console`, `cookies`, and `storage.local/session` properties.
-- `browser.tab.windows`: synchronous access to child-frame metadata and frame proxies.
-- `browser.downloads`, `browser.permissions`, and `browser.runtime`: browser-level CDP services.
-
-Every tab returned from `browser.open`, `browser.tabs.get`, or `browser.tabs.all` is a `BrowserTab` with the same interface as `browser.tab`. `browser.tab.window` and its descendants are remote proxies; they do not become local ClearScript DOM objects.
-
-The `browser.tab.open(optionsJson)` and `browser.tab.save(optionsJson)` methods are direct aliases for the native `window.showOpenFilePicker(options)` and `window.showSaveFilePicker(options)` APIs. These are asynchronous methods, not properties. They do not implement their own dialogs. They return remote file-handle proxies so callers can read metadata/content and create writable streams without attempting to marshal Chromium's native handles into V8. The browser's secure-context, permission, and transient-user-activation requirements still apply.
-
-```js
-const handles = await browser.tab.open();
-const file = await handles[0].getFile();
-const text = await handles[0].text();
-
-const output = await browser.tab.save(JSON.stringify({ suggestedName: "result.txt" }));
-await output.writeText("Saved by DEAL.JS");
-```
-
-`browser.tab` tracks the tab most recently opened or activated through this provider. When the current tab is closed, the provider activates the adjacent remaining tab (the next tab at the closing position, or the previous tab when the closed tab was last) and updates `browser.tab` to that newly selected tab. The provider cannot detect manual tab switches made directly in the Chrome UI; use `browser.activate(tab)` when changing tabs through the API.
-
-The provider scopes `tabs`, activation, and closing to its application-level `WindowId`. A newly opened tab is created after activating an anchor tab and its resulting window ID is checked. If Chromium creates it in a different window, the operation fails and the stray target is closed rather than silently mixing tabs from different browser objects.
-
-`BrowserPage.EvaluateAsync` returns by-value results. Internal remote-object operations are used only for browser-owned handles such as File System Access handles; these handles must be disposed when no longer needed. The native web smoke tests are in [Samples/Native-Web-Smoke-Test.js](Samples/Native-Web-Smoke-Test.js).
-
-
-## Browser navigation, address resolution, and Fetch
-
-Browser-level lifecycle and current-tab navigation are deliberately separate:
+The public .NET API uses **PascalCase** names only. Duplicate lower-case C# aliases have been removed. ClearScript resolves member names without regard to casing, so both the familiar JavaScript-style spelling and the canonical .NET spelling address the same member:
 
 ```javascript
-// Open a new tab; close() closes the browser instance.
-const opened = await browser.open("example.com");
+const titleA = browser.tab.window.document.title;
+const titleB = browser.Tab.Window.Document.Title;
 
-// The current tab is exposed synchronously.
-const tab = browser.tab;
-const currentUrl = tab.url;
-const title = tab.window.document.title;
-
-// Replace the current document without adding a history entry.
-await tab.load("example.org/start");
-
-// Navigate normally and create a history entry.
-await tab.navigate("example.org/next");
-await tab.back();
-await tab.forward();
-await tab.reload();
-
-// Update the current history entry or add a same-document entry.
-await tab.locate("https://example.org/next#section");
-await tab.relocate("https://example.org/next#details");
-
-// Close the current tab; browser.tab becomes the tab Chromium selects next.
-await browser.tab.close();
-
-// Close the Chromium browser process.
-browser.close();
+const urlA = browser.tab.window.location.href;
+const urlB = browser.Tab.Window.Location.Href;
 ```
 
-The API is organized by responsibility:
+These are synchronous property reads. They return values rather than .NET `Task` objects. The host waits for Chromium to answer each remote property read; the returned value is not a local DOM object.
 
-- `browser.open(url)`: open a new tab.
-- `browser.close()`: close the browser instance.
-- `browser.tab`: synchronously access the current tab.
-- `browser.tab.load(url)`: replace the current document without adding a history entry.
-- `browser.tab.navigate(url)`: navigate the current tab and add a history entry.
-- `browser.tab.back()`, `forward()`, `go(delta)`, and `reload()`: current-tab navigation controls.
-- `browser.tab.locate(url)` and `relocate(url)`: replace or add a same-document history entry.
-- `browser.tab.close()`: close the current tab, activate the adjacent remaining tab, and update `browser.tab` to that tab.
-- `browser.tabs.current`, `browser.tabs.all`, and `browser.tabs.get(id)`: access tabs in the browser instance.
-- `browser.activate(tab)`: activate a tab and make it the current tab.
-- `browser.tab.window`: remote Window proxy, with `document`, `location`, `history`, `navigator`, `screen`, `console`, `cookies`, and `storage.local/session`.
+The main object hierarchy is:
 
-All properties beneath `browser.tab` are synchronous and return values rather than .NET `Task` objects. For example, `browser.tab.url`, `browser.tab.window.document.title`, `browser.tab.window.location.href`, `browser.tab.window.history.length`, `browser.tab.window.navigator.onLine`, `browser.tab.window.screen.width`, `browser.tab.windows.length`, and `browser.tabs.all` are read without `await`. Primitive values retain their JavaScript types (strings, numbers, and booleans); arrays and objects are returned as CLR arrays and dictionaries that ClearScript can expose to JavaScript. These are remote reads, so the host blocks while Chromium answers. Operations that perform browser actions or use the network—such as `open`, `load`, `navigate`, `back`, `forward`, `reload`, storage methods, and file pickers—remain awaitable.
+- `browser`: the `Browser`.
+- `browser.Tab`: the currently visible tab in the provider's browser window.
+- `browser.Tabs.Current` and `browser.Tabs.All`: the current tab and the synchronous collection of tabs in that window.
+- `browser.Tab.Window`: the remote Window proxy.
+- `browser.Tab.Windows`: the child-frame collection.
+- `browser.Downloads`, `browser.Permissions`, and `browser.Runtime`: browser-level CDP services.
 
-The shared `PathProvider` normalizes incomplete web addresses and resolves local paths. Browser navigation, Fetch, the legacy `Send` request helper, and remote `USE`/`REUSE` module resolution use the same provider. For example, `browser.tab.load("./pages/start.html")` loads a local file in the current tab. Chromium's normal `file://` security restrictions still apply.
+A `BrowserTab` exposes synchronous `Id`, `Url`, `Title`, `Window`, and `Windows` properties. Its navigation and history methods include `Load`, `Navigate`, `Reload`, `Back`, `Forward`, `Go`, `Locate`, and `Relocate`. Browser-level operations are `Open`, `Activate`, and `Close`. The current tab can also be closed with `browser.Tab.Close()`.
 
-The global `fetch(...)` remains available as an HTTP/data transport API. Its host transport supports HTTP, HTTPS, and local files. Local file Fetch supports `GET` and `HEAD`, returns status `200`, an absolute `file://` response URL, an inferred content type, and the file bytes. Missing files reject the Fetch promise. Local file reads do not use HTTP cookies or HTTP request headers.
+The Window proxy exposes `Document`, `Location`, `History`, `Navigator`, `Screen`, `Console`, `Cookies`, and `Storage`. Their public properties are also PascalCase. Examples include:
 
-### USE and REUSE
+- `Document.Title`, `Document.Url`, `Document.Html`, `Document.Text`, `Document.ReadyState`, and `Document.VisibilityState`.
+- `Location.Href`, `Origin`, `Pathname`, `Search`, and `Hash`.
+- `History.Length` and `State`.
+- `Navigator.UserAgent`, `Language`, `Languages`, `Platform`, `Online`, and `CookieEnabled`.
+- `Screen.Width`, `Height`, `AvailWidth`, `AvailHeight`, and `ColorDepth`.
+- `Storage.Local` and `Storage.Session`; each storage area exposes `Length` and `Keys`.
+
+Browser properties return native values synchronously, including file-system metadata such as `Name`, `Kind`, `Type`, `Size`, and `LastModified`. The non-`Async` convenience methods are synchronous as well; their explicitly named `...Async()` counterparts remain awaitable. DEAL source uses the familiar lower-case browser-object spelling because ClearScript resolves the public PascalCase .NET members without regard to casing:
+
+```deal
+Consider tab is browser.open("https://example.com/");
+Consider title is browser.tab.window.document.title;
+
+browser.tab.window.storage.local.setItem("key", "value");
+Consider value is browser.tab.window.storage.local.getItem("key");
+
+browser.tab.navigate("https://example.org/");
+browser.tab.back();
+```
+
+The File System Access API is exposed through the native browser file pickers. `browser.tab.open(optionsJson)` and `browser.tab.save(optionsJson)` call `window.showOpenFilePicker(options)` and `window.showSaveFilePicker(options)`. Their non-`Async` forms return browser-owned remote proxies synchronously:
+
+```deal
+Consider handles is browser.tab.open();
+Consider file is handles[0].getFile();
+Consider text is file.text();
+Consider fileName is file.name;
+
+Consider output is browser.tab.save("{\"suggestedName\":\"result.txt\"}");
+output.writeText("Saved by DEAL.JS");
+```
+
+Chromium continues to enforce its secure-context, permission, and transient-user-activation requirements. Dispose remote file handles when they are no longer needed.
+
+#### Current-tab tracking and closing
+
+The provider does not assume that the first item returned by CDP is the active tab, and it does not treat an arbitrary available tab as the current tab. When `browser.Tab` is read, the provider checks the pages' `document.visibilityState` values and resolves the tab that Chromium currently shows. This also allows tab switches made directly in the Chrome UI to be reflected the next time `browser.Tab` is accessed.
+
+When `browser.Tab.Close()` closes the current tab, the provider waits for the closed target to disappear, identifies the remaining page that is actually visible, and updates its current-tab reference to that page. If the browser window is minimized and Chromium reports no visible page, the provider uses the adjacent tab as a fallback. Closing the last tab creates a replacement blank tab so the browser window remains available.
+
+The provider scopes tab discovery, activation, and closing to its application-level `WindowId`. A newly opened tab is created after activating an anchor tab, and its resulting window ID is checked. If Chromium creates it in a different window, the operation fails and the stray target is closed rather than mixing tabs from different browser objects.
+
+The native browser tests are in [tests/Browser-Object-Model-Smoke-Test.js](Samples/tests/runtime/Browser-Object-Model-Smoke-Test.js). The Fetch and local-file tests are in [tests/Native-Web-Smoke-Test.js](Samples/tests/runtime/Native-Web-Smoke-Test.js). The DEAL compiler stress tests, expected JavaScript, and result snapshots are grouped in [tests/](Samples/tests/).
+
+#### Address resolution and local files
+
+The shared `Router` normalizes incomplete web addresses and resolves local paths. Browser navigation, Fetch, the legacy `Send` request helper, and remote `USE`/`REUSE` module resolution use the same provider.
+
+```javascript
+browser.tab.load("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
+
+Consider response is await fetch("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
+Consider html is await response.text();
+```
+
+Configure the provider from the .NET host when needed:
+
+```csharp
+engine.Router.BaseDirectory = @"D:\Projects\MyScraper";
+engine.Router.BaseAddress = "https://example.com/app/";
+```
+
+Chromium loads local files through `file://` and applies its normal security restrictions. Host Fetch supports local-file `GET` and `HEAD` requests, returns status `200`, an absolute `file://` response URL, an inferred content type, and the file bytes. Missing files reject the Fetch promise. Local file reads do not use HTTP cookies or HTTP request headers.
+
+#### USE and REUSE
 
 `USE` and `REUSE` are compile-time dependency-loading instructions:
 
-```javascript
-USE deal/core;
-USE deal/web;
-USE ./Libraries/Selectors;
+```deal
+Use deal/core;
+Use deal/web;
+Use ./Libraries/Selectors;
 
 // The dependency is already loaded, so this does not process it again.
-USE ./Libraries/Selectors;
+Use ./Libraries/Selectors;
 
 // Force the same dependency to be processed again.
-REUSE ./Libraries/Selectors;
-REUSE https://example.com/lib.djs;
+Reuse ./Libraries/Selectors;
+Reuse https://example.com/lib.djs;
 ```
 
-Both instructions resolve resources through the compiler's shared path/resource resolution. `USE` skips a dependency already registered by the current compiler; `REUSE` forces that dependency to be processed again. `REUSE` does not imply a separate download or cache-refresh policy for remote modules.
+Both instructions resolve resources through the compiler's shared path and resource resolution. `USE` skips a dependency already registered by the current compiler; `REUSE` forces that dependency to be processed again. `REUSE` does not imply a separate download or cache-refresh policy for remote modules.
+
+
+## DEAL.JS samples
+
+The sample collection is divided by intent rather than keeping unrelated files together:
+
+- **[Tests](Samples/tests/)** contains DEAL and JavaScript compiler stress inputs, their expected JavaScript and captured result files, plus browser and Fetch smoke tests.
+- **[Tutorials](Samples/tutorials/)** contains progressive, commented DEAL.JS examples intended to teach the language and its browser integration.
+- **[Practicals](Samples/practicals/)** contains larger, adaptable examples for real workflows, including browser-based scraping and batch collection.
+
+For the recommended learning path, begin with [01 - Getting Started](Samples/tutorials/01-Getting-Started.djs), continue with [02 - Browser and Fetch](Samples/tutorials/02-Browser-and-Fetch.djs), and then study [Web Scraper](Samples/practicals/Web-Scraper.djs).

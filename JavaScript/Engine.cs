@@ -1,4 +1,4 @@
-using MiMFa.Engine.JavaScript.Web;
+using MiMFa.Net;
 using MiMFa.Engine.Model;
 using MiMFa.Engine.Resource;
 using MiMFa.Engine.Stage;
@@ -12,9 +12,9 @@ namespace MiMFa.Engine.JavaScript
     {
         public Dictionary<string, Token> Keywords { get; } = new Dictionary<string, Token>();
 
-        public PathProvider PathProvider { get; set; }
-        public FetchTransport FetchTransport { get; set; }
-        public BrowserProvider BrowserProvider { get; set; }
+        public Router Router { get; set; }
+        public Transfer Transfer { get; set; }
+        public Browser Browser { get; set; }
 
 
         public Engine(StageBase[] compileStages = null, StageBase executeStage = null, Options options = null, ResourceProvider resourceProvider = null)
@@ -26,14 +26,14 @@ namespace MiMFa.Engine.JavaScript
                     new Generator()
                 }, executeStage, options ?? new Options(), resourceProvider ?? new ResourceProvider())
         {
-            PathProvider = new PathProvider();
-            FetchTransport = new FetchTransport { PathProvider = PathProvider };
-            BrowserProvider = new BrowserProvider { PathProvider = PathProvider };
+            Router = new Router();
+            Transfer = new Transfer { Router = Router };
+            Browser = new Browser { Router = Router };
         }
         public override void Dispose()
         {
-            BrowserProvider?.Final();
-            FetchTransport?.Final();
+            Browser?.Final();
+            Transfer?.Final();
             base.Dispose();
         }
 
