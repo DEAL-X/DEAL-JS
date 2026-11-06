@@ -103,7 +103,7 @@ namespace MiMFa.Net.Browsers.Sessions
                 ? null
                 : await GetPageAsync(_currentContextId).ConfigureAwait(false);
             var activeIds = new HashSet<string>(result.Select(item => item.Id), StringComparer.Ordinal);
-            foreach (string staleId in _pages.Keys.Where(id => !activeIds.Contains(id)).ToList())
+            foreach (string staleId in _pages.Keys.Concat(_tabs.Keys).Where(id => !activeIds.Contains(id)).Distinct().ToList())
             {
                 if (_pages.TryRemove(staleId, out var stalePage)) stalePage.Dispose();
                 _tabs.TryRemove(staleId, out _);
@@ -169,7 +169,9 @@ namespace MiMFa.Net.Browsers.Sessions
 
         private BrowserTab GetTab(BrowserPage page)
         {
-            return _tabs.GetOrAdd(page.TargetId, _ => new BrowserTab(_browser, page));
+            var tab = _tabs.GetOrAdd(page.TargetId, _ => new BrowserTab(_browser, page));
+            tab.IsCurrent = page.TargetId == _currentContextId;
+            return tab;
         }
 
         public override BrowserTab OpenTab(string url, int timeoutMilliseconds = 0) =>
@@ -267,6 +269,7 @@ namespace MiMFa.Net.Browsers.Sessions
             await _driver.SendAsync("browsingContext.activate", new JObject { ["context"] = targetId }).ConfigureAwait(false);
             CurrentPage = await GetPageAsync(targetId).ConfigureAwait(false);
             _currentContextId = targetId;
+            foreach (var tab in _tabs.Values) tab.IsCurrent = tab.Id == targetId;
             return true;
         }
 
