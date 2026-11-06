@@ -69,9 +69,9 @@ namespace MiMFa.Net.Browsers.Sessions
 
 
 
-        public override IList<BrowserTabInfo> GetTabs() => GetTabsAsync().GetAwaiter().GetResult();
+        public override BrowserTabs GetTabs() => GetTabsAsync().GetAwaiter().GetResult();
 
-        public override async Task<IList<BrowserTabInfo>> GetTabsAsync()
+        public override async Task<BrowserTabs> GetTabsAsync()
         {
             await _driver.EnsureSessionAsync().ConfigureAwait(false);
             JObject tree = await _driver.SendAsync("browsingContext.getTree", new JObject { ["maxDepth"] = 0 }).ConfigureAwait(false);
@@ -109,7 +109,7 @@ namespace MiMFa.Net.Browsers.Sessions
                 if (CurrentPage?.TargetId == staleId) CurrentPage = null;
                 if (_currentContextId == staleId) _currentContextId = null;
             }
-            return result;
+            return new BrowserTabs(_browser, result);
         }
 
         private async Task<string> GetVisibleTabIdAsync(IList<BrowserTabInfo> tabs)

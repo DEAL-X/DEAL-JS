@@ -1,13 +1,13 @@
 // Tutorial 02: Browser control and Fetch.
 // Browser convenience methods and browser properties are synchronous.
 // The .NET host selects Chrome (default), Edge, or Firefox before running this file.
-// Fetch is asynchronous, so await its result and response body.
+// `Fetch`, `load` and `go` are asynchronous, so await thair results and response body.
 
 Use deal/core;
 Use deal/web;
 
 // Open returns a BrowserTab immediately.
-Consider tab is browser.open("https://example.com/");
+Consider tab is browser open https://example.com/;
 
 // Browser properties are ordinary synchronous values.
 Consider pageTitle is browser.tab.window.document.title;
@@ -19,9 +19,10 @@ browser.tab.navigate("https://example.org/");
 browser.tab.back();
 
 // Fetch remains asynchronous.
-Consider response is await fetch("https://example.com/");
-If response.ok,
-    Consider html is await response.text();
-    Print html;
-Otherwise,
+Fetch https://example.com/,
+Then
+    If argument.ok,
+        Consider html is argument.text();
+        Print html;
+Otherwise
     Log error "The request failed with status " + response.status;

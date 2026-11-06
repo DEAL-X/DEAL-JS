@@ -13,7 +13,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using MiMFa.Net;
 
-namespace MiMFa.Net.Fetch
+namespace MiMFa.Net.Transfers
 {
     /// <summary>
     /// Provides the native HTTP transport for the JavaScript Fetch API.
@@ -107,9 +107,9 @@ namespace MiMFa.Net.Fetch
         /// If bodyBase64 is supplied, it takes precedence over data.
         /// This allows arbitrary binary request bodies.
         /// </summary>
-        public JObject Fetch(FetchRequest request) => FetchAsync(request).GetAwaiter().GetResult();
+        public JObject Fetch(TransferRequest request) => FetchAsync(request).GetAwaiter().GetResult();
 
-        public Task<JObject> FetchAsync(FetchRequest request)
+        public Task<JObject> FetchAsync(TransferRequest request)
         {
             if (request == null) throw new ArgumentNullException(nameof(request));
             return FetchAsync(request.Method, request.Url, request.Data, request.ContentType,

@@ -14,9 +14,9 @@
 
 ```text
 Net/
-├── Fetch/
+├── Transfers/
 │   ├── Transfer.cs
-│   ├── FetchRequest.cs
+│   ├── TransferRequest.cs
 │   └── ...
 └── Browsers/
     ├── Browser.cs
@@ -49,7 +49,7 @@ Net/
 ```text
 DEAL Engine
     |
-    +-- Fetch.Transfer --> Fetch transport implementation
+    +-- Transfers.Transfer --> Fetch transport implementation
     |
     +-- Browsers.Browser --> BrowserSession
                                |

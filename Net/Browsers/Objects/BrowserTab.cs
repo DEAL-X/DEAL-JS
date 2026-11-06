@@ -14,8 +14,11 @@ namespace MiMFa.Net.Browsers.Objects
 
         internal BrowserPage Page { get; }
         public string Id => Page.TargetId;
+        public string Type { get; set; }
         public object Url => Page.EvaluateValue("location.href");
         public object Title => Page.EvaluateValue("document.title");
+        public string WebSocketDebuggerUrl { get; set; }
+        public bool IsCurrent { get; set; }
         public BrowserWindow Window { get; }
         public BrowserWindows Windows { get; }
 

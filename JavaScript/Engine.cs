@@ -1,5 +1,5 @@
 using MiMFa.Net;
-using MiMFa.Net.Fetch;
+using MiMFa.Net.Transfers;
 using MiMFa.Net.Browsers;
 using MiMFa.Engine.Model;
 using MiMFa.Engine.Resource;
