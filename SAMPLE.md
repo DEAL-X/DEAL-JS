@@ -80,7 +80,9 @@ engine.Browser.Dispose();
 engine.Browser = new Browser(driver: new FirefoxDriver());
 ```
 
-`BrowserTabs` is itself the tab collection (`List<BrowserTab>`); there is no separate tab-info DTO. Each `BrowserTab` is a lightweight handle that resolves its page session only when a page operation or page-backed property is used.\n\nThe browser provider delegates common operations to a protocol-neutral browser session. Chromium-only services such as download behavior, permission overrides, and browser runtime information are optional capabilities; unsupported capabilities throw `NotSupportedException` rather than sending CDP commands to Firefox.
+`BrowserTabs` is itself the tab collection (`List<BrowserTab>`); there is no separate tab-info DTO. Each `BrowserTab` is a lightweight handle that resolves its page session only when a page operation or page-backed property is used.
+
+The browser provider delegates common operations to a protocol-neutral browser session. Chromium-only services such as download behavior, permission overrides, and browser runtime information are optional capabilities; unsupported capabilities throw `NotSupportedException` rather than sending CDP commands to Firefox.
 
 ## 4. Synchronous properties and methods
 
