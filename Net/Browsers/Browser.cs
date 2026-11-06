@@ -75,12 +75,10 @@ namespace MiMFa.Net.Browsers
         public Task<BrowserTab> OpenTabAsync(string url, int timeoutMilliseconds = 0) => Session.OpenTabAsync(url, timeoutMilliseconds);
         public BrowserPage OpenPage(string url, int timeoutMilliseconds = 0) => Session.OpenPage(url, timeoutMilliseconds);
        
-        public BrowserTab Open(string url = null) => Session.OpenTab(url ?? "about:blank");
-        public Task<BrowserPage> OpenAsync(string url, int timeoutMilliseconds = 0) => Session.OpenAsync(url, timeoutMilliseconds);
+        public BrowserTab Open(string url = null, int timeoutMilliseconds = 0) => Session.OpenTab(url ?? "about:blank", timeoutMilliseconds);
+        public Task<BrowserPage> OpenAsync(string url = null, int timeoutMilliseconds = 0) => Session.OpenAsync(url, timeoutMilliseconds);
 
-        public BrowserPage Load(string url) => Session.Load(url);
-        public Task<BrowserPage> LoadAsync(string url) => Session.LoadAsync(url);
-        public BrowserPage Load(string url, int timeoutMilliseconds) => Session.Load(url, timeoutMilliseconds);
+        public BrowserPage Load(string url, int timeoutMilliseconds = -1) => Session.Load(url, timeoutMilliseconds);
         public Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = -1) => Session.LoadAsync(url, timeoutMilliseconds);
         public string Reload() => Session.Reload();
         public Task<string> ReloadAsync() => Session.ReloadAsync();
@@ -92,8 +90,8 @@ namespace MiMFa.Net.Browsers
         public string GoForward() => Session.GoForward();
         public Task<string> GoForwardAsync() => Session.GoForwardAsync();
 
-        public string SetLocation(string address, bool addHistoryEntry) => Session.SetLocation(address, addHistoryEntry);
-        public Task<string> SetLocationAsync(string address, bool addHistoryEntry) => Session.SetLocationAsync(address, addHistoryEntry);
+        public string SetLocation(string address, bool addHistoryEntry = false) => Session.SetLocation(address, addHistoryEntry);
+        public Task<string> SetLocationAsync(string address, bool addHistoryEntry = false) => Session.SetLocationAsync(address, addHistoryEntry);
 
         internal JObject SendBrowserCommand(string method, JObject parameters = null)
         {
