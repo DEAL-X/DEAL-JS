@@ -7,13 +7,14 @@ using System.Threading.Tasks;
 
 namespace MiMFa.Net.Browsers.Objects
 {
-    /// <summary>A tab handle. Its Window and related objects are remote browser proxies.</summary>
+    /// <summary>A lightweight tab handle. Its page and related objects are resolved on demand.</summary>
     public sealed class BrowserTab : IDisposable
     {
         private readonly Browser _browser;
+        private BrowserPage _page;
 
-        internal BrowserPage Page { get; }
-        public string Id => Page.TargetId;
+        internal BrowserPage Page => _page ?? (_page = _browser.GetPage(Id));
+        public string Id { get; }
         public string Type { get; set; }
         public object Url => Page.EvaluateValue("location.href");
         public object Title => Page.EvaluateValue("document.title");
@@ -22,21 +23,29 @@ namespace MiMFa.Net.Browsers.Objects
         public BrowserWindow Window { get; }
         public BrowserWindows Windows { get; }
 
-        internal BrowserTab(Browser browser, BrowserPage page)
+        internal BrowserTab(Browser browser, string id, string type = "page", string webSocketDebuggerUrl = null, bool isCurrent = false)
         {
             _browser = browser ?? throw new ArgumentNullException(nameof(browser));
-            Page = page ?? throw new ArgumentNullException(nameof(page));
+            Id = id ?? throw new ArgumentNullException(nameof(id));
+            Type = type;
+            WebSocketDebuggerUrl = webSocketDebuggerUrl;
+            IsCurrent = isCurrent;
             Window = new BrowserWindow(this);
             Windows = new BrowserWindows(this);
+        }
+
+        internal BrowserTab(Browser browser, BrowserPage page) : this(browser, page?.TargetId)
+        {
+            _page = page ?? throw new ArgumentNullException(nameof(page));
         }
 
         public void Dispose()
         {
             try
             {
-                if (!Close()) Page.Dispose();
+                if (!Close()) _page?.Dispose();
             }
-            catch { Page.Dispose(); }
+            catch { _page?.Dispose(); }
         }
 
         public string Load(string address) => LoadAsync(address).GetAwaiter().GetResult();
@@ -51,8 +60,8 @@ namespace MiMFa.Net.Browsers.Objects
         public Task<string> ForwardAsync() => Page.GoForwardAsync();
         public string Go(int delta) => GoAsync(delta).GetAwaiter().GetResult();
         public Task<string> GoAsync(int delta) => Page.GoAsync(delta);
-        public string SetLocation(string address, bool addHistoryEntry) => SetLocationAsync(address, addHistoryEntry).GetAwaiter().GetResult();
-        public Task<string> SetLocationAsync(string address, bool addHistoryEntry)
+        public string SetLocation(string address, bool addHistoryEntry = false) => SetLocationAsync(address, addHistoryEntry).GetAwaiter().GetResult();
+        public Task<string> SetLocationAsync(string address, bool addHistoryEntry = false)
         {
             string operation = addHistoryEntry ? "pushState" : "replaceState";
             return Page.EvaluateAsync("history." + operation + "(null, null, " + Json(address == null ? null : ResolveAddress(address)) + "); location.href");

@@ -76,21 +76,22 @@ namespace MiMFa.Net.Browsers.Sessions
             await _driver.EnsureSessionAsync().ConfigureAwait(false);
             JObject tree = await _driver.SendAsync("browsingContext.getTree", new JObject { ["maxDepth"] = 0 }).ConfigureAwait(false);
             var contexts = tree["contexts"] as JArray ?? new JArray();
-            var result = new List<BrowserTabInfo>();
+            var result = new List<BrowserTab>();
 
             foreach (JObject context in contexts.OfType<JObject>())
             {
                 string id = (string)context["context"];
                 if (string.IsNullOrWhiteSpace(id)) continue;
-                var page = await GetPageAsync(id).ConfigureAwait(false);
-                result.Add(new BrowserTabInfo
+                var tab = new BrowserTab(_browser, id);
+                if (_tabs.TryGetValue(id, out var existingTab))
                 {
-                    Id = id,
-                    Type = "page",
-                    Title = page.Title,
-                    Url = (string)context["url"] ?? page.Url,
-                    WebSocketDebuggerUrl = null
-                });
+                    existingTab.Type = tab.Type;
+                    existingTab.IsCurrent = tab.IsCurrent;
+                    tab = existingTab;
+                }
+                else
+                    tab = _tabs.GetOrAdd(id, tab);
+                result.Add(tab);
             }
 
             string visibleId = await GetVisibleTabIdAsync(result).ConfigureAwait(false);
@@ -102,7 +103,7 @@ namespace MiMFa.Net.Browsers.Sessions
                 ? null
                 : await GetPageAsync(_currentContextId).ConfigureAwait(false);
             var activeIds = new HashSet<string>(result.Select(item => item.Id), StringComparer.Ordinal);
-            foreach (string staleId in _pages.Keys.Where(id => !activeIds.Contains(id)).ToList())
+            foreach (string staleId in _pages.Keys.Concat(_tabs.Keys).Where(id => !activeIds.Contains(id)).Distinct().ToList())
             {
                 if (_pages.TryRemove(staleId, out var stalePage)) stalePage.Dispose();
                 _tabs.TryRemove(staleId, out _);
@@ -112,14 +113,14 @@ namespace MiMFa.Net.Browsers.Sessions
             return new BrowserTabs(_browser, result);
         }
 
-        private async Task<string> GetVisibleTabIdAsync(IList<BrowserTabInfo> tabs)
+        private async Task<string> GetVisibleTabIdAsync(IList<BrowserTab> tabs)
         {
             var previous = tabs.FirstOrDefault(item => item.Id == _currentContextId);
             if (previous != null)
             {
                 try
                 {
-                    object state = await _pages[previous.Id].EvaluateValueAsync("document.visibilityState").ConfigureAwait(false);
+                    object state = await (await GetPageAsync(previous.Id).ConfigureAwait(false)).EvaluateValueAsync("document.visibilityState").ConfigureAwait(false);
                     if (string.Equals(Convert.ToString(state), "visible", StringComparison.OrdinalIgnoreCase))
                         return previous.Id;
                 }
@@ -131,7 +132,7 @@ namespace MiMFa.Net.Browsers.Sessions
                 if (tab.Id == _currentContextId) continue;
                 try
                 {
-                    object state = await _pages[tab.Id].EvaluateValueAsync("document.visibilityState").ConfigureAwait(false);
+                    object state = await (await GetPageAsync(tab.Id).ConfigureAwait(false)).EvaluateValueAsync("document.visibilityState").ConfigureAwait(false);
                     if (string.Equals(Convert.ToString(state), "visible", StringComparison.OrdinalIgnoreCase))
                         return tab.Id;
                 }
@@ -168,7 +169,9 @@ namespace MiMFa.Net.Browsers.Sessions
 
         private BrowserTab GetTab(BrowserPage page)
         {
-            return _tabs.GetOrAdd(page.TargetId, _ => new BrowserTab(_browser, page));
+            var tab = _tabs.GetOrAdd(page.TargetId, _ => new BrowserTab(_browser, page));
+            tab.IsCurrent = page.TargetId == _currentContextId;
+            return tab;
         }
 
         public override BrowserTab OpenTab(string url, int timeoutMilliseconds = 0) =>
@@ -252,9 +255,7 @@ namespace MiMFa.Net.Browsers.Sessions
         public override string GoForward() => GoForwardAsync().GetAwaiter().GetResult();
         public override Task<string> GoForwardAsync() => CurrentPage == null ? Task.FromResult<string>(null) : CurrentPage.GoForwardAsync();
 
-        public override BrowserPage Load(string url) => LoadAsync(url).GetAwaiter().GetResult();
-        public override Task<BrowserPage> LoadAsync(string url) => LoadAsync(url, _driver.Timeout);
-        public override BrowserPage Load(string url, int timeoutMilliseconds) => LoadAsync(url, timeoutMilliseconds).GetAwaiter().GetResult();
+        public override BrowserPage Load(string url, int timeoutMilliseconds = -1) => LoadAsync(url, timeoutMilliseconds).GetAwaiter().GetResult();
         public override Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = -1) =>
             OpenAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : _driver.Timeout);
 
@@ -268,6 +269,7 @@ namespace MiMFa.Net.Browsers.Sessions
             await _driver.SendAsync("browsingContext.activate", new JObject { ["context"] = targetId }).ConfigureAwait(false);
             CurrentPage = await GetPageAsync(targetId).ConfigureAwait(false);
             _currentContextId = targetId;
+            foreach (var tab in _tabs.Values) tab.IsCurrent = tab.Id == targetId;
             return true;
         }
 

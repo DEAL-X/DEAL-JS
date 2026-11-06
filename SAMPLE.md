@@ -61,7 +61,7 @@ The same browser-object API is available through Chrome, Edge, and Firefox. The 
 - `browser.tab.navigate(url)` performs normal navigation.
 - `browser.tab.back()`, `forward()`, `go(delta)`, and `reload()` control navigation history.
 - `browser.tab.close()` closes the current tab and refreshes the current-tab reference.
-- `browser.tabs.all` returns the tabs in the provider's browser window.
+- `browser.tabs` returns the `BrowserTabs` collection directly; each item is a `BrowserTab` handle.
 - `browser.tabs.get(id)` retrieves a tab by ID.
 - `browser.activate(tab)` activates a tab and updates the current-tab reference.
 
@@ -80,6 +80,8 @@ engine.Browser.Dispose();
 engine.Browser = new Browser(driver: new FirefoxDriver());
 ```
 
+`BrowserTabs` is itself the tab collection (`List<BrowserTab>`); there is no separate tab-info DTO. Each `BrowserTab` is a lightweight handle that resolves its page session only when a page operation or page-backed property is used.
+
 The browser provider delegates common operations to a protocol-neutral browser session. Chromium-only services such as download behavior, permission overrides, and browser runtime information are optional capabilities; unsupported capabilities throw `NotSupportedException` rather than sending CDP commands to Firefox.
 
 ## 4. Synchronous properties and methods
@@ -93,7 +95,7 @@ Consider historyLength is browser.tab.window.history.length;
 Consider isOnline is browser.tab.window.navigator.onLine;
 Consider screenWidth is browser.tab.window.screen.width;
 Consider frameCount is browser.tab.windows.length;
-Consider tabs is browser.tabs.all;
+Consider tabs is browser.tabs;
 ```
 
 The non-`Async` convenience methods are synchronous too:
