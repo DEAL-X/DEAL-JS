@@ -142,7 +142,8 @@ For each asynchronous public or internal operation, provide the synchronous conv
 5. [x] Add `FirefoxDriver`, the BiDi transport, and Firefox browser/page sessions for common operations.
 6. [x] Move Fetch transport to `Net/Fetch` and update engine wiring/namespaces.
 7. [x] Audit the migrated Browser and Fetch classes for file separation, namespace/folder alignment, member ordering, synchronous/async pairs, and synchronous properties.
-8. [x] Update README.md, SAMPLE.md, sample directory guides, and add a cross-driver browser smoke test. The smoke test still needs to be executed against real Chrome, Edge, and Firefox installations.\n9. [x] Replace `BrowserTabInfo` with lazy `BrowserTab` handles and consolidate duplicate timeout overloads.
+8. [x] Update README.md, SAMPLE.md, sample directory guides, and add a cross-driver browser smoke test. The smoke test still needs to be executed against real Chrome, Edge, and Firefox installations.
+9. [x] Replace `BrowserTabInfo` with lazy `BrowserTab` handles and consolidate duplicate timeout overloads.
 
 ## Implementation status
 
