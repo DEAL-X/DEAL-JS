@@ -19,7 +19,7 @@ namespace MiMFa.Net.Browsers.Objects
         public BrowserTab Get(string id) => GetAsync(id).GetAwaiter().GetResult();
         public Task<BrowserTab> GetAsync(string id) => _browser.GetTabAsync(id);
         public bool Close(BrowserTab tab) => CloseAsync(tab).GetAwaiter().GetResult();
-        public Task<bool> CloseAsync(BrowserTab tab) => tab == null ? Task.FromResult(false) : tab.CloseAsync();
+        public Task<bool> CloseAsync(BrowserTab tab) => tab == null ? Task.FromResult(false) : _browser.CloseAsync(tab.Id);
         public bool Activate(BrowserTab tab) => ActivateAsync(tab).GetAwaiter().GetResult();
         public Task<bool> ActivateAsync(BrowserTab tab) => tab == null ? Task.FromResult(false) : _browser.ActivateAsync(tab.Id);
     }
