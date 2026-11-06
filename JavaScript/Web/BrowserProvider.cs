@@ -43,29 +43,24 @@ namespace MiMFa.Engine.JavaScript.Web
         public BrowserDownloads Downloads { get; }
         public BrowserPermissions Permissions { get; }
         public BrowserRuntime Runtime { get; }
-        public BrowserDownloads downloads => Downloads;
-        public BrowserPermissions permissions => Permissions;
-        public BrowserRuntime runtime => Runtime;
+        public BrowserTab Open(string url = null) => OpenTabAsync(url ?? "about:blank").GetAwaiter().GetResult();
+        public void Close() => CloseBrowser();
+        public bool Activate(BrowserTab tab) => tab == null ? false : ActivateAsync(tab.Id).GetAwaiter().GetResult();
         public BrowserTab Tab
         {
             get
             {
-                if (CurrentPage != null) return GetTab(CurrentPage);
-                if (string.IsNullOrEmpty(_currentTargetId))
-                    GetTabsAsync().GetAwaiter().GetResult();
-                if (string.IsNullOrEmpty(_currentTargetId)) return null;
-                var current = GetTabAsync(_currentTargetId).GetAwaiter().GetResult();
-                CurrentPage = current.Page;
-                return current;
+                var tabs = GetTabsAsync().GetAwaiter().GetResult();
+                var current = tabs.FirstOrDefault(item => item.IsCurrent);
+                if (current == null) return null;
+                var page = GetPageAsync(current.Id).GetAwaiter().GetResult();
+                CurrentPage = page;
+                _currentTargetId = current.Id;
+                return GetTab(page);
             }
         }
-        // Lower-case aliases form the public JavaScript-facing API.
-        public BrowserTabs tabs => Tabs;
-        public BrowserTab tab => Tab;
+        // ClearScript resolves public members without regard to identifier casing.
         // Browser-level operations. Tab navigation and history belong to BrowserTab.
-        public Task<BrowserTab> open(string url = null) => OpenTabAsync(url ?? "about:blank");
-        public void close() => CloseBrowser();
-        public Task<bool> activate(BrowserTab tab) => tab == null ? Task.FromResult(false) : ActivateAsync(tab.Id);
 
         public Process Process;
         public string DriverPath { get; set; }
@@ -260,6 +255,44 @@ namespace MiMFa.Engine.JavaScript.Web
             return result["windowId"].Value<int>();
         }
 
+        private async Task<string> GetVisibleTabIdAsync(IList<BrowserTabInfo> tabs)
+        {
+            // Check the previously current tab first. This is the common path and
+            // avoids probing every other tab on each browser.Tab property access.
+            var previous = tabs.FirstOrDefault(item => item.Id == _currentTargetId);
+            if (previous != null)
+            {
+                try
+                {
+                    var page = await GetPageAsync(previous).ConfigureAwait(false);
+                    var visibility = await page.EvaluateValueAsync("document.visibilityState").ConfigureAwait(false);
+                    if (string.Equals(Convert.ToString(visibility), "visible", StringComparison.OrdinalIgnoreCase))
+                        return previous.Id;
+                }
+                catch
+                {
+                    // A target can disappear while the tab list is being inspected.
+                }
+            }
+
+            foreach (var tab in tabs)
+            {
+                if (tab.Id == _currentTargetId) continue;
+                try
+                {
+                    var page = await GetPageAsync(tab).ConfigureAwait(false);
+                    var visibility = await page.EvaluateValueAsync("document.visibilityState").ConfigureAwait(false);
+                    if (string.Equals(Convert.ToString(visibility), "visible", StringComparison.OrdinalIgnoreCase))
+                        return tab.Id;
+                }
+                catch
+                {
+                    // A target can disappear while the tab list is being inspected.
+                }
+            }
+            return null;
+        }
+
         public async Task<IList<BrowserTabInfo>> GetTabsAsync()
         {
             await EnsureAvailableAsync(Timeout).ConfigureAwait(false);
@@ -287,8 +320,11 @@ namespace MiMFa.Engine.JavaScript.Web
                         IsCurrent = !string.IsNullOrEmpty(_currentTargetId) && _currentTargetId == id
                     });
                 }
-                if (string.IsNullOrEmpty(_currentTargetId) && result.Count > 0)
-                    _currentTargetId = result[0].Id;
+                string visibleTargetId = await GetVisibleTabIdAsync(result).ConfigureAwait(false);
+                if (!string.IsNullOrEmpty(visibleTargetId))
+                    _currentTargetId = visibleTargetId;
+                else if (!result.Any(item => item.Id == _currentTargetId))
+                    _currentTargetId = null;
                 foreach (var item in result) item.IsCurrent = item.Id == _currentTargetId;
                 var activeIds = new HashSet<string>(result.Select(x => x.Id));
                 foreach (var id in _pages.Keys.Where(x => !activeIds.Contains(x)).ToList())
@@ -296,23 +332,16 @@ namespace MiMFa.Engine.JavaScript.Web
                     if (_pages.TryRemove(id, out var stale)) stale.Dispose();
                     _tabs.TryRemove(id, out _);
                     if (CurrentPage != null && CurrentPage.TargetId == id) CurrentPage = null;
-                    if (_currentTargetId == id) _currentTargetId = result.FirstOrDefault()?.Id;
+                    if (_currentTargetId == id) _currentTargetId = null;
                 }
                 return result;
             }
         }
 
-        public async Task<BrowserPage> GetPageAsync(string targetId)
+        private async Task<BrowserPage> GetPageAsync(BrowserTabInfo tab)
         {
-            if (string.IsNullOrWhiteSpace(targetId)) throw new ArgumentException("A browser tab identifier is required.", nameof(targetId));
-            if (_pages.TryGetValue(targetId, out var existing))
-            {
-                return existing;
-            }
-
-            var tabs = await GetTabsAsync().ConfigureAwait(false);
-            var tab = tabs.FirstOrDefault(x => x.Id == targetId);
-            if (tab == null) throw new KeyNotFoundException("The browser tab was not found: " + targetId);
+            if (tab == null) throw new ArgumentNullException(nameof(tab));
+            if (_pages.TryGetValue(tab.Id, out var existing)) return existing;
             if (!Uri.TryCreate(tab.WebSocketDebuggerUrl, UriKind.Absolute, out Uri wsUri))
                 throw new InvalidOperationException("The browser returned an invalid DevTools WebSocket URL.");
 
@@ -322,10 +351,10 @@ namespace MiMFa.Engine.JavaScript.Web
                 await connection.ConnectAsync(wsUri, CancellationToken.None).ConfigureAwait(false);
                 var page = new BrowserPage(tab.Id, connection);
                 await page.InitializeAsync().ConfigureAwait(false);
-                if (!_pages.TryAdd(targetId, page))
+                if (!_pages.TryAdd(tab.Id, page))
                 {
                     page.Dispose();
-                    page = _pages[targetId];
+                    page = _pages[tab.Id];
                 }
                 return page;
             }
@@ -334,6 +363,18 @@ namespace MiMFa.Engine.JavaScript.Web
                 connection.Dispose();
                 throw;
             }
+        }
+
+        public async Task<BrowserPage> GetPageAsync(string targetId)
+        {
+            if (string.IsNullOrWhiteSpace(targetId))
+                throw new ArgumentException("A browser tab identifier is required.", nameof(targetId));
+            if (_pages.TryGetValue(targetId, out var existing)) return existing;
+
+            var tabs = await GetTabsAsync().ConfigureAwait(false);
+            var tab = tabs.FirstOrDefault(item => item.Id == targetId);
+            if (tab == null) throw new KeyNotFoundException("The browser tab was not found: " + targetId);
+            return await GetPageAsync(tab).ConfigureAwait(false);
         }
 
         private BrowserTab GetTab(BrowserPage page)
@@ -527,19 +568,30 @@ namespace MiMFa.Engine.JavaScript.Web
                 remaining = remaining.Where(item => item.Id != targetId).ToList();
 
                 if (string.IsNullOrEmpty(replacementId))
+                    replacementId = remaining.FirstOrDefault(item => item.IsCurrent)?.Id;
+
+                if (string.IsNullOrEmpty(replacementId))
                 {
-                    // Chromium selects the tab at the closing position, or the
-                    // previous tab when the closed tab was last in the tab order.
+                    // Only fall back to tab-strip order when Chromium reports no
+                    // visible page (for example, while the browser window is minimized).
                     replacementId = remaining.ElementAtOrDefault(Math.Min(closingIndex, remaining.Count - 1))?.Id
                         ?? remaining.LastOrDefault()?.Id;
+                    if (!string.IsNullOrEmpty(replacementId))
+                        await _browserConnection.SendAsync("Target.activateTarget",
+                            new JObject { ["targetId"] = replacementId }).ConfigureAwait(false);
                 }
 
                 if (!string.IsNullOrEmpty(replacementId))
                 {
-                    await _browserConnection.SendAsync("Target.activateTarget",
-                        new JObject { ["targetId"] = replacementId }).ConfigureAwait(false);
                     CurrentPage = await GetPageAsync(replacementId).ConfigureAwait(false);
                     _currentTargetId = replacementId;
+                    var refreshed = await GetTabsAsync().ConfigureAwait(false);
+                    var visible = refreshed.FirstOrDefault(item => item.IsCurrent);
+                    if (visible != null && visible.Id != replacementId)
+                    {
+                        CurrentPage = await GetPageAsync(visible.Id).ConfigureAwait(false);
+                        _currentTargetId = visible.Id;
+                    }
                 }
                 else
                 {

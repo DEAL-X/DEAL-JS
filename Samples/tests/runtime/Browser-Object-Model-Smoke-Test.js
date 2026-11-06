@@ -3,17 +3,17 @@
 // tab Chromium selects next. File picker checks require user activation.
 
 async function browserObjectModelSmokeTest() {
-    const anchor = await browser.open("about:blank");
-    const opened = await browser.open("https://example.com/");
+    const anchor = browser.Open("about:blank");
+    const opened = browser.Open("https://example.com/");
 
     if (!opened || !opened.Id)
         throw new Error("browser.open() did not return a BrowserTab.");
 
     // Browser properties return native values synchronously.
-    const title = opened.window.document.title;
-    const href = opened.window.location.href;
-    const width = opened.window.innerWidth;
-    const online = opened.window.navigator.onLine;
+    const title = opened.Window.Document.Title;
+    const href = opened.Window.Location.Href;
+    const width = opened.Window.InnerWidth;
+    const online = opened.Window.Navigator.Online;
 
     if (typeof title !== "string" || !title.toLowerCase().includes("example"))
         throw new Error("document.title did not return a synchronous string.");
@@ -25,38 +25,38 @@ async function browserObjectModelSmokeTest() {
         throw new Error("navigator.onLine did not return a boolean.");
 
     // Methods that communicate with Chromium remain awaitable.
-    await opened.window.storage.local.setItem("deal.browser.smoke", "ok");
-    const stored = await opened.window.storage.local.getItem("deal.browser.smoke");
+    opened.Window.Storage.Local.SetItem("deal.browser.smoke", "ok");
+    const stored = opened.Window.Storage.Local.GetItem("deal.browser.smoke");
     if (stored !== "ok")
         throw new Error("The localStorage proxy did not round-trip a value.");
 
-    const tabs = browser.tabs.all;
+    const tabs = browser.Tabs.All;
     if (!Array.isArray(tabs) && typeof tabs.Count !== "number")
         throw new Error("browser.tabs.all did not return a synchronous collection.");
 
-    const fetched = await browser.tabs.get(opened.Id);
+    const fetched = browser.Tabs.Get(opened.Id);
     if (fetched.Id !== opened.Id)
         throw new Error("browser.tabs.get() returned the wrong tab.");
 
-    await browser.activate(fetched);
-    if (browser.tab.Id !== fetched.Id)
+    browser.Activate(fetched);
+    if (browser.Tab.Id !== fetched.Id)
         throw new Error("browser.tab did not follow browser.activate().");
 
     // load() replaces the document; navigate() adds a history entry.
-    await browser.tab.load("https://example.com/");
-    await browser.tab.navigate("https://example.org/");
-    await browser.tab.back();
+    browser.Tab.Load("https://example.com/");
+    browser.Tab.Navigate("https://example.org/");
+    browser.Tab.Back();
 
     // Closing the current tab should make the newly selected tab current.
-    await browser.tab.close();
-    if (!browser.tab || browser.tab.Id !== anchor.Id)
+    browser.Tab.Close();
+    if (!browser.Tab || browser.Tab.Id !== anchor.Id)
         throw new Error("browser.tab did not refer to the tab selected after closing the current tab.");
 
-    const version = await browser.runtime.GetVersionAsync();
+    const version = await browser.Runtime.GetVersionAsync();
     if (!version)
         throw new Error("Browser runtime version information was not returned.");
 
-    browser.close();
+    browser.Close();
     return {
         passed: true,
         title: title,
@@ -69,7 +69,7 @@ async function browserObjectModelSmokeTest() {
 }
 
 // Optional manual checks. These invoke Chromium's native file pickers.
-// const selected = await browser.tab.open(JSON.stringify({ multiple: true }));
-// const fileInfo = await selected[0].getFile();
-// const saveHandle = await browser.tab.save(JSON.stringify({ suggestedName: "deal-output.txt" }));
-// await saveHandle.writeText("Created through the native File System Access API.");
+// const selected = browser.Tab.Open(JSON.stringify({ multiple: true }));
+// const fileInfo = selected[0].GetFile();
+// const saveHandle = browser.Tab.Save(JSON.stringify({ suggestedName: "deal-output.txt" }));
+// saveHandle.WriteText("Created through the native File System Access API.");

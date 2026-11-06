@@ -21,24 +21,23 @@ namespace MiMFa.Engine.JavaScript.Web
         internal string ResolveAddress(string address) => _browser.PathProvider == null ? address : _browser.PathProvider.Resolve(address, Page.Url);
         private static string Json(string value) => Newtonsoft.Json.JsonConvert.ToString(value);
         public string Id => Page.TargetId;
-        public string Url => Page.Url;
-        public string Title => Page.Title;
-        public object url => Page.EvaluateValueAsync("location.href").GetAwaiter().GetResult();
-        public object title => Page.EvaluateValueAsync("document.title").GetAwaiter().GetResult();
+        public object Url => Page.EvaluateValueAsync("location.href").GetAwaiter().GetResult();
+        public object Title => Page.EvaluateValueAsync("document.title").GetAwaiter().GetResult();
         public BrowserWindow Window { get; }
         public BrowserWindows Windows { get; }
-        public BrowserWindow window => Window;
-        public BrowserWindows windows => Windows;
         // Navigation and history operations are scoped to the current tab.
-        public Task<string> load(string address) => LoadAsync(address);
-        public Task<string> navigate(string address) => NavigateAsync(address);
-        public Task<string> reload() => ReloadAsync();
-        public Task<string> back() => Page.GoBackAsync();
-        public Task<string> forward() => Page.GoForwardAsync();
-        public Task<string> go(int delta) => Page.GoAsync(delta);
-        public Task<string> locate(string address) => SetLocationAsync(address, false);
-        public Task<string> relocate(string address) => SetLocationAsync(address, true);
-        public Task<bool> close() => CloseAsync();
+
+        public string Load(string address) => LoadAsync(address).GetAwaiter().GetResult();
+        public string Navigate(string address) => NavigateAsync(address).GetAwaiter().GetResult();
+        public string Reload() => ReloadAsync().GetAwaiter().GetResult();
+        public string Back() => Page.GoBackAsync().GetAwaiter().GetResult();
+        public string Forward() => Page.GoForwardAsync().GetAwaiter().GetResult();
+        public string Go(int delta) => Page.GoAsync(delta).GetAwaiter().GetResult();
+        public string Locate(string address) => SetLocationAsync(address, false).GetAwaiter().GetResult();
+        public string Relocate(string address) => SetLocationAsync(address, true).GetAwaiter().GetResult();
+        public bool Close() => CloseAsync().GetAwaiter().GetResult();
+        public IList<BrowserFileSystemFileHandle> Open(string optionsJson = null) => OpenAsync(optionsJson).GetAwaiter().GetResult();
+        public BrowserFileSystemFileHandle Save(string optionsJson = null) => SaveAsync(optionsJson).GetAwaiter().GetResult();
 
         public Task<string> LoadAsync(string address) => Page.ReplaceNavigateAsync(ResolveAddress(address));
         public Task<string> NavigateAsync(string address) => Page.NavigateAsync(ResolveAddress(address));
@@ -88,8 +87,6 @@ namespace MiMFa.Engine.JavaScript.Web
             return new BrowserFileSystemFileHandle(Page, objectId);
         }
 
-        public Task<IList<BrowserFileSystemFileHandle>> open(string optionsJson = null) => OpenAsync(optionsJson);
-        public Task<BrowserFileSystemFileHandle> save(string optionsJson = null) => SaveAsync(optionsJson);
 
         public void Dispose()
         {

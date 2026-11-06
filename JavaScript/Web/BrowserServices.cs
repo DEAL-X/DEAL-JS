@@ -15,10 +15,10 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserDownloads : BrowserService
     {
         internal BrowserDownloads(BrowserProvider browser) : base(browser) { }
-        public Task<JObject> allow(string directory) => AllowAsync(directory);
-        public Task<JObject> deny() => DenyAsync();
-        public Task<JObject> allowAndName(string directory) => AllowAndNameAsync(directory);
-        public Task<JObject> cancel(string guid) => CancelAsync(guid);
+        public JObject Allow(string directory) => AllowAsync(directory).GetAwaiter().GetResult();
+        public JObject Deny() => DenyAsync().GetAwaiter().GetResult();
+        public JObject AllowAndName(string directory) => AllowAndNameAsync(directory).GetAwaiter().GetResult();
+        public JObject Cancel(string guid) => CancelAsync(guid).GetAwaiter().GetResult();
         public Task<JObject> AllowAsync(string directory) => SendAsync("Browser.setDownloadBehavior",
             new JObject { ["behavior"] = "allow", ["downloadPath"] = directory, ["eventsEnabled"] = true });
         public Task<JObject> DenyAsync() => SendAsync("Browser.setDownloadBehavior",
@@ -32,8 +32,8 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserPermissions : BrowserService
     {
         internal BrowserPermissions(BrowserProvider browser) : base(browser) { }
-        public Task<JObject> grant(string origin, IEnumerable<string> permissions) => GrantAsync(origin, permissions);
-        public Task<JObject> reset(string origin = null) => ResetAsync(origin);
+        public JObject Grant(string origin, IEnumerable<string> permissions) => GrantAsync(origin, permissions).GetAwaiter().GetResult();
+        public JObject Reset(string origin = null) => ResetAsync(origin).GetAwaiter().GetResult();
         public Task<JObject> GrantAsync(string origin, IEnumerable<string> permissions)
         {
             if (string.IsNullOrWhiteSpace(origin)) throw new ArgumentException("An origin is required.", nameof(origin));
@@ -55,9 +55,9 @@ namespace MiMFa.Engine.JavaScript.Web
     public sealed class BrowserRuntime : BrowserService
     {
         internal BrowserRuntime(BrowserProvider browser) : base(browser) { }
-        public Task<JObject> version() => GetVersionAsync();
-        public Task<JObject> commandLine() => GetCommandLineAsync();
-        public Task<JObject> close() => CloseAsync();
+        public JObject Version() => GetVersionAsync().GetAwaiter().GetResult();
+        public JObject CommandLine() => GetCommandLineAsync().GetAwaiter().GetResult();
+        public JObject Close() => CloseAsync().GetAwaiter().GetResult();
         public Task<JObject> GetVersionAsync() => SendAsync("Browser.getVersion");
         public Task<JObject> GetCommandLineAsync() => SendAsync("Browser.getBrowserCommandLine");
         public Task<JObject> CloseAsync() => SendAsync("Browser.close");

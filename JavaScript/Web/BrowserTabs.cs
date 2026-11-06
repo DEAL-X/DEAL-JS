@@ -12,11 +12,10 @@ namespace MiMFa.Engine.JavaScript.Web
         internal BrowserTabs(BrowserProvider browser) { _browser = browser; }
 
         public BrowserTab Current => _browser.Tab;
-        public BrowserTab current => Current;
-        public IList<BrowserTab> all => GetAllAsync().GetAwaiter().GetResult();
-        public Task<BrowserTab> get(string id) => GetAsync(id);
-        public Task<bool> close(BrowserTab tab) => CloseAsync(tab);
-        public Task<bool> activate(BrowserTab tab) => ActivateAsync(tab);
+        public IList<BrowserTab> All => GetAllAsync().GetAwaiter().GetResult();
+        public BrowserTab Get(string id) => GetAsync(id).GetAwaiter().GetResult();
+        public bool Close(BrowserTab tab) => CloseAsync(tab).GetAwaiter().GetResult();
+        public bool Activate(BrowserTab tab) => ActivateAsync(tab).GetAwaiter().GetResult();
         public async Task<IList<BrowserTab>> GetAllAsync()
         {
             var infos = await _browser.GetTabsAsync().ConfigureAwait(false);
