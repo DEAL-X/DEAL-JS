@@ -9,7 +9,6 @@ namespace MiMFa.Net.Browsers.Services
     {
         internal BrowserPermissions(Browser browser) : base(browser) { }
         public JObject Grant(string origin, IEnumerable<string> permissions) => GrantAsync(origin, permissions).GetAwaiter().GetResult();
-        public JObject Reset(string origin = null) => ResetAsync(origin).GetAwaiter().GetResult();
         public Task<JObject> GrantAsync(string origin, IEnumerable<string> permissions)
         {
             if (string.IsNullOrWhiteSpace(origin)) throw new ArgumentException("An origin is required.", nameof(origin));
@@ -20,6 +19,7 @@ namespace MiMFa.Net.Browsers.Services
                 ["permissions"] = new JArray(permissions)
             });
         }
+        public JObject Reset(string origin = null) => ResetAsync(origin).GetAwaiter().GetResult();
         public Task<JObject> ResetAsync(string origin = null)
         {
             var parameters = new JObject();

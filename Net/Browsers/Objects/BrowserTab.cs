@@ -1,15 +1,24 @@
-using System;
-using System.Threading.Tasks;
+using MiMFa.Net.Browsers;
+using MiMFa.Net.Browsers.Objects.Files;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
-using MiMFa.Net.Browsers.Files;
+using System.Threading.Tasks;
 
 namespace MiMFa.Net.Browsers.Objects
 {
-    /// <summary>A tab handle. Its Window and related objects are remote Chromium proxies.</summary>
+    /// <summary>A tab handle. Its Window and related objects are remote browser proxies.</summary>
     public sealed class BrowserTab : IDisposable
     {
         private readonly Browser _browser;
+
+        internal BrowserPage Page { get; }
+        public string Id => Page.TargetId;
+        public object Url => Page.EvaluateValue("location.href");
+        public object Title => Page.EvaluateValue("document.title");
+        public BrowserWindow Window { get; }
+        public BrowserWindows Windows { get; }
+
         internal BrowserTab(Browser browser, BrowserPage page)
         {
             _browser = browser ?? throw new ArgumentNullException(nameof(browser));
@@ -18,47 +27,40 @@ namespace MiMFa.Net.Browsers.Objects
             Windows = new BrowserWindows(this);
         }
 
-        internal BrowserPage Page { get; }
-        internal string ResolveAddress(string address) => _browser.Router == null ? address : _browser.Router.Resolve(address, Page.Url);
-        private static string Json(string value) => Newtonsoft.Json.JsonConvert.ToString(value);
-        public string Id => Page.TargetId;
-        public object Url => Page.EvaluateValueAsync("location.href").GetAwaiter().GetResult();
-        public object Title => Page.EvaluateValueAsync("document.title").GetAwaiter().GetResult();
-        public BrowserWindow Window { get; }
-        public BrowserWindows Windows { get; }
-        // Navigation and history operations are scoped to the current tab.
+        public void Dispose()
+        {
+            try
+            {
+                if (!Close()) Page.Dispose();
+            }
+            catch { Page.Dispose(); }
+        }
 
         public string Load(string address) => LoadAsync(address).GetAwaiter().GetResult();
-        public string Navigate(string address) => NavigateAsync(address).GetAwaiter().GetResult();
-        public string Reload() => ReloadAsync().GetAwaiter().GetResult();
-        public string Back() => Page.GoBackAsync().GetAwaiter().GetResult();
-        public string Forward() => Page.GoForwardAsync().GetAwaiter().GetResult();
-        public string Go(int delta) => Page.GoAsync(delta).GetAwaiter().GetResult();
-        public string Locate(string address) => SetLocationAsync(address, false).GetAwaiter().GetResult();
-        public string Relocate(string address) => SetLocationAsync(address, true).GetAwaiter().GetResult();
-        public bool Close() => CloseAsync().GetAwaiter().GetResult();
-        public IList<BrowserFileSystemFileHandle> Open(string optionsJson = null) => OpenAsync(optionsJson).GetAwaiter().GetResult();
-        public BrowserFileSystemFileHandle Save(string optionsJson = null) => SaveAsync(optionsJson).GetAwaiter().GetResult();
-
         public Task<string> LoadAsync(string address) => Page.ReplaceNavigateAsync(ResolveAddress(address));
+        public string Navigate(string address) => NavigateAsync(address).GetAwaiter().GetResult();
         public Task<string> NavigateAsync(string address) => Page.NavigateAsync(ResolveAddress(address));
+        public string Reload() => ReloadAsync().GetAwaiter().GetResult();
+        public Task<string> ReloadAsync() => Page.ReloadAsync();
+        public string Back() => BackAsync().GetAwaiter().GetResult();
+        public Task<string> BackAsync() => Page.GoBackAsync();
+        public string Forward() => ForwardAsync().GetAwaiter().GetResult();
+        public Task<string> ForwardAsync() => Page.GoForwardAsync();
+        public string Go(int delta) => GoAsync(delta).GetAwaiter().GetResult();
+        public Task<string> GoAsync(int delta) => Page.GoAsync(delta);
+        public string SetLocation(string address, bool addHistoryEntry) => SetLocationAsync(address, addHistoryEntry).GetAwaiter().GetResult();
         public Task<string> SetLocationAsync(string address, bool addHistoryEntry)
         {
             string operation = addHistoryEntry ? "pushState" : "replaceState";
             return Page.EvaluateAsync("history." + operation + "(null, null, " + Json(address == null ? null : ResolveAddress(address)) + "); location.href");
         }
-
-        public Task<string> ReloadAsync() => Page.ReloadAsync();
+        public string Locate(string address) => LocateAsync(address).GetAwaiter().GetResult();
+        public Task<string> LocateAsync(string address) => SetLocationAsync(address, false);
+        public string Relocate(string address) => RelocateAsync(address).GetAwaiter().GetResult();
+        public Task<string> RelocateAsync(string address) => SetLocationAsync(address, true);
+        public bool Close() => CloseAsync().GetAwaiter().GetResult();
         public Task<bool> CloseAsync() => _browser.CloseAsync(Id);
-
-        // Direct aliases for the native File System Access API. The picker and
-        // its security/permission checks remain entirely owned by Chromium.
-        private static string NormalizePickerOptions(string optionsJson)
-        {
-            if (string.IsNullOrWhiteSpace(optionsJson)) return "{}";
-            var options = JObject.Parse(optionsJson);
-            return options.ToString(Newtonsoft.Json.Formatting.None);
-        }
+        public IList<BrowserFileSystemFileHandle> Open(string optionsJson = null) => OpenAsync(optionsJson).GetAwaiter().GetResult();
 
         public async Task<IList<BrowserFileSystemFileHandle>> OpenAsync(string optionsJson = null)
         {
@@ -81,6 +83,8 @@ namespace MiMFa.Net.Browsers.Objects
             finally { await Page.ReleaseObjectAsync(objectId).ConfigureAwait(false); }
         }
 
+        public BrowserFileSystemFileHandle Save(string optionsJson = null) => SaveAsync(optionsJson).GetAwaiter().GetResult();
+
         public async Task<BrowserFileSystemFileHandle> SaveAsync(string optionsJson = null)
         {
             string objectId = await Page.EvaluateObjectAsync(
@@ -88,14 +92,15 @@ namespace MiMFa.Net.Browsers.Objects
             return new BrowserFileSystemFileHandle(Page, objectId);
         }
 
+        internal string ResolveAddress(string address) => _browser.Router == null ? address : _browser.Router.Resolve(address, Page.Url);
 
-        public void Dispose()
+        private static string NormalizePickerOptions(string optionsJson)
         {
-            try
-            {
-                if (!CloseAsync().GetAwaiter().GetResult()) Page.Dispose();
-            }
-            catch { Page.Dispose(); }
+            if (string.IsNullOrWhiteSpace(optionsJson)) return "{}";
+            var options = JObject.Parse(optionsJson);
+            return options.ToString(Newtonsoft.Json.Formatting.None);
         }
+
+        private static string Json(string value) => Newtonsoft.Json.JsonConvert.ToString(value);
     }
 }

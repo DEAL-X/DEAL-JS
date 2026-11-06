@@ -2,7 +2,7 @@
 
 The sample collection is organized by purpose:
 
-- [tests/](tests/) — compiler stress inputs, expected JavaScript, actual result snapshots, and runtime smoke tests.
+- [tests/](tests/) — compiler stress inputs, expected JavaScript, actual result snapshots, and runtime smoke tests, including the cross-driver browser-session check.
 - [tutorials/](tutorials/) — progressive, commented DEAL.JS examples for learning the language.
 - [practicals/](practicals/) — realistic DEAL.JS workflows that can be adapted to applications.
 

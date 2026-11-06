@@ -11,8 +11,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using MiMFa.Net;
 
-namespace MiMFa.Net
+namespace MiMFa.Net.Fetch
 {
     /// <summary>
     /// Provides the native HTTP transport for the JavaScript Fetch API.
@@ -35,6 +36,26 @@ namespace MiMFa.Net
 
         public Transfer()
         {
+        }
+
+        public void Dispose()
+        {
+            IsAlive = false;
+
+            foreach (var request in _requests.Values)
+            {
+                try
+                {
+                    request.Cancel();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // The request completed concurrently.
+                }
+            }
+
+            _client?.Dispose();
+            _client = null;
         }
 
         // ------------------------------------------------------------
@@ -74,25 +95,7 @@ namespace MiMFa.Net
             Dispose();
         }
 
-        public void Dispose()
-        {
-            IsAlive = false;
 
-            foreach (var request in _requests.Values)
-            {
-                try
-                {
-                    request.Cancel();
-                }
-                catch (ObjectDisposedException)
-                {
-                    // The request completed concurrently.
-                }
-            }
-
-            _client?.Dispose();
-            _client = null;
-        }
 
         // ------------------------------------------------------------
         // Fetch
@@ -104,6 +107,37 @@ namespace MiMFa.Net
         /// If bodyBase64 is supplied, it takes precedence over data.
         /// This allows arbitrary binary request bodies.
         /// </summary>
+        public JObject Fetch(FetchRequest request) => FetchAsync(request).GetAwaiter().GetResult();
+
+        public Task<JObject> FetchAsync(FetchRequest request)
+        {
+            if (request == null) throw new ArgumentNullException(nameof(request));
+            return FetchAsync(request.Method, request.Url, request.Data, request.ContentType,
+                request.Timeout, request.Headers, request.Id, request.BodyBase64, request.Credentials);
+        }
+
+        public JObject Fetch(
+            string method,
+            string url,
+            string data = null,
+            string contentType = "application/json",
+            int timeout = 30000,
+            JObject headers = null,
+            string id = null,
+            string bodyBase64 = null)
+        {
+            return FetchAsync(
+                method,
+                url,
+                data,
+                contentType,
+                timeout,
+                headers,
+                id,
+                bodyBase64
+            ).GetAwaiter().GetResult();
+        }
+
         public async Task<JObject> FetchAsync(
             string method,
             string url,
@@ -323,6 +357,8 @@ namespace MiMFa.Net
         }
 
         /// <summary>JSON bridge for script hosts that do not expose Newtonsoft types.</summary>
+        public JObject FetchJson(string method, string url, string data = null, string contentType = "application/json", int timeout = 30000, string headersJson = null, string id = null, string bodyBase64 = null, string credentials = "same-origin") => FetchJsonAsync(method, url, data, contentType, timeout, headersJson, id, bodyBase64, credentials).GetAwaiter().GetResult();
+
         public Task<JObject> FetchJsonAsync(
             string method,
             string url,
@@ -342,8 +378,9 @@ namespace MiMFa.Net
         // Synchronous methods
         // ------------------------------------------------------------
 
-        public JObject Fetch(
-            string method,
+
+
+        public JObject Get(
             string url,
             string data = null,
             string contentType = "application/json",
@@ -352,15 +389,9 @@ namespace MiMFa.Net
             string id = null,
             string bodyBase64 = null)
         {
-            return FetchAsync(
-                method,
-                url,
-                data,
-                contentType,
-                timeout,
-                headers,
-                id,
-                bodyBase64
+            return GetAsync(
+                url, data, contentType,
+                timeout, headers, id, bodyBase64
             ).GetAwaiter().GetResult();
         }
 
@@ -378,7 +409,9 @@ namespace MiMFa.Net
                 timeout, headers, id, bodyBase64);
         }
 
-        public JObject Get(
+
+
+        public JObject Post(
             string url,
             string data = null,
             string contentType = "application/json",
@@ -387,7 +420,7 @@ namespace MiMFa.Net
             string id = null,
             string bodyBase64 = null)
         {
-            return GetAsync(
+            return PostAsync(
                 url, data, contentType,
                 timeout, headers, id, bodyBase64
             ).GetAwaiter().GetResult();
@@ -407,20 +440,7 @@ namespace MiMFa.Net
                 timeout, headers, id, bodyBase64);
         }
 
-        public JObject Post(
-            string url,
-            string data = null,
-            string contentType = "application/json",
-            int timeout = 30000,
-            JObject headers = null,
-            string id = null,
-            string bodyBase64 = null)
-        {
-            return PostAsync(
-                url, data, contentType,
-                timeout, headers, id, bodyBase64
-            ).GetAwaiter().GetResult();
-        }
+
 
         // ------------------------------------------------------------
         // Cancellation

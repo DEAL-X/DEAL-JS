@@ -9,10 +9,10 @@ namespace MiMFa.Net.Browsers.Services
     {
         internal BrowserRuntime(Browser browser) : base(browser) { }
         public JObject Version() => GetVersionAsync().GetAwaiter().GetResult();
-        public JObject CommandLine() => GetCommandLineAsync().GetAwaiter().GetResult();
-        public JObject Close() => CloseAsync().GetAwaiter().GetResult();
         public Task<JObject> GetVersionAsync() => SendAsync("Browser.getVersion");
+        public JObject CommandLine() => GetCommandLineAsync().GetAwaiter().GetResult();
         public Task<JObject> GetCommandLineAsync() => SendAsync("Browser.getBrowserCommandLine");
+        public JObject Close() => CloseAsync().GetAwaiter().GetResult();
         public Task<JObject> CloseAsync() => SendAsync("Browser.close");
     }
 }

@@ -11,11 +11,14 @@ namespace MiMFa.Net.Browsers.Objects
     {
         private readonly BrowserTab _tab;
         public int Index { get; }
-        internal BrowserFrame(BrowserTab tab, int index) { _tab = tab; Index = index; }
+
         private string Prefix => "window.frames[" + Index.ToString(System.Globalization.CultureInfo.InvariantCulture) + "]";
-        public object Name => _tab.Page.EvaluateValueAsync(Prefix + ".name").GetAwaiter().GetResult();
-        public object Url => _tab.Page.EvaluateValueAsync("(function(w){try{return w.location.href}catch(e){return null}})(" + Prefix + ")").GetAwaiter().GetResult();
-        public object Title => _tab.Page.EvaluateValueAsync("(function(w){try{return w.document.title}catch(e){return null}})(" + Prefix + ")").GetAwaiter().GetResult();
+        public object Name => _tab.Page.EvaluateValue(Prefix + ".name");
+        public object Url => _tab.Page.EvaluateValue("(function(w){try{return w.location.href}catch(e){return null}})(" + Prefix + ")");
+        public object Title => _tab.Page.EvaluateValue("(function(w){try{return w.document.title}catch(e){return null}})(" + Prefix + ")");
+        internal BrowserFrame(BrowserTab tab, int index) { _tab = tab; Index = index; }
+
+        public string Evaluate(string expression) => EvaluateAsync(expression).GetAwaiter().GetResult();
         public Task<string> EvaluateAsync(string expression) =>
             _tab.Page.EvaluateAsync("(function(w){return w.eval(" + (expression ?? "undefined") + ")})(" + Prefix + ")");
     }

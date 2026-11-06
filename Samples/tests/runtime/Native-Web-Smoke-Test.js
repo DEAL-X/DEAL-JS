@@ -1,4 +1,4 @@
-// Run after the host initializes the engine and loads deal/web/fetch.js.
+// Run after the host initializes the engine, selects a browser driver, and loads deal/web/fetch.js.
 
 async function testDealFetch() {
     const response = await fetch("example.com");
@@ -56,7 +56,7 @@ async function testDealBrowserLocalFile() {
     const title = browser.Tab .Window .Document.Title;
 
     if (title !== "DEAL local path test")
-        throw new Error("Chromium did not load the local file.");
+        throw new Error("The selected browser did not load the local file.");
 
     return { url: browser.Tab.Url, title: title };
 }

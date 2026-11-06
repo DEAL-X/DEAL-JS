@@ -1,6 +1,7 @@
+// Chromium-specific object-model smoke test for ChromeDriver and EdgeDriver.
 // Run this sample in the ClearScript host after loading the DEAL web library.
-// The test opens two tabs so closing the current tab can be checked against the
-// tab Chromium selects next. File picker checks require user activation.
+// The cross-driver common API test is Browser-Driver-Smoke-Test.js.
+// File picker checks require browser support, a secure context, and user activation.
 
 async function browserObjectModelSmokeTest() {
     const anchor = browser.Open("about:blank");
@@ -24,7 +25,7 @@ async function browserObjectModelSmokeTest() {
     if (typeof online !== "boolean")
         throw new Error("navigator.onLine did not return a boolean.");
 
-    // Methods that communicate with Chromium remain awaitable.
+    // Explicit Async methods remain awaitable; browser convenience methods are synchronous.
     opened.Window.Storage.Local.SetItem("deal.browser.smoke", "ok");
     const stored = opened.Window.Storage.Local.GetItem("deal.browser.smoke");
     if (stored !== "ok")

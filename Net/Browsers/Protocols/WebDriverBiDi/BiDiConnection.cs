@@ -7,9 +7,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MiMFa.Net.Browsers.Drivers
+namespace MiMFa.Net.Browsers.Protocols.WebDriverBiDi
 {
-    internal sealed class Connection : IDisposable
+    internal sealed class BiDiConnection : IDisposable
     {
         private readonly ClientWebSocket _socket = new ClientWebSocket();
         private readonly ConcurrentDictionary<int, TaskCompletionSource<JObject>> _pending =
@@ -21,6 +21,24 @@ namespace MiMFa.Net.Browsers.Drivers
 
         public event Action<string, JObject> EventReceived;
 
+        public void Dispose()
+        {
+            _shutdown.Cancel();
+            var closed = new ObjectDisposedException(nameof(BiDiConnection));
+            foreach (var item in _pending.Values)
+                item.TrySetException(closed);
+            try
+            {
+                if (_socket.State == WebSocketState.Open)
+                    _socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "DEAL closing", CancellationToken.None)
+                        .GetAwaiter().GetResult();
+            }
+            catch { }
+            _socket.Dispose();
+            _sendLock.Dispose();
+            _shutdown.Dispose();
+        }
+
         public async Task ConnectAsync(Uri websocketUri, CancellationToken cancellationToken)
         {
             await _socket.ConnectAsync(websocketUri, cancellationToken).ConfigureAwait(false);
@@ -30,12 +48,12 @@ namespace MiMFa.Net.Browsers.Drivers
         public async Task<JObject> SendAsync(string method, JObject parameters = null, int timeoutMilliseconds = 30000)
         {
             if (_socket.State != WebSocketState.Open)
-                throw new InvalidOperationException("The browser debugging WebSocket is not connected.");
+                throw new InvalidOperationException("The WebDriver BiDi WebSocket is not connected.");
 
             int id = Interlocked.Increment(ref _nextId);
             var completion = new TaskCompletionSource<JObject>(TaskCreationOptions.RunContinuationsAsynchronously);
             if (!_pending.TryAdd(id, completion))
-                throw new InvalidOperationException("Could not register the DevTools command.");
+                throw new InvalidOperationException("Could not register the WebDriver BiDi command.");
 
             var command = new JObject
             {
@@ -57,7 +75,7 @@ namespace MiMFa.Net.Browsers.Drivers
                 {
                     timeout.CancelAfter(timeoutMilliseconds);
                     using (timeout.Token.Register(() => completion.TrySetException(
-                        new TimeoutException("The DevTools command timed out: " + method))))
+                        new TimeoutException("The WebDriver BiDi command timed out: " + method))))
                     {
                         JObject result = await completion.Task.ConfigureAwait(false);
                         if (result["error"] != null)
@@ -86,7 +104,7 @@ namespace MiMFa.Net.Browsers.Drivers
                                 .ConfigureAwait(false);
                             if (part.MessageType == WebSocketMessageType.Close) return;
                             if (part.MessageType != WebSocketMessageType.Text)
-                                throw new WebSocketException("Unexpected binary message from the DevTools protocol.");
+                                throw new WebSocketException("Unexpected binary message from the WebDriver BiDi protocol.");
                             stream.Write(buffer, 0, part.Count);
                         } while (!part.EndOfMessage);
 
@@ -126,28 +144,12 @@ namespace MiMFa.Net.Browsers.Drivers
             }
             finally
             {
-                var closed = new WebSocketException("The DevTools WebSocket connection was closed.");
+                var closed = new WebSocketException("The WebDriver BiDi WebSocket connection was closed.");
                 foreach (var item in _pending.Values)
                     item.TrySetException(closed);
             }
         }
 
-        public void Dispose()
-        {
-            _shutdown.Cancel();
-            var closed = new ObjectDisposedException(nameof(Connection));
-            foreach (var item in _pending.Values)
-                item.TrySetException(closed);
-            try
-            {
-                if (_socket.State == WebSocketState.Open)
-                    _socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "DEAL closing", CancellationToken.None)
-                        .GetAwaiter().GetResult();
-            }
-            catch { }
-            _socket.Dispose();
-            _sendLock.Dispose();
-            _shutdown.Dispose();
-        }
+
     }
 }

@@ -672,13 +672,37 @@ The host transport supports HTTP and HTTPS, common request methods, request and 
 
 This is a host-side Fetch compatibility layer, not a complete browser Fetch implementation. It does not enforce browser CORS policy or implement service workers, browser cache modes, opaque `no-cors` responses, browser referrer policy, integrity checks, keepalive semantics, or streaming response bodies. Unsupported request options are rejected rather than silently ignored. URL-encoded `formData()` parsing is supported; multipart `FormData` uploads require a browser XHR runtime.
 
+At the .NET layer, the HTTP transport is kept separate from browser control: `Transfer` and `FetchRequest` are in `MiMFa.Net.Fetch`; the browser provider and drivers are in `MiMFa.Net.Browsers` and `MiMFa.Net.Browsers.Drivers`. The shared `Router` remains in `MiMFa.Net`. A host can construct a request directly with `new Transfer().FetchAsync(new FetchRequest { Url = ... })`; DEAL's JavaScript `fetch()` compatibility layer uses this transport internally.
+
 The ClearScript V8 host must enable `V8ScriptEngineFlags.EnableTaskPromiseConversion` for .NET `Task` results to be awaitable from JavaScript.
 
-#### Chromium browser object model
+#### Cross-browser browser object model
 
-The ClearScript host exposes `application.Engine.Browser` as the DEAL `browser` object. One `Browser` is scoped to one application-level Chromium window. Its `WindowId` is discovered through the Chrome DevTools Protocol (CDP), or can be supplied when attaching to an existing debugging endpoint. Create a separate provider instance for each application-level browser window.
+The ClearScript host exposes `application.Engine.Browser` as the DEAL `browser` object. The public `Browser` type is a browser-independent provider facade. It delegates browser operations to a selected `BrowserDriver` and a protocol-neutral `BrowserSession`; each tab is represented by a `BrowserPageSession`. The provider and page objects do not need to know whether the selected implementation uses DevTools Protocol or WebDriver BiDi.
 
-The public .NET API uses **PascalCase** names only. Duplicate lower-case C# aliases have been removed. ClearScript resolves member names without regard to casing, so both the familiar JavaScript-style spelling and the canonical .NET spelling address the same member:
+The default constructor continues to select Chrome for backward compatibility. The .NET host can select another driver explicitly:
+
+```csharp
+using MiMFa.Net.Browsers;
+using MiMFa.Net.Browsers.Drivers;
+
+// Default: ChromeDriver
+var chromeBrowser = new Browser();
+
+// Edge shares the Chromium implementation.
+var edgeBrowser = new Browser(driver: new EdgeDriver());
+
+// Firefox uses geckodriver and WebDriver BiDi.
+var firefoxBrowser = new Browser(driver: new FirefoxDriver());
+
+// Optional explicit executable paths:
+var firefoxWithCustomDriver = new Browser(
+    driver: new FirefoxDriver(driverPath: @"C:\tools\geckodriver.exe"));
+```
+
+`ChromeDriver` and `EdgeDriver` inherit from `ChromiumDriver`, which owns the shared Chromium process, profile, and debugging-endpoint setup. `FirefoxDriver` is independent and uses geckodriver to create a WebDriver BiDi session. Firefox requires a compatible Firefox/geckodriver installation; geckodriver must be discoverable on `PATH` or supplied through `driverPath`.
+
+The public .NET API uses **PascalCase** names only. ClearScript resolves member names without regard to casing, so both the familiar JavaScript-style spelling and the canonical .NET spelling address the same member:
 
 ```javascript
 const titleA = browser.tab.window.document.title;
@@ -688,20 +712,24 @@ const urlA = browser.tab.window.location.href;
 const urlB = browser.Tab.Window.Location.Href;
 ```
 
-These are synchronous property reads. They return values rather than .NET `Task` objects. The host waits for Chromium to answer each remote property read; the returned value is not a local DOM object.
+These are synchronous property reads. They return values rather than .NET `Task` objects. The host waits for the selected browser to answer each remote property read; the returned value is not a local DOM object.
 
-The main object hierarchy is:
+The common object hierarchy is:
 
-- `browser`: the `Browser`.
-- `browser.Tab`: the currently visible tab in the provider's browser window.
-- `browser.Tabs.Current` and `browser.Tabs.All`: the current tab and the synchronous collection of tabs in that window.
+- `browser`: the `Browser` provider.
+- `browser.Driver`: the selected browser driver.
+- `browser.Session`: the active protocol-neutral browser session.
+- `browser.Tab`: the currently displayed tab in the provider's browser session.
+- `browser.Tabs.Current` and `browser.Tabs.All`: the current tab and the synchronous collection of tabs.
 - `browser.Tab.Window`: the remote Window proxy.
 - `browser.Tab.Windows`: the child-frame collection.
-- `browser.Downloads`, `browser.Permissions`, and `browser.Runtime`: browser-level CDP services.
+- `browser.Downloads`, `browser.Permissions`, and `browser.Runtime`: optional browser-level services.
 
-A `BrowserTab` exposes synchronous `Id`, `Url`, `Title`, `Window`, and `Windows` properties. Its navigation and history methods include `Load`, `Navigate`, `Reload`, `Back`, `Forward`, `Go`, `Locate`, and `Relocate`. Browser-level operations are `Open`, `Activate`, and `Close`. The current tab can also be closed with `browser.Tab.Close()`.
+`WindowId` exposes the native application-window identifier when the selected backend provides one; Firefox uses BiDi browsing-context IDs and therefore reports `null` for this Chromium-specific concept. `Cookies.Document` is based on the standard `document.cookie` API; `Cookies.All` uses the Chromium CDP cookie command and is not available through Firefox.
 
-The Window proxy exposes `Document`, `Location`, `History`, `Navigator`, `Screen`, `Console`, `Cookies`, and `Storage`. Their public properties are also PascalCase. Examples include:
+A `BrowserTab` exposes synchronous `Id`, `Url`, `Title`, `Window`, and `Windows` properties. Its common navigation and history methods include `Load`, `Navigate`, `Reload`, `Back`, `Forward`, `Go`, `Locate`, and `Relocate`. Browser-level operations are `Open`, `Activate`, and `Close`. The current tab can also be closed with `browser.Tab.Close()`.
+
+The Window proxy exposes `Document`, `Location`, `History`, `Navigator`, `Screen`, `Console`, `Cookies`, and `Storage`. Their public properties are PascalCase. Examples include:
 
 - `Document.Title`, `Document.Url`, `Document.Html`, `Document.Text`, `Document.ReadyState`, and `Document.VisibilityState`.
 - `Location.Href`, `Origin`, `Pathname`, `Search`, and `Hash`.
@@ -710,7 +738,7 @@ The Window proxy exposes `Document`, `Location`, `History`, `Navigator`, `Screen
 - `Screen.Width`, `Height`, `AvailWidth`, `AvailHeight`, and `ColorDepth`.
 - `Storage.Local` and `Storage.Session`; each storage area exposes `Length` and `Keys`.
 
-Browser properties return native values synchronously, including file-system metadata such as `Name`, `Kind`, `Type`, `Size`, and `LastModified`. The non-`Async` convenience methods are synchronous as well; their explicitly named `...Async()` counterparts remain awaitable. DEAL source uses the familiar lower-case browser-object spelling because ClearScript resolves the public PascalCase .NET members without regard to casing:
+Browser properties return native values synchronously. The non-`Async` convenience methods are synchronous as well; explicitly named `...Async()` counterparts remain awaitable. DEAL source uses familiar lower-case browser-object spelling because ClearScript resolves the public PascalCase .NET members without regard to casing:
 
 ```deal
 Consider tab is browser.open("https://example.com/");
@@ -723,29 +751,17 @@ browser.tab.navigate("https://example.org/");
 browser.tab.back();
 ```
 
-The File System Access API is exposed through the native browser file pickers. `browser.tab.open(optionsJson)` and `browser.tab.save(optionsJson)` call `window.showOpenFilePicker(options)` and `window.showSaveFilePicker(options)`. Their non-`Async` forms return browser-owned remote proxies synchronously:
+The File System Access API is accessed through the browser's native file pickers. Availability depends on the browser, its secure-context rules, permissions, and user-activation requirements. The `Open` and `Save` operations return remote handles; their explicit `...Async()` counterparts remain available.
 
-```deal
-Consider handles is browser.tab.open();
-Consider file is handles[0].getFile();
-Consider text is file.text();
-Consider fileName is file.name;
+Downloads, permission overrides, browser command-line information, and other vendor-specific operations are optional capabilities. The Chromium drivers provide the existing CDP-backed services. A driver that does not implement a capability, including Firefox for the current Chromium-only services, reports `NotSupportedException` rather than silently sending a CDP command.
 
-Consider output is browser.tab.save("{\"suggestedName\":\"result.txt\"}");
-output.writeText("Saved by DEAL.JS");
-```
-
-Chromium continues to enforce its secure-context, permission, and transient-user-activation requirements. Dispose remote file handles when they are no longer needed.
+The native browser test is [Browser-Driver-Smoke-Test.js](Samples/tests/runtime/Browser-Driver-Smoke-Test.js); run it once with each driver configured by the .NET host. The Chromium-specific file-picker checks remain in [Browser-Object-Model-Smoke-Test.js](Samples/tests/runtime/Browser-Object-Model-Smoke-Test.js). Fetch and local-file checks are in [Native-Web-Smoke-Test.js](Samples/tests/runtime/Native-Web-Smoke-Test.js).
 
 #### Current-tab tracking and closing
 
-The provider does not assume that the first item returned by CDP is the active tab, and it does not treat an arbitrary available tab as the current tab. When `browser.Tab` is read, the provider checks the pages' `document.visibilityState` values and resolves the tab that Chromium currently shows. This also allows tab switches made directly in the Chrome UI to be reflected the next time `browser.Tab` is accessed.
+The provider does not assume that the first item returned by a protocol is the active tab, and it does not treat an arbitrary available tab as the current tab. Reading `browser.Tab` resolves the page the browser currently displays. Chromium uses the page visibility state reported through CDP; Firefox uses WebDriver BiDi browsing contexts and the same page visibility state. Browser UI tab switches are reflected the next time `browser.Tab` is accessed.
 
-When `browser.Tab.Close()` closes the current tab, the provider waits for the closed target to disappear, identifies the remaining page that is actually visible, and updates its current-tab reference to that page. If the browser window is minimized and Chromium reports no visible page, the provider uses the adjacent tab as a fallback. Closing the last tab creates a replacement blank tab so the browser window remains available.
-
-The provider scopes tab discovery, activation, and closing to its application-level `WindowId`. A newly opened tab is created after activating an anchor tab, and its resulting window ID is checked. If Chromium creates it in a different window, the operation fails and the stray target is closed rather than mixing tabs from different browser objects.
-
-The native browser tests are in [tests/Browser-Object-Model-Smoke-Test.js](Samples/tests/runtime/Browser-Object-Model-Smoke-Test.js). The Fetch and local-file tests are in [tests/Native-Web-Smoke-Test.js](Samples/tests/runtime/Native-Web-Smoke-Test.js). The DEAL compiler stress tests, expected JavaScript, and result snapshots are grouped in [tests/](Samples/tests/).
+When `browser.Tab.Close()` closes the current tab, the provider waits for the closed context to disappear and updates its current-tab reference to the remaining visible page. If the browser reports no visible page, it falls back to the adjacent tab. Closing the last tab creates a replacement blank tab so the provider remains usable.
 
 #### Address resolution and local files
 
@@ -761,11 +777,11 @@ Consider html is await response.text();
 Configure the provider from the .NET host when needed:
 
 ```csharp
-engine.Router.BaseDirectory = @"D:\Projects\MyScraper";
-engine.Router.BaseAddress = "https://example.com/app/";
+engine.Router.RootDirectory = @"D:\Projects\MyScraper";
+engine.Router.RootAddress = "https://example.com/app/";
 ```
 
-Chromium loads local files through `file://` and applies its normal security restrictions. Host Fetch supports local-file `GET` and `HEAD` requests, returns status `200`, an absolute `file://` response URL, an inferred content type, and the file bytes. Missing files reject the Fetch promise. Local file reads do not use HTTP cookies or HTTP request headers.
+The selected browser loads local files through `file://` and applies its normal security restrictions. Host Fetch supports local-file `GET` and `HEAD` requests, returns status `200`, an absolute `file://` response URL, an inferred content type, and the file bytes. Missing files reject the Fetch promise. Local file reads do not use HTTP cookies or HTTP request headers.
 
 #### USE and REUSE
 
