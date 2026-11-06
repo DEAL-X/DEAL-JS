@@ -159,7 +159,7 @@ namespace MiMFa.Net.Browsers.Sessions
             return result["windowId"].Value<int>();
         }
 
-        private async Task<string> GetVisibleTabIdAsync(IList<BrowserTabInfo> tabs)
+        private async Task<string> GetVisibleTabIdAsync(IList<BrowserTab> tabs)
         {
             // Check the previously current tab first. This is the common path and
             // avoids probing every other tab on each browser.Tab property access.
@@ -209,22 +209,25 @@ namespace MiMFa.Net.Browsers.Sessions
                 var pages = items.OfType<JObject>()
                     .Where(x => string.Equals((string)x["type"], "page", StringComparison.OrdinalIgnoreCase))
                     .ToList();
-                var result = new List<BrowserTabInfo>();
+                var result = new List<BrowserTab>();
                 foreach (var item in pages)
                 {
                     string id = (string)item["id"];
                     int windowId = await GetWindowIdAsync(id).ConfigureAwait(false);
                     if (!_windowId.HasValue) _windowId = windowId;
                     if (_windowId.Value != windowId) continue;
-                    result.Add(new BrowserTabInfo
+                    var tab = new BrowserTab(_browser, id, (string)item["type"], (string)item["webSocketDebuggerUrl"],
+                        !string.IsNullOrEmpty(_currentTargetId) && _currentTargetId == id);
+                    if (_tabs.TryGetValue(id, out var existingTab))
                     {
-                        Id = id,
-                        Type = (string)item["type"],
-                        Title = (string)item["title"],
-                        Url = (string)item["url"],
-                        WebSocketDebuggerUrl = (string)item["webSocketDebuggerUrl"],
-                        IsCurrent = !string.IsNullOrEmpty(_currentTargetId) && _currentTargetId == id
-                    });
+                        existingTab.Type = tab.Type;
+                        existingTab.WebSocketDebuggerUrl = tab.WebSocketDebuggerUrl;
+                        existingTab.IsCurrent = tab.IsCurrent;
+                        tab = existingTab;
+                    }
+                    else
+                        tab = _tabs.GetOrAdd(id, tab);
+                    result.Add(tab);
                 }
                 string visibleTargetId = await GetVisibleTabIdAsync(result).ConfigureAwait(false);
                 if (!string.IsNullOrEmpty(visibleTargetId))
@@ -246,7 +249,7 @@ namespace MiMFa.Net.Browsers.Sessions
             }
         }
 
-        private async Task<BrowserPage> GetPageAsync(BrowserTabInfo tab)
+        private async Task<BrowserPage> GetPageAsync(BrowserTab tab)
         {
             if (tab == null) throw new ArgumentNullException(nameof(tab));
             if (_pages.TryGetValue(tab.Id, out var existing)) return existing;
@@ -352,11 +355,7 @@ namespace MiMFa.Net.Browsers.Sessions
         public override string GoForward() => GoForwardAsync().GetAwaiter().GetResult();
         public override Task<string> GoForwardAsync() => CurrentPage == null ? Task.FromResult<string>(null) : CurrentPage.GoForwardAsync();
 
-        public override BrowserPage Load(string url) => LoadAsync(url).GetAwaiter().GetResult();
-
-        public override Task<BrowserPage> LoadAsync(string url) => LoadAsync(url, _driver.Timeout);
-
-        public override BrowserPage Load(string url, int timeoutMilliseconds) => LoadAsync(url, timeoutMilliseconds).GetAwaiter().GetResult();
+        public override BrowserPage Load(string url, int timeoutMilliseconds = -1) => LoadAsync(url, timeoutMilliseconds).GetAwaiter().GetResult();
 
         public override async Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = -1)
         {
@@ -388,7 +387,7 @@ namespace MiMFa.Net.Browsers.Sessions
                 if (_windowId.Value != createdWindowId)
                     throw new InvalidOperationException("Chromium created the new tab in a different application-level window.");
 
-                BrowserTabInfo info = null;
+                BrowserTab info = null;
                 var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMilliseconds);
                 while (info == null && DateTime.UtcNow < deadline)
                 {
@@ -398,14 +397,7 @@ namespace MiMFa.Net.Browsers.Sessions
                         var targets = JArray.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
                         var item = targets.OfType<JObject>().FirstOrDefault(x => (string)x["id"] == id);
                         if (item != null)
-                            info = new BrowserTabInfo
-                            {
-                                Id = id,
-                                Type = (string)item["type"],
-                                Title = (string)item["title"],
-                                Url = (string)item["url"],
-                                WebSocketDebuggerUrl = (string)item["webSocketDebuggerUrl"]
-                            };
+                            info = new BrowserTab(_browser, id, (string)item["type"], (string)item["webSocketDebuggerUrl"]);
                     }
                     if (info == null) await Task.Delay(50).ConfigureAwait(false);
                 }
