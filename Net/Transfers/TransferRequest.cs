@@ -1,9 +1,9 @@
 using Newtonsoft.Json.Linq;
 
-namespace MiMFa.Net.Fetch
+namespace MiMFa.Net.Transfers
 {
     /// <summary>Describes one Fetch-compatible HTTP or local-file request.</summary>
-    public sealed class FetchRequest
+    public sealed class TransferRequest
     {
         public string Method { get; set; } = "GET";
         public string Url { get; set; }

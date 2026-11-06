@@ -18,8 +18,8 @@ namespace MiMFa.Net.Browsers.Sessions
         public abstract Task<bool> IsAvailableAsync();
         public abstract void CloseBrowser();
 
-        public abstract IList<BrowserTabInfo> GetTabs();
-        public abstract Task<IList<BrowserTabInfo>> GetTabsAsync();
+        public abstract BrowserTabs GetTabs();
+        public abstract Task<BrowserTabs> GetTabsAsync();
         public abstract BrowserPage GetPage(string targetId);
         public abstract Task<BrowserPage> GetPageAsync(string targetId);
         public abstract BrowserTab GetTab(string targetId);

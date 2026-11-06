@@ -1,0 +1,1 @@
+async command #load:start|function() => await application.Engine.Browser.LoadAsync(...arguments);

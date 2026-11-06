@@ -1,0 +1,1 @@
+async command #go:start|function() => await application.Engine.Browser.GoAsync(...arguments);

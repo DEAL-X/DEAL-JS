@@ -197,9 +197,9 @@ namespace MiMFa.Net.Browsers.Sessions
             return null;
         }
 
-        public override IList<BrowserTabInfo> GetTabs() => GetTabsAsync().GetAwaiter().GetResult();
+        public override BrowserTabs GetTabs() => GetTabsAsync().GetAwaiter().GetResult();
 
-        public override async Task<IList<BrowserTabInfo>> GetTabsAsync()
+        public override async Task<BrowserTabs> GetTabsAsync()
         {
             await EnsureAvailableAsync(_driver.Timeout).ConfigureAwait(false);
             using (var response = await _http.GetAsync(_driver.Endpoint.TrimEnd('/') + "/json/list").ConfigureAwait(false))
@@ -242,7 +242,7 @@ namespace MiMFa.Net.Browsers.Sessions
                     if (CurrentPage != null && CurrentPage.TargetId == id) CurrentPage = null;
                     if (_currentTargetId == id) _currentTargetId = null;
                 }
-                return result;
+                return new BrowserTabs(_browser, result);
             }
         }
 
@@ -495,7 +495,7 @@ namespace MiMFa.Net.Browsers.Sessions
                     await Task.Delay(50).ConfigureAwait(false);
                     remaining = await GetTabsAsync().ConfigureAwait(false);
                 }
-                remaining = remaining.Where(item => item.Id != targetId).ToList();
+                remaining = new BrowserTabs(_browser, remaining.Where(item => item.Id != targetId));
 
                 if (string.IsNullOrEmpty(replacementId))
                     replacementId = remaining.FirstOrDefault(item => item.IsCurrent)?.Id;

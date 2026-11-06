@@ -16,6 +16,8 @@
   <ItemGroup>
     <None Remove="deal\struct\struct.djs" />
     <None Remove="deal\web\browser.djs" />
+    <None Remove="deal\web\go.djs" />
+    <None Remove="deal\web\load.djs" />
     <None Remove="Newtonsoft.Json.dll" />
     <None Remove="deal\collect\.djs" />
     <None Remove="deal\collect\collect.djs" />
@@ -129,6 +131,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="deal\web\download.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="deal\web\go.djs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="deal\web\load.djs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="deal\web\fetch.js">
@@ -309,11 +317,6 @@
     <None Update="deal\web\transfer.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-
-  <ItemGroup>
-    <Folder Include="Net\Commons\" />
   </ItemGroup>
 
 </Project>
