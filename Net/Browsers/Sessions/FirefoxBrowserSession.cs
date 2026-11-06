@@ -76,21 +76,23 @@ namespace MiMFa.Net.Browsers.Sessions
             await _driver.EnsureSessionAsync().ConfigureAwait(false);
             JObject tree = await _driver.SendAsync("browsingContext.getTree", new JObject { ["maxDepth"] = 0 }).ConfigureAwait(false);
             var contexts = tree["contexts"] as JArray ?? new JArray();
-            var result = new List<BrowserTabInfo>();
+            var result = new List<BrowserTab>();
 
             foreach (JObject context in contexts.OfType<JObject>())
             {
                 string id = (string)context["context"];
                 if (string.IsNullOrWhiteSpace(id)) continue;
                 var page = await GetPageAsync(id).ConfigureAwait(false);
-                result.Add(new BrowserTabInfo
+                var tab = new BrowserTab(_browser, id);
+                if (_tabs.TryGetValue(id, out var existingTab))
                 {
-                    Id = id,
-                    Type = "page",
-                    Title = page.Title,
-                    Url = (string)context["url"] ?? page.Url,
-                    WebSocketDebuggerUrl = null
-                });
+                    existingTab.Type = tab.Type;
+                    existingTab.IsCurrent = tab.IsCurrent;
+                    tab = existingTab;
+                }
+                else
+                    tab = _tabs.GetOrAdd(id, tab);
+                result.Add(tab);
             }
 
             string visibleId = await GetVisibleTabIdAsync(result).ConfigureAwait(false);
@@ -112,7 +114,7 @@ namespace MiMFa.Net.Browsers.Sessions
             return new BrowserTabs(_browser, result);
         }
 
-        private async Task<string> GetVisibleTabIdAsync(IList<BrowserTabInfo> tabs)
+        private async Task<string> GetVisibleTabIdAsync(IList<BrowserTab> tabs)
         {
             var previous = tabs.FirstOrDefault(item => item.Id == _currentContextId);
             if (previous != null)
@@ -252,9 +254,7 @@ namespace MiMFa.Net.Browsers.Sessions
         public override string GoForward() => GoForwardAsync().GetAwaiter().GetResult();
         public override Task<string> GoForwardAsync() => CurrentPage == null ? Task.FromResult<string>(null) : CurrentPage.GoForwardAsync();
 
-        public override BrowserPage Load(string url) => LoadAsync(url).GetAwaiter().GetResult();
-        public override Task<BrowserPage> LoadAsync(string url) => LoadAsync(url, _driver.Timeout);
-        public override BrowserPage Load(string url, int timeoutMilliseconds) => LoadAsync(url, timeoutMilliseconds).GetAwaiter().GetResult();
+        public override BrowserPage Load(string url, int timeoutMilliseconds = -1) => LoadAsync(url, timeoutMilliseconds).GetAwaiter().GetResult();
         public override Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = -1) =>
             OpenAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : _driver.Timeout);
 
