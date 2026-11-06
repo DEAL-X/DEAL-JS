@@ -61,7 +61,7 @@ The same browser-object API is available through Chrome, Edge, and Firefox. The 
 - `browser.tab.navigate(url)` performs normal navigation.
 - `browser.tab.back()`, `forward()`, `go(delta)`, and `reload()` control navigation history.
 - `browser.tab.close()` closes the current tab and refreshes the current-tab reference.
-- `browser.tabs.all` returns the tabs in the provider's browser window.
+- `browser.tabs` returns the `BrowserTabs` collection directly; each item is a `BrowserTab` handle.
 - `browser.tabs.get(id)` retrieves a tab by ID.
 - `browser.activate(tab)` activates a tab and updates the current-tab reference.
 
