@@ -49,10 +49,10 @@ browser.tab.forward();
 browser.tab.reload();
 
 browser.tab.close();
-// browser.tab now refers to the tab Chromium displays next.
+// browser.tab now refers to the tab the selected browser displays next.
 ```
 
-The browser API is organized by responsibility:
+The same browser-object API is available through Chrome, Edge, and Firefox. The default .NET host configuration selects Chrome; the selected driver is injected when constructing the browser provider. The browser API is organized by responsibility:
 
 - `browser.open(url)` opens a tab and returns its `BrowserTab`.
 - `browser.close()` closes the browser instance.
@@ -64,6 +64,23 @@ The browser API is organized by responsibility:
 - `browser.tabs.all` returns the tabs in the provider's browser window.
 - `browser.tabs.get(id)` retrieves a tab by ID.
 - `browser.activate(tab)` activates a tab and updates the current-tab reference.
+
+Select the browser from the .NET host. Chrome is the backward-compatible default; Edge shares the Chromium driver implementation, while Firefox uses WebDriver BiDi:
+
+```csharp
+using MiMFa.Net.Browsers;
+using MiMFa.Net.Browsers.Drivers;
+
+// Replace the default browser created by the engine.
+engine.Browser.Dispose();
+engine.Browser = new Browser(driver: new EdgeDriver());
+
+// Or select Firefox (geckodriver must be installed or driverPath supplied).
+engine.Browser.Dispose();
+engine.Browser = new Browser(driver: new FirefoxDriver());
+```
+
+The browser provider delegates common operations to a protocol-neutral browser session. Chromium-only services such as download behavior, permission overrides, and browser runtime information are optional capabilities; unsupported capabilities throw `NotSupportedException` rather than sending CDP commands to Firefox.
 
 ## 4. Synchronous properties and methods
 
@@ -96,7 +113,7 @@ Consider content is file.text();
 
 The corresponding explicitly named `...Async()` methods remain asynchronous and return Tasks. Use them from JavaScript with `await` when asynchronous composition is desired. For example, `GetFileAsync()`, `ReadTextAsync()`, and `NavigateAsync()` remain awaitable; `GetFile()`, `Text()`, and `Navigate()` are synchronous convenience methods.
 
-Synchronous calls that access Chromium block the calling host thread until the operation completes. They are synchronous at the JavaScript-facing API boundary; they are not local, in-process DOM reads.
+Synchronous calls that access the selected browser block the calling host thread until the operation completes. They are synchronous at the JavaScript-facing API boundary; they are not local, in-process DOM reads.
 
 ## 5. Fetch web resources
 
@@ -118,6 +135,8 @@ Otherwise,
 
 The host transport supports HTTP and HTTPS, common request methods, request and response headers, byte-safe bodies, redirects, timeouts, cancellation, and a host cookie jar. It is not a complete browser Fetch implementation: browser CORS policy, service workers, browser cache modes, opaque `no-cors` responses, browser referrer policy, integrity checks, keepalive semantics, and streaming response bodies are not implemented.
 
+At the .NET layer, the transport types live in `MiMFa.Net.Fetch` (`Transfer` and `FetchRequest`), separately from the browser provider in `MiMFa.Net.Browsers`. The shared address `Router` remains in `MiMFa.Net`. The DEAL `fetch()` function uses this transport internally.
+
 The ClearScript V8 host must enable `V8ScriptEngineFlags.EnableTaskPromiseConversion` so explicitly asynchronous .NET Task results can be awaited from JavaScript.
 
 ## 6. Work with local files
@@ -134,15 +153,15 @@ Consider html is await response.text();
 Configure the base directory from the .NET host when needed:
 
 ```csharp
-engine.Router.BaseDirectory = @"D:\Projects\MyScraper";
-engine.Router.BaseAddress = "https://example.com/app/";
+engine.Router.RootDirectory = @"D:\Projects\MyScraper";
+engine.Router.RootAddress = "https://example.com/app/";
 ```
 
-Chromium loads local files through `file://` and applies its normal security restrictions. Host Fetch supports local-file `GET` and `HEAD` requests. Local file reads do not use HTTP cookies or HTTP request headers.
+The selected browser loads local files through `file://` and applies its normal security restrictions. Host Fetch supports local-file `GET` and `HEAD` requests. Local file reads do not use HTTP cookies or HTTP request headers.
 
 ## 7. File System Access API
 
-The browser's native file pickers are exposed through `browser.tab.open()` and `browser.tab.save()`. Their non-`Async` forms return file handles synchronously:
+The browser's native file pickers are exposed through `browser.tab.open()` and `browser.tab.save()` when supported by the selected browser and security context. Their non-`Async` forms return file handles synchronously:
 
 ```deal
 Consider handles is browser.tab.open();
@@ -153,13 +172,13 @@ Consider saveHandle is browser.tab.save("{\"suggestedName\":\"deal-output.txt\"}
 saveHandle.writeText("Created through DEAL.JS.");
 ```
 
-The explicit asynchronous counterparts remain available as `OpenAsync()`, `SaveAsync()`, `GetFileAsync()`, `ReadTextAsync()`, and `WriteTextAsync()`. Chromium continues to enforce secure-context, permission, and transient-user-activation requirements. Dispose remote file handles when they are no longer needed.
+The explicit asynchronous counterparts remain available as `OpenAsync()`, `SaveAsync()`, `GetFileAsync()`, `ReadTextAsync()`, and `WriteTextAsync()`. The browser enforces its secure-context, permission, and transient-user-activation requirements. Dispose remote file handles when they are no longer needed.
 
 ## 8. Current-tab tracking
 
-The provider does not assume that the first item returned by the DevTools Protocol is active. Reading `browser.tab` checks the remaining pages' `document.visibilityState` and resolves the tab Chromium currently displays. This also tracks tab switches performed directly in the browser UI.
+The provider does not assume that the first item returned by a browser protocol is active. Reading `browser.tab` resolves the page the selected browser currently displays. Chromium uses CDP and Firefox uses WebDriver BiDi; both resolve the visible page through `document.visibilityState`. This also tracks tab switches performed directly in the browser UI.
 
-After `browser.tab.close()` closes the current tab, the provider waits for the target to disappear, identifies the remaining visible page, and updates its current-tab reference. If the browser is minimized and Chromium reports no visible page, it falls back to an adjacent tab. Closing the last tab creates a replacement blank tab so the browser window remains available.
+After `browser.tab.close()` closes the current tab, the provider waits for the browsing context to disappear, identifies the remaining visible page, and updates its current-tab reference. If the browser is minimized and no visible page is reported, it falls back to an adjacent tab. Closing the last tab creates a replacement blank tab so the browser remains available.
 
 ## 9. Sample directory
 

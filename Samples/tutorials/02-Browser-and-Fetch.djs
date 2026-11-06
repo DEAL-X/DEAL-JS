@@ -1,5 +1,6 @@
 // Tutorial 02: Browser control and Fetch.
 // Browser convenience methods and browser properties are synchronous.
+// The .NET host selects Chrome (default), Edge, or Firefox before running this file.
 // Fetch is asynchronous, so await its result and response body.
 
 Use deal/core;

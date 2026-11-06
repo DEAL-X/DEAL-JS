@@ -1,0 +1,341 @@
+using MiMFa.Net.Browsers.Protocols.DevTools;
+using MiMFa.Net.Browsers.Sessions;
+using MiMFa.Net.Browsers.Objects;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace MiMFa.Net.Browsers.Protocols.DevTools
+{
+    /// <summary>
+    /// A host-side handle to a remote Chromium page. The actual Window and Document
+    /// remain in Chromium and are accessed through the DevTools Protocol.
+    /// </summary>
+    internal sealed class DevToolsPageSession : BrowserPageSession, IDevToolsPageCommandSession
+    {
+        private readonly DevToolsConnection _connection;
+        private bool _disposed;
+
+        internal DevToolsPageSession(string targetId, DevToolsConnection connection)
+        {
+            TargetId = targetId ?? throw new ArgumentNullException(nameof(targetId));
+            _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+            _connection.EventReceived += OnEvent;
+        }
+
+        public override string TargetId { get; }
+        public override string Url { get; protected set; }
+        public override string Title { get; protected set; }
+
+        private void OnEvent(string name, JObject data)
+        {
+            // Never issue a CDP command synchronously from the receive loop:
+            // its response must be processed by that same loop.
+            if (name == "Page.frameNavigated")
+            {
+                var frame = data?["frame"] as JObject;
+                if (frame?["parentId"] == null)
+                    Url = (string)frame["url"];
+            }
+            else if (name == "Page.loadEventFired")
+            {
+                Task.Run(async () =>
+                {
+                    try { await RefreshAsync().ConfigureAwait(false); }
+                    catch { /* A navigation can close the target while refreshing. */ }
+                });
+            }
+        }
+
+        public override void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _connection.EventReceived -= OnEvent;
+            _connection.Dispose();
+        }
+
+        internal override async Task InitializeAsync()
+        {
+            await _connection.SendAsync("Page.enable").ConfigureAwait(false);
+            await _connection.SendAsync("Runtime.enable").ConfigureAwait(false);
+            await _connection.SendAsync("Network.enable").ConfigureAwait(false);
+            await RefreshAsync().ConfigureAwait(false);
+        }
+
+        public string Navigate(string url, int timeoutMilliseconds = 60000) => NavigateAsync(url, timeoutMilliseconds).GetAwaiter().GetResult();
+
+        public override async Task<string> NavigateAsync(string url, int timeoutMilliseconds = 60000)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                throw new ArgumentException("A navigation URL is required.", nameof(url));
+
+            var loaded = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Action<string, JObject> handler = (name, data) =>
+            {
+                if (name == "Page.loadEventFired" || name == "Page.navigatedWithinDocument")
+                    loaded.TrySetResult(true);
+            };
+            _connection.EventReceived += handler;
+            try
+            {
+                var navigation = await _connection.SendAsync("Page.navigate", new JObject { ["url"] = url }).ConfigureAwait(false);
+                if (navigation["errorText"] != null)
+                    throw new InvalidOperationException(navigation["errorText"].Value<string>());
+                if (timeoutMilliseconds <= 0) timeoutMilliseconds = 60000;
+                using (var timeout = new CancellationTokenSource(timeoutMilliseconds))
+                using (timeout.Token.Register(() => loaded.TrySetException(new TimeoutException("The page did not finish loading before the navigation timeout."))))
+                    await loaded.Task.ConfigureAwait(false);
+                await RefreshAsync().ConfigureAwait(false);
+                return Url;
+            }
+            finally { _connection.EventReceived -= handler; }
+        }
+
+        /// <summary>Replaces the current document without adding a history entry.</summary>
+        public string ReplaceNavigate(string url, int timeoutMilliseconds = 60000) => ReplaceNavigateAsync(url, timeoutMilliseconds).GetAwaiter().GetResult();
+
+        public override async Task<string> ReplaceNavigateAsync(string url, int timeoutMilliseconds = 60000)
+        {
+            if (string.IsNullOrWhiteSpace(url)) throw new ArgumentException("A navigation URL is required.", nameof(url));
+            var loaded = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Action<string, JObject> handler = (name, data) =>
+            {
+                if (name == "Page.loadEventFired" || name == "Page.navigatedWithinDocument")
+                    loaded.TrySetResult(true);
+            };
+            _connection.EventReceived += handler;
+            try
+            {
+                await EvaluateAsync("location.replace(" + Newtonsoft.Json.JsonConvert.ToString(url) + ")").ConfigureAwait(false);
+                if (timeoutMilliseconds <= 0) timeoutMilliseconds = 60000;
+                using (var timeout = new CancellationTokenSource(timeoutMilliseconds))
+                using (timeout.Token.Register(() => loaded.TrySetException(new TimeoutException("The page did not finish loading before the navigation timeout."))))
+                    await loaded.Task.ConfigureAwait(false);
+                await RefreshAsync().ConfigureAwait(false);
+                return Url;
+            }
+            finally { _connection.EventReceived -= handler; }
+        }
+
+        internal override async Task<object> EvaluateValueAsync(string expression)
+        {
+            var result = await _connection.SendAsync("Runtime.evaluate", new JObject
+            {
+                ["expression"] = expression ?? "undefined",
+                ["awaitPromise"] = true,
+                ["returnByValue"] = true,
+                ["userGesture"] = true
+            }).ConfigureAwait(false);
+            if (result["exceptionDetails"] != null)
+                throw new InvalidOperationException(result["exceptionDetails"].ToString());
+            JObject remote = result["result"] as JObject;
+            if (remote == null) return null;
+            if (remote["subtype"]?.Value<string>() == "error")
+                throw new InvalidOperationException(remote["description"]?.Value<string>() ?? "JavaScript evaluation failed.");
+            return BrowserPage.ToClrValue(remote["value"]);
+        }
+
+        internal static object ToClrValue(JToken token)
+        {
+            if (token == null || token.Type == JTokenType.Null || token.Type == JTokenType.Undefined)
+                return null;
+            if (token is JObject obj)
+                return obj.Properties().ToDictionary(property => property.Name, property => ToClrValue(property.Value));
+            if (token is JArray array)
+                return array.Select(ToClrValue).ToArray();
+            if (token is JValue value)
+                return value.Value;
+            return token.ToString();
+        }
+
+        public string Evaluate(string expression) => EvaluateAsync(expression).GetAwaiter().GetResult();
+
+        public override async Task<string> EvaluateAsync(string expression)
+        {
+            var result = await _connection.SendAsync("Runtime.evaluate", new JObject
+            {
+                ["expression"] = expression ?? "undefined",
+                ["awaitPromise"] = true,
+                ["returnByValue"] = true,
+                ["userGesture"] = true
+            }).ConfigureAwait(false);
+            if (result["exceptionDetails"] != null)
+                throw new InvalidOperationException(result["exceptionDetails"].ToString());
+            JObject remote = result["result"] as JObject;
+            if (remote == null) return null;
+            if (remote["subtype"]?.Value<string>() == "error")
+                throw new InvalidOperationException(remote["description"]?.Value<string>() ?? "JavaScript evaluation failed.");
+            JToken value = remote["value"];
+            if (value == null) return null;
+            return value.Type == JTokenType.String ? value.Value<string>() : value.ToString();
+        }
+
+        public JObject SendCommand(string method, JObject parameters = null) =>
+            SendCommandAsync(method, parameters).GetAwaiter().GetResult();
+
+        public Task<JObject> SendCommandAsync(string method, JObject parameters = null) =>
+            _connection.SendAsync(method, parameters);
+
+        internal override async Task<string> EvaluateObjectAsync(string expression)
+        {
+            var response = await _connection.SendAsync("Runtime.evaluate", new JObject
+            {
+                ["expression"] = expression ?? "undefined",
+                ["awaitPromise"] = true,
+                ["returnByValue"] = false,
+                ["userGesture"] = true
+            }).ConfigureAwait(false);
+            if (response["exceptionDetails"] != null)
+                throw new InvalidOperationException(response["exceptionDetails"].ToString());
+            var remote = response["result"] as JObject;
+            if (remote == null || remote["objectId"] == null)
+                throw new InvalidOperationException(remote?["description"]?.Value<string>() ?? "The expression did not return a remote object.");
+            return remote["objectId"].Value<string>();
+        }
+
+        internal override async Task<string> CallFunctionObjectAsync(string objectId, string functionDeclaration, JArray arguments = null)
+        {
+            var response = await _connection.SendAsync("Runtime.callFunctionOn", new JObject
+            {
+                ["objectId"] = objectId,
+                ["functionDeclaration"] = functionDeclaration,
+                ["arguments"] = arguments ?? new JArray(),
+                ["awaitPromise"] = true,
+                ["returnByValue"] = false,
+                ["userGesture"] = true
+            }).ConfigureAwait(false);
+            if (response["exceptionDetails"] != null)
+                throw new InvalidOperationException(response["exceptionDetails"].ToString());
+            var remote = response["result"] as JObject;
+            if (remote == null || remote["objectId"] == null)
+                throw new InvalidOperationException(remote?["description"]?.Value<string>() ?? "The browser operation did not return an object.");
+            return remote["objectId"].Value<string>();
+        }
+
+        internal override async Task<string> CallFunctionValueAsync(string objectId, string functionDeclaration, JArray arguments = null)
+        {
+            var response = await _connection.SendAsync("Runtime.callFunctionOn", new JObject
+            {
+                ["objectId"] = objectId,
+                ["functionDeclaration"] = functionDeclaration,
+                ["arguments"] = arguments ?? new JArray(),
+                ["awaitPromise"] = true,
+                ["returnByValue"] = true,
+                ["userGesture"] = true
+            }).ConfigureAwait(false);
+            if (response["exceptionDetails"] != null)
+                throw new InvalidOperationException(response["exceptionDetails"].ToString());
+            var remote = response["result"] as JObject;
+            if (remote == null || remote["value"] == null) return null;
+            var value = remote["value"];
+            return value.Type == JTokenType.String ? value.Value<string>() : value.ToString();
+        }
+
+        internal override async Task ReleaseObjectAsync(string objectId)
+        {
+            if (string.IsNullOrWhiteSpace(objectId) || _disposed) return;
+            await _connection.SendAsync("Runtime.releaseObject", new JObject { ["objectId"] = objectId }).ConfigureAwait(false);
+        }
+
+        public void Refresh() => RefreshAsync().GetAwaiter().GetResult();
+
+        public override async Task RefreshAsync()
+        {
+            string state = await EvaluateAsync("JSON.stringify({url:location.href,title:document.title})").ConfigureAwait(false);
+            if (string.IsNullOrEmpty(state)) return;
+            JObject value = JObject.Parse(state);
+            Url = (string)value["url"];
+            Title = (string)value["title"];
+        }
+
+        private async Task<string> RunNavigationCommandAsync(Func<Task<bool>> command, int timeoutMilliseconds = 30000)
+        {
+            var loaded = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            Action<string, JObject> handler = (name, data) =>
+            {
+                if (name == "Page.loadEventFired" || name == "Page.navigatedWithinDocument")
+                    loaded.TrySetResult(true);
+            };
+            _connection.EventReceived += handler;
+            try
+            {
+                bool initiated = await command().ConfigureAwait(false);
+                if (!initiated) return Url;
+                using (var timeout = new CancellationTokenSource(timeoutMilliseconds))
+                using (timeout.Token.Register(() => loaded.TrySetException(new TimeoutException("The page navigation timed out."))))
+                    await loaded.Task.ConfigureAwait(false);
+                await RefreshAsync().ConfigureAwait(false);
+                return Url;
+            }
+            finally { _connection.EventReceived -= handler; }
+        }
+
+        public string GoBack() => GoBackAsync().GetAwaiter().GetResult();
+        public override Task<string> GoBackAsync()
+        {
+            return RunNavigationCommandAsync(async () =>
+            {
+                var history = await _connection.SendAsync("Page.getNavigationHistory").ConfigureAwait(false);
+                int index = history["currentIndex"].Value<int>();
+                var entries = history["entries"] as JArray;
+                if (entries == null || index <= 0) return false;
+                await _connection.SendAsync("Page.navigateToHistoryEntry",
+                    new JObject { ["entryId"] = entries[index - 1]["id"] }).ConfigureAwait(false);
+                return true;
+            });
+        }
+
+        public string GoForward() => GoForwardAsync().GetAwaiter().GetResult();
+        public override Task<string> GoForwardAsync()
+        {
+            return RunNavigationCommandAsync(async () =>
+            {
+                var history = await _connection.SendAsync("Page.getNavigationHistory").ConfigureAwait(false);
+                int index = history["currentIndex"].Value<int>();
+                var entries = history["entries"] as JArray;
+                if (entries == null || index + 1 >= entries.Count) return false;
+                await _connection.SendAsync("Page.navigateToHistoryEntry",
+                    new JObject { ["entryId"] = entries[index + 1]["id"] }).ConfigureAwait(false);
+                return true;
+            });
+        }
+
+        public string Go(int delta) => GoAsync(delta).GetAwaiter().GetResult();
+        public override Task<string> GoAsync(int delta)
+        {
+            return RunNavigationCommandAsync(async () =>
+            {
+                var history = await _connection.SendAsync("Page.getNavigationHistory").ConfigureAwait(false);
+                int index = history["currentIndex"].Value<int>();
+                var entries = history["entries"] as JArray;
+                int targetIndex = index + delta;
+                if (entries == null || targetIndex < 0 || targetIndex >= entries.Count) return false;
+                await _connection.SendAsync("Page.navigateToHistoryEntry",
+                    new JObject { ["entryId"] = entries[targetIndex]["id"] }).ConfigureAwait(false);
+                return true;
+            });
+        }
+
+        public string Reload() => ReloadAsync().GetAwaiter().GetResult();
+        public override Task<string> ReloadAsync()
+        {
+            return RunNavigationCommandAsync(async () =>
+            {
+                await _connection.SendAsync("Page.reload", new JObject { ["ignoreCache"] = false }).ConfigureAwait(false);
+                return true;
+            });
+        }
+
+        public override async Task CloseAsync()
+        {
+            if (_disposed) return;
+            await _connection.SendAsync("Page.close").ConfigureAwait(false);
+            Dispose();
+        }
+
+
+    }
+}

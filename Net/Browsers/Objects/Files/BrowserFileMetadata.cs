@@ -2,7 +2,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Threading.Tasks;
 
-namespace MiMFa.Net.Browsers.Files
+namespace MiMFa.Net.Browsers.Objects.Files
 {
     public sealed class BrowserFileMetadata
     {

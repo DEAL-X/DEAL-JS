@@ -12,34 +12,32 @@ using System.Threading;
 using System.Threading.Tasks;
 using MiMFa.Net.Browsers.Services;
 using MiMFa.Net.Browsers.Objects;
+using MiMFa.Net.Browsers.Protocols.DevTools;
 using MiMFa.Net.Browsers.Drivers;
+using MiMFa.Net.Browsers.Sessions;
+using MiMFa.Net.Browsers.Protocols.Common;
+using MiMFa.Net;
 
-namespace MiMFa.Net
+namespace MiMFa.Net.Browsers.Sessions
 {
     /// <summary>
     /// Controls Chromium page targets (browser tabs) through the DevTools Protocol.
     /// </summary>
-    public sealed class Browser : IDisposable
+    internal sealed class ChromiumBrowserSession : BrowserSession, IBrowserCommandSession
     {
+        private readonly Browser _browser;
+        private readonly ChromiumDriver _driver;
         private readonly HttpClient _http = new HttpClient();
         private readonly SemaphoreSlim _browserConnectionLock = new SemaphoreSlim(1, 1);
-        private Connection _browserConnection;
+        private DevToolsConnection _browserConnection;
         private int? _windowId;
         private string _currentTargetId;
-        public int? WindowId => _windowId;
+        public override int? WindowId => _windowId;
         private readonly ConcurrentDictionary<string, BrowserPage> _pages =
             new ConcurrentDictionary<string, BrowserPage>();
         private readonly ConcurrentDictionary<string, BrowserTab> _tabs =
             new ConcurrentDictionary<string, BrowserTab>();
-        public Router Router { get; set; }
-        public BrowserTabs Tabs { get; }
-        public BrowserDownloads Downloads { get; }
-        public BrowserPermissions Permissions { get; }
-        public BrowserRuntime Runtime { get; }
-        public BrowserTab Open(string url = null) => OpenTabAsync(url ?? "about:blank").GetAwaiter().GetResult();
-        public void Close() => CloseBrowser();
-        public bool Activate(BrowserTab tab) => tab == null ? false : ActivateAsync(tab.Id).GetAwaiter().GetResult();
-        public BrowserTab Tab
+        public override BrowserTab Tab
         {
             get
             {
@@ -52,33 +50,18 @@ namespace MiMFa.Net
                 return GetTab(page);
             }
         }
-        // ClearScript resolves public members without regard to identifier casing.
-        // Browser-level operations. Tab navigation and history belong to BrowserTab.
+        public override BrowserPage CurrentPage { get; protected set; }
 
-        public Process Process;
-        public string DriverPath { get; set; }
-        public string Host { get; set; } = "http://127.0.0.1";
-        public int Port { get; set; }
-        public bool RandomizedPort { get; set; } = false;
-        public string Endpoint => Host.TrimEnd('/') + ":" + Port;
-        public int Timeout { get; set; } = 60000;
-        public BrowserPage CurrentPage { get; private set; }
-        public bool IsAlive => Process != null && !Process.HasExited;
-
-        public Browser(string host = null, int? port = null, string driverPath = null, int? windowId = null)
+        internal ChromiumBrowserSession(Browser browser, ChromiumDriver driver, int? windowId = null)
         {
-            Host = host ?? "http://127.0.0.1";
-            Port = port ?? 0;
-            DriverPath = driverPath;
+            _browser = browser ?? throw new ArgumentNullException(nameof(browser));
+            _driver = driver ?? throw new ArgumentNullException(nameof(driver));
             _windowId = windowId;
-            Tabs = new BrowserTabs(this);
-            Downloads = new BrowserDownloads(this);
-            Permissions = new BrowserPermissions(this);
-            Runtime = new BrowserRuntime(this);
-            RandomizedPort = !port.HasValue;
         }
 
-        public void Dispose()
+
+
+        public override void Dispose()
         {
             foreach (var item in _pages.Values)
                 item.Dispose();
@@ -90,62 +73,14 @@ namespace MiMFa.Net
             _browserConnection?.Dispose();
             _browserConnection = null;
 
-            if (Process != null)
-            {
-                try
-                {
-                    if (!Process.HasExited)
-                    {
-                        Process.CloseMainWindow();
-                        if (!Process.WaitForExit(3000)) Process.Kill();
-                        Process.WaitForExit();
-                    }
-                }
-                finally
-                {
-                    Process.Dispose();
-                    Process = null;
-                }
-            }
             _http.Dispose();
             _browserConnectionLock.Dispose();
         }
 
-        public void Initial()
-        {
-            if (IsAlive) return;
-            if (Port > 0 && IsAvailableAsync().GetAwaiter().GetResult()) return;
-
-            if (string.IsNullOrWhiteSpace(DriverPath))
-            {
-                string x86Path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Google", "Chrome", "Application", "chrome.exe");
-                string x64Path = Path.Combine(Path.GetPathRoot(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)), "Program Files", "Google", "Chrome", "Application", "chrome.exe");
-                string localPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Google", "Chrome", "Application", "chrome.exe");
-
-                if (File.Exists(x86Path)) DriverPath = x86Path;
-                else if (File.Exists(x64Path)) DriverPath = x64Path;
-                else if (File.Exists(localPath)) DriverPath = localPath;
-                else throw new FileNotFoundException("Browser executable was not found.", DriverPath);
-            }
-
-            string profilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "Drivers", Path.GetFileNameWithoutExtension(DriverPath), "Profile");
-            Directory.CreateDirectory(profilePath);
-            if (RandomizedPort || Port <= 0) Port = GetFreePort();
-
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = DriverPath,
-                Arguments = $"--remote-debugging-port={Port} --user-data-dir=\"{profilePath}\"",
-                UseShellExecute = false,
-                CreateNoWindow = false
-            };
-            Process = System.Diagnostics.Process.Start(startInfo);
-            if (Process == null) throw new InvalidOperationException("Failed to start the browser.");
-        }
+        public override void Initial() => _driver.Initial();
 
         /// <summary>Closes the Chromium browser process while keeping this provider reusable.</summary>
-        public void CloseBrowser()
+        public override void CloseBrowser()
         {
             foreach (var page in _pages.Values) page.Dispose();
             _pages.Clear();
@@ -160,45 +95,19 @@ namespace MiMFa.Net
                 _browserConnection.Dispose();
                 _browserConnection = null;
             }
-            if (Process != null)
-            {
-                try
-                {
-                    if (!Process.HasExited)
-                    {
-                        Process.CloseMainWindow();
-                        if (!Process.WaitForExit(3000)) Process.Kill();
-                        Process.WaitForExit();
-                    }
-                }
-                finally { Process.Dispose(); Process = null; }
-            }
+            _driver.Close();
         }
 
         public void Final() => Dispose();
 
-        private static int GetFreePort()
-        {
-            var listener = new TcpListener(IPAddress.Loopback, 0);
-            listener.Start();
-            try { return ((IPEndPoint)listener.LocalEndpoint).Port; }
-            finally { listener.Stop(); }
-        }
+        public override bool IsAvailable() => IsAvailableAsync().GetAwaiter().GetResult();
 
-        public async Task<bool> IsAvailableAsync()
-        {
-            try
-            {
-                using (var response = await _http.GetAsync(Endpoint.TrimEnd('/') + "/json/version").ConfigureAwait(false))
-                    return response.IsSuccessStatusCode;
-            }
-            catch { return false; }
-        }
+        public override Task<bool> IsAvailableAsync() => _driver.IsAvailableAsync();
 
         private async Task EnsureAvailableAsync(int timeoutMilliseconds)
         {
-            if (!IsAlive) Initial();
-            var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMilliseconds > 0 ? timeoutMilliseconds : Timeout);
+            if (!_driver.IsAlive) Initial();
+            var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMilliseconds > 0 ? timeoutMilliseconds : _driver.Timeout);
             while (!await IsAvailableAsync().ConfigureAwait(false))
             {
                 if (DateTime.UtcNow >= deadline)
@@ -214,14 +123,14 @@ namespace MiMFa.Net
             try
             {
                 if (_browserConnection != null) return;
-                using (var response = await _http.GetAsync(Endpoint.TrimEnd('/') + "/json/version").ConfigureAwait(false))
+                using (var response = await _http.GetAsync(_driver.Endpoint.TrimEnd('/') + "/json/version").ConfigureAwait(false))
                 {
                     response.EnsureSuccessStatusCode();
                     JObject version = JObject.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
                     string websocket = (string)version["webSocketDebuggerUrl"];
                     if (!Uri.TryCreate(websocket, UriKind.Absolute, out Uri uri))
                         throw new InvalidOperationException("Chromium did not provide a browser-level DevTools WebSocket URL.");
-                    var connection = new Connection();
+                    var connection = new DevToolsConnection();
                     try
                     {
                         await connection.ConnectAsync(uri, CancellationToken.None).ConfigureAwait(false);
@@ -233,9 +142,11 @@ namespace MiMFa.Net
             finally { _browserConnectionLock.Release(); }
         }
 
-        internal async Task<JObject> SendBrowserCommandAsync(string method, JObject parameters = null)
+        public JObject SendBrowserCommand(string method, JObject parameters = null) => SendBrowserCommandAsync(method, parameters).GetAwaiter().GetResult();
+
+        public async Task<JObject> SendBrowserCommandAsync(string method, JObject parameters = null)
         {
-            await EnsureAvailableAsync(Timeout).ConfigureAwait(false);
+            await EnsureAvailableAsync(_driver.Timeout).ConfigureAwait(false);
             await EnsureBrowserConnectionAsync().ConfigureAwait(false);
             return await _browserConnection.SendAsync(method, parameters).ConfigureAwait(false);
         }
@@ -286,10 +197,12 @@ namespace MiMFa.Net
             return null;
         }
 
-        public async Task<IList<BrowserTabInfo>> GetTabsAsync()
+        public override IList<BrowserTabInfo> GetTabs() => GetTabsAsync().GetAwaiter().GetResult();
+
+        public override async Task<IList<BrowserTabInfo>> GetTabsAsync()
         {
-            await EnsureAvailableAsync(Timeout).ConfigureAwait(false);
-            using (var response = await _http.GetAsync(Endpoint.TrimEnd('/') + "/json/list").ConfigureAwait(false))
+            await EnsureAvailableAsync(_driver.Timeout).ConfigureAwait(false);
+            using (var response = await _http.GetAsync(_driver.Endpoint.TrimEnd('/') + "/json/list").ConfigureAwait(false))
             {
                 response.EnsureSuccessStatusCode();
                 var items = JArray.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
@@ -319,6 +232,8 @@ namespace MiMFa.Net
                 else if (!result.Any(item => item.Id == _currentTargetId))
                     _currentTargetId = null;
                 foreach (var item in result) item.IsCurrent = item.Id == _currentTargetId;
+                var currentTab = result.FirstOrDefault(item => item.Id == _currentTargetId);
+                CurrentPage = currentTab == null ? null : await GetPageAsync(currentTab).ConfigureAwait(false);
                 var activeIds = new HashSet<string>(result.Select(x => x.Id));
                 foreach (var id in _pages.Keys.Where(x => !activeIds.Contains(x)).ToList())
                 {
@@ -338,11 +253,11 @@ namespace MiMFa.Net
             if (!Uri.TryCreate(tab.WebSocketDebuggerUrl, UriKind.Absolute, out Uri wsUri))
                 throw new InvalidOperationException("The browser returned an invalid DevTools WebSocket URL.");
 
-            var connection = new Connection();
+            var connection = new DevToolsConnection();
             try
             {
                 await connection.ConnectAsync(wsUri, CancellationToken.None).ConfigureAwait(false);
-                var page = new BrowserPage(tab.Id, connection);
+                var page = new BrowserPage(new DevToolsPageSession(tab.Id, connection));
                 await page.InitializeAsync().ConfigureAwait(false);
                 if (!_pages.TryAdd(tab.Id, page))
                 {
@@ -358,7 +273,9 @@ namespace MiMFa.Net
             }
         }
 
-        public async Task<BrowserPage> GetPageAsync(string targetId)
+        public override BrowserPage GetPage(string targetId) => GetPageAsync(targetId).GetAwaiter().GetResult();
+
+        public override async Task<BrowserPage> GetPageAsync(string targetId)
         {
             if (string.IsNullOrWhiteSpace(targetId))
                 throw new ArgumentException("A browser tab identifier is required.", nameof(targetId));
@@ -372,64 +289,80 @@ namespace MiMFa.Net
 
         private BrowserTab GetTab(BrowserPage page)
         {
-            return _tabs.GetOrAdd(page.TargetId, _ => new BrowserTab(this, page));
+            return _tabs.GetOrAdd(page.TargetId, _ => new BrowserTab(_browser, page));
         }
 
-        public async Task<BrowserTab> GetTabAsync(string targetId)
+        public override BrowserTab GetTab(string targetId) => GetTabAsync(targetId).GetAwaiter().GetResult();
+
+        public override async Task<BrowserTab> GetTabAsync(string targetId)
         {
             var page = await GetPageAsync(targetId).ConfigureAwait(false);
             return GetTab(page);
         }
 
-        public async Task<BrowserTab> OpenTabAsync(string url, int timeoutMilliseconds = 0)
+        public override BrowserTab OpenTab(string url, int timeoutMilliseconds = 0) => OpenTabAsync(url, timeoutMilliseconds).GetAwaiter().GetResult();
+
+        public override async Task<BrowserTab> OpenTabAsync(string url, int timeoutMilliseconds = 0)
         {
             var page = await OpenAsync(url, timeoutMilliseconds).ConfigureAwait(false);
             return GetTab(page);
         }
 
-        public async Task<BrowserPage> OpenAsync(string url, int timeoutMilliseconds = 0)
+        public override BrowserPage OpenPage(string url, int timeoutMilliseconds = 0) => OpenAsync(url, timeoutMilliseconds).GetAwaiter().GetResult();
+
+        public override async Task<BrowserPage> OpenAsync(string url, int timeoutMilliseconds = 0)
         {
-            return await LoadAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : Timeout).ConfigureAwait(false);
+            return await LoadAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : _driver.Timeout).ConfigureAwait(false);
         }
 
-        public async Task<string> GoAsync(string address, int timeoutMilliseconds = 0)
+        public override string Go(string address, int timeoutMilliseconds = 0) => GoAsync(address, timeoutMilliseconds).GetAwaiter().GetResult();
+
+        public override async Task<string> GoAsync(string address, int timeoutMilliseconds = 0)
         {
             if (string.IsNullOrWhiteSpace(address)) return await GoBackAsync().ConfigureAwait(false);
-            string url = Router == null ? address : Router.Resolve(address, CurrentPage?.Url);
+            string url = _browser.Router == null ? address : _browser.Router.Resolve(address, CurrentPage?.Url);
             if (CurrentPage == null)
             {
-                var page = await LoadAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : Timeout).ConfigureAwait(false);
+                var page = await LoadAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : _driver.Timeout).ConfigureAwait(false);
                 return page.Url;
             }
-            return await CurrentPage.NavigateAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : Timeout).ConfigureAwait(false);
+            return await CurrentPage.NavigateAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : _driver.Timeout).ConfigureAwait(false);
         }
 
-        public async Task<string> ReloadAsync()
+        public override string Reload() => ReloadAsync().GetAwaiter().GetResult();
+
+        public override async Task<string> ReloadAsync()
         {
             if (CurrentPage == null) return null;
             return await CurrentPage.ReloadAsync().ConfigureAwait(false);
         }
 
-        public async Task<string> SetLocationAsync(string address, bool addHistoryEntry)
+        public override string SetLocation(string address, bool addHistoryEntry) => SetLocationAsync(address, addHistoryEntry).GetAwaiter().GetResult();
+
+        public override async Task<string> SetLocationAsync(string address, bool addHistoryEntry)
         {
             if (CurrentPage == null) throw new InvalidOperationException("There is no current browser tab.");
-            string url = Router == null ? address : Router.Resolve(address, CurrentPage.Url);
+            string url = _browser.Router == null ? address : _browser.Router.Resolve(address, CurrentPage.Url);
             string operation = addHistoryEntry ? "pushState" : "replaceState";
             return await CurrentPage.EvaluateAsync("history." + operation + "(null, null, " + Newtonsoft.Json.JsonConvert.ToString(url) + "); location.href").ConfigureAwait(false);
         }
 
-        public Task<string> GoBackAsync() => CurrentPage == null ? Task.FromResult<string>(null) : CurrentPage.GoBackAsync();
-        public Task<string> GoForwardAsync() => CurrentPage == null ? Task.FromResult<string>(null) : CurrentPage.GoForwardAsync();
+        public override string GoBack() => GoBackAsync().GetAwaiter().GetResult();
+        public override Task<string> GoBackAsync() => CurrentPage == null ? Task.FromResult<string>(null) : CurrentPage.GoBackAsync();
+        public override string GoForward() => GoForwardAsync().GetAwaiter().GetResult();
+        public override Task<string> GoForwardAsync() => CurrentPage == null ? Task.FromResult<string>(null) : CurrentPage.GoForwardAsync();
 
-        public BrowserPage Load(string url) => LoadAsync(url).GetAwaiter().GetResult();
+        public override BrowserPage Load(string url) => LoadAsync(url).GetAwaiter().GetResult();
 
-        public Task<BrowserPage> LoadAsync(string url) => LoadAsync(url, Timeout);
+        public override Task<BrowserPage> LoadAsync(string url) => LoadAsync(url, _driver.Timeout);
 
-        public async Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = -1)
+        public override BrowserPage Load(string url, int timeoutMilliseconds) => LoadAsync(url, timeoutMilliseconds).GetAwaiter().GetResult();
+
+        public override async Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = -1)
         {
             if (string.IsNullOrWhiteSpace(url)) url = "about:blank";
-            else if (Router != null) url = Router.Resolve(url);
-            if (timeoutMilliseconds <= 0) timeoutMilliseconds = Timeout;
+            else if (_browser.Router != null) url = _browser.Router.Resolve(url);
+            if (timeoutMilliseconds <= 0) timeoutMilliseconds = _driver.Timeout;
             await EnsureAvailableAsync(timeoutMilliseconds).ConfigureAwait(false);
             await EnsureBrowserConnectionAsync().ConfigureAwait(false);
             if (string.IsNullOrEmpty(_currentTargetId))
@@ -459,7 +392,7 @@ namespace MiMFa.Net
                 var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMilliseconds);
                 while (info == null && DateTime.UtcNow < deadline)
                 {
-                    using (var response = await _http.GetAsync(Endpoint.TrimEnd('/') + "/json/list").ConfigureAwait(false))
+                    using (var response = await _http.GetAsync(_driver.Endpoint.TrimEnd('/') + "/json/list").ConfigureAwait(false))
                     {
                         response.EnsureSuccessStatusCode();
                         var targets = JArray.Parse(await response.Content.ReadAsStringAsync().ConfigureAwait(false));
@@ -479,11 +412,11 @@ namespace MiMFa.Net
                 if (info == null || !Uri.TryCreate(info.WebSocketDebuggerUrl, UriKind.Absolute, out Uri wsUri))
                     throw new TimeoutException("The new tab did not become available through the DevTools endpoint.");
 
-                var connection = new Connection();
+                var connection = new DevToolsConnection();
                 try
                 {
                     await connection.ConnectAsync(wsUri, CancellationToken.None).ConfigureAwait(false);
-                    var page = new BrowserPage(id, connection);
+                    var page = new BrowserPage(new DevToolsPageSession(id, connection));
                     await page.InitializeAsync().ConfigureAwait(false);
                     await page.NavigateAsync(url, timeoutMilliseconds).ConfigureAwait(false);
                     _pages[id] = page;
@@ -505,10 +438,12 @@ namespace MiMFa.Net
             }
         }
 
-        public async Task<bool> ActivateAsync(string targetId)
+        public override bool Activate(string targetId) => ActivateAsync(targetId).GetAwaiter().GetResult();
+
+        public override async Task<bool> ActivateAsync(string targetId)
         {
             if (string.IsNullOrWhiteSpace(targetId)) return false;
-            await EnsureAvailableAsync(Timeout).ConfigureAwait(false);
+            await EnsureAvailableAsync(_driver.Timeout).ConfigureAwait(false);
             var tabs = await GetTabsAsync().ConfigureAwait(false);
             if (!tabs.Any(x => x.Id == targetId)) return false;
             await EnsureBrowserConnectionAsync().ConfigureAwait(false);
@@ -521,10 +456,12 @@ namespace MiMFa.Net
             return true;
         }
 
-        public async Task<bool> CloseAsync(string targetId)
+        public override bool Close(string targetId) => CloseAsync(targetId).GetAwaiter().GetResult();
+
+        public override async Task<bool> CloseAsync(string targetId)
         {
             if (string.IsNullOrWhiteSpace(targetId)) return false;
-            await EnsureAvailableAsync(Timeout).ConfigureAwait(false);
+            await EnsureAvailableAsync(_driver.Timeout).ConfigureAwait(false);
             var tabs = await GetTabsAsync().ConfigureAwait(false);
             int closingIndex = tabs.Select((tab, index) => new { tab, index }).Where(x => x.tab.Id == targetId).Select(x => x.index).DefaultIfEmpty(-1).First();
             if (closingIndex < 0) return false;
@@ -552,7 +489,7 @@ namespace MiMFa.Net
                 // Wait until Chromium has removed the closed target before choosing
                 // the tab that will become the provider's new current (visible) tab.
                 var remaining = await GetTabsAsync().ConfigureAwait(false);
-                var closeDeadline = DateTime.UtcNow.AddMilliseconds(Timeout > 0 ? Timeout : 60000);
+                var closeDeadline = DateTime.UtcNow.AddMilliseconds(_driver.Timeout > 0 ? _driver.Timeout : 60000);
                 while (remaining.Any(item => item.Id == targetId) && DateTime.UtcNow < closeDeadline)
                 {
                     await Task.Delay(50).ConfigureAwait(false);
