@@ -19,7 +19,7 @@ function runBrowserDriverSmokeTest(browser) {
     if (String(opened.Title) !== "DEAL driver navigated")
         throw new Error(driverName + " did not navigate the page.");
 
-    const tabs = browser.Tabs.All;
+    const tabs = browser.Tabs;
     if (!tabs || typeof tabs.Count !== "number" || tabs.Count < 1)
         throw new Error(driverName + " did not return the browser tab collection.");
 
@@ -40,6 +40,6 @@ function runBrowserDriverSmokeTest(browser) {
         initialTabId: initialTab ? initialTab.Id : null,
         closedTabId: opened.Id,
         currentTabId: current.Id,
-        tabCountAfterClose: browser.Tabs.All.Count
+        tabCountAfterClose: browser.Tabs.Count
     };
 }
