@@ -14,7 +14,7 @@ namespace MiMFa.Net.Browsers.Drivers
 
         protected override string DiscoverExecutable()
         {
-            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string programFiles = Path.Combine(Path.GetPathRoot( Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)), "Program Files");
             string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
             string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             return FindExecutable(new[] { "msedge.exe", "Microsoft Edge", "microsoft-edge" },
