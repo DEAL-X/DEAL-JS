@@ -255,8 +255,8 @@ namespace MiMFa.Net.Browsers.Sessions
         public override string GoForward() => GoForwardAsync().GetAwaiter().GetResult();
         public override Task<string> GoForwardAsync() => CurrentPage == null ? Task.FromResult<string>(null) : CurrentPage.GoForwardAsync();
 
-        public override BrowserPage Load(string url, int timeoutMilliseconds = -1) => LoadAsync(url, timeoutMilliseconds).GetAwaiter().GetResult();
-        public override Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = -1) =>
+        public override BrowserPage Load(string url, int timeoutMilliseconds = 0) => LoadAsync(url, timeoutMilliseconds).GetAwaiter().GetResult();
+        public override Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = 0) =>
             OpenAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : _driver.Timeout);
 
         public override bool Activate(string targetId) => ActivateAsync(targetId).GetAwaiter().GetResult();

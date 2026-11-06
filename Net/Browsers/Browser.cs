@@ -78,8 +78,8 @@ namespace MiMFa.Net.Browsers
         public BrowserTab Open(string url = null, int timeoutMilliseconds = 0) => Session.OpenTab(url ?? "about:blank", timeoutMilliseconds);
         public Task<BrowserPage> OpenAsync(string url = null, int timeoutMilliseconds = 0) => Session.OpenAsync(url, timeoutMilliseconds);
 
-        public BrowserPage Load(string url, int timeoutMilliseconds = -1) => Session.Load(url, timeoutMilliseconds);
-        public Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = -1) => Session.LoadAsync(url, timeoutMilliseconds);
+        public BrowserPage Load(string url, int timeoutMilliseconds = 0) => Session.Load(url, timeoutMilliseconds);
+        public Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = 0) => Session.LoadAsync(url, timeoutMilliseconds);
         public string Reload() => Session.Reload();
         public Task<string> ReloadAsync() => Session.ReloadAsync();
 

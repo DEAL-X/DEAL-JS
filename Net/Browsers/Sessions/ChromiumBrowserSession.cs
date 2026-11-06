@@ -357,9 +357,9 @@ namespace MiMFa.Net.Browsers.Sessions
         public override string GoForward() => GoForwardAsync().GetAwaiter().GetResult();
         public override Task<string> GoForwardAsync() => CurrentPage == null ? Task.FromResult<string>(null) : CurrentPage.GoForwardAsync();
 
-        public override BrowserPage Load(string url, int timeoutMilliseconds = -1) => LoadAsync(url, timeoutMilliseconds).GetAwaiter().GetResult();
+        public override BrowserPage Load(string url, int timeoutMilliseconds = 0) => LoadAsync(url, timeoutMilliseconds).GetAwaiter().GetResult();
 
-        public override async Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = -1)
+        public override async Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = 0)
         {
             if (string.IsNullOrWhiteSpace(url)) url = "about:blank";
             else if (_browser.Router != null) url = _browser.Router.Resolve(url);

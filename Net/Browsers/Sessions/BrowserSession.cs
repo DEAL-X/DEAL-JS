@@ -38,8 +38,8 @@ namespace MiMFa.Net.Browsers.Sessions
         public abstract Task<string> GoBackAsync();
         public abstract string GoForward();
         public abstract Task<string> GoForwardAsync();
-        public abstract BrowserPage Load(string url, int timeoutMilliseconds = -1);
-        public abstract Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = -1);
+        public abstract BrowserPage Load(string url, int timeoutMilliseconds = 0);
+        public abstract Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = 0);
         public abstract bool Activate(string targetId);
         public abstract Task<bool> ActivateAsync(string targetId);
         public abstract bool Close(string targetId);
