@@ -238,7 +238,7 @@ namespace MiMFa.Net.Browsers.Sessions
                 var currentTab = result.FirstOrDefault(item => item.Id == _currentTargetId);
                 CurrentPage = currentTab == null ? null : await GetPageAsync(currentTab).ConfigureAwait(false);
                 var activeIds = new HashSet<string>(result.Select(x => x.Id));
-                foreach (var id in _pages.Keys.Where(x => !activeIds.Contains(x)).ToList())
+                foreach (var id in _pages.Keys.Concat(_tabs.Keys).Where(x => !activeIds.Contains(x)).Distinct().ToList())
                 {
                     if (_pages.TryRemove(id, out var stale)) stale.Dispose();
                     _tabs.TryRemove(id, out _);
@@ -292,7 +292,9 @@ namespace MiMFa.Net.Browsers.Sessions
 
         private BrowserTab GetTab(BrowserPage page)
         {
-            return _tabs.GetOrAdd(page.TargetId, _ => new BrowserTab(_browser, page));
+            var tab = _tabs.GetOrAdd(page.TargetId, _ => new BrowserTab(_browser, page));
+            tab.IsCurrent = page.TargetId == _currentTargetId;
+            return tab;
         }
 
         public override BrowserTab GetTab(string targetId) => GetTabAsync(targetId).GetAwaiter().GetResult();
@@ -445,6 +447,7 @@ namespace MiMFa.Net.Browsers.Sessions
             var page = await GetPageAsync(targetId).ConfigureAwait(false);
             CurrentPage = page;
             _currentTargetId = targetId;
+            foreach (var tab in _tabs.Values) tab.IsCurrent = tab.Id == targetId;
             return true;
         }
 
