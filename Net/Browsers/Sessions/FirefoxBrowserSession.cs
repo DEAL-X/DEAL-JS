@@ -82,7 +82,6 @@ namespace MiMFa.Net.Browsers.Sessions
             {
                 string id = (string)context["context"];
                 if (string.IsNullOrWhiteSpace(id)) continue;
-                var page = await GetPageAsync(id).ConfigureAwait(false);
                 var tab = new BrowserTab(_browser, id);
                 if (_tabs.TryGetValue(id, out var existingTab))
                 {
@@ -121,7 +120,7 @@ namespace MiMFa.Net.Browsers.Sessions
             {
                 try
                 {
-                    object state = await _pages[previous.Id].EvaluateValueAsync("document.visibilityState").ConfigureAwait(false);
+                    object state = await (await GetPageAsync(previous.Id).ConfigureAwait(false)).EvaluateValueAsync("document.visibilityState").ConfigureAwait(false);
                     if (string.Equals(Convert.ToString(state), "visible", StringComparison.OrdinalIgnoreCase))
                         return previous.Id;
                 }
@@ -133,7 +132,7 @@ namespace MiMFa.Net.Browsers.Sessions
                 if (tab.Id == _currentContextId) continue;
                 try
                 {
-                    object state = await _pages[tab.Id].EvaluateValueAsync("document.visibilityState").ConfigureAwait(false);
+                    object state = await (await GetPageAsync(tab.Id).ConfigureAwait(false)).EvaluateValueAsync("document.visibilityState").ConfigureAwait(false);
                     if (string.Equals(Convert.ToString(state), "visible", StringComparison.OrdinalIgnoreCase))
                         return tab.Id;
                 }
