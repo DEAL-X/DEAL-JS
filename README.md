@@ -678,7 +678,7 @@ The ClearScript V8 host must enable `V8ScriptEngineFlags.EnableTaskPromiseConver
 
 #### Cross-browser browser object model
 
-The ClearScript host exposes `application.Engine.Browser` as the DEAL `browser` object. The public `Browser` type is a browser-independent provider facade. It delegates browser operations to a selected `BrowserDriver` and a protocol-neutral `BrowserSession`; each tab is represented by a `BrowserPageSession`. The provider and page objects do not need to know whether the selected implementation uses DevTools Protocol or WebDriver BiDi.
+The ClearScript host exposes `application.Engine.Browser` as the DEAL `browser` object. `BrowserTabs` directly contains `BrowserTab` handles; there is no parallel `BrowserTabInfo` type. Tab handles resolve their page session lazily, avoiding the creation of page connections merely to enumerate tabs. The public `Browser` type is a browser-independent provider facade. It delegates browser operations to a selected `BrowserDriver` and a protocol-neutral `BrowserSession`; each tab is represented by a `BrowserPageSession`. The provider and page objects do not need to know whether the selected implementation uses DevTools Protocol or WebDriver BiDi.
 
 The default constructor continues to select Chrome for backward compatibility. The .NET host can select another driver explicitly:
 
@@ -720,7 +720,7 @@ The common object hierarchy is:
 - `browser.Driver`: the selected browser driver.
 - `browser.Session`: the active protocol-neutral browser session.
 - `browser.Tab`: the currently displayed tab in the provider's browser session.
-- `browser.Tabs.Current` and `browser.Tabs.All`: the current tab and the synchronous collection of tabs.
+- `browser.Tabs`: the synchronous `BrowserTabs` collection of `BrowserTab` handles; `browser.Tabs.Current` resolves the current tab.
 - `browser.Tab.Window`: the remote Window proxy.
 - `browser.Tab.Windows`: the child-frame collection.
 - `browser.Downloads`, `browser.Permissions`, and `browser.Runtime`: optional browser-level services.
