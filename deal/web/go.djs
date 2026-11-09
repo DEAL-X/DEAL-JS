@@ -1,1 +1,1 @@
-async command #go:start|function() => will application.Engine.Browser.Async(...arguments);
+async command #GO:start|function() => will application.Engine.Browser.Async(...arguments);

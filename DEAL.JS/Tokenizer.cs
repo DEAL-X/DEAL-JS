@@ -50,13 +50,23 @@ namespace MiMFa.Engine.DEAL.JS
             }
             walker.MoveToProcedure();
             if (this.SwitchToken != null)
-                if (Regex.IsMatch(walker.Current, @"[{}\[\]()""'`;]", RegexOptions.CultureInvariant))
+                if (Regex.IsMatch(walker.Current, @"[{}\[\]()""'`;:,]", RegexOptions.CultureInvariant))
                     this.SwitchToken = null;
-                else if (walker.Current != ",")
+                else
                 {
                     var type = this.SwitchToken.Value;
                     this.SwitchToken = null;
-                    return GetAcceptedToken(type, string.Join("", walker.WalkWhile(c => !Regex.IsMatch(walker.Current, @"[,;\s]", RegexOptions.CultureInvariant))), walker.Position);
+                    var next = walker.Peek(1);
+                    var strict = (walker.Current == "@" && (next == "\"" || next == "'" || next == "`"));
+                    if (
+                        (type & TokenType.StringData) != 0 &&
+                        (strict || walker.Current == "\"" || walker.Current == "'" || walker.Current == "`")
+                    )
+                    {
+                        var token = TokenizeString(walker, walker.Position, strict);
+                        return GetAcceptedToken(type, token.Value, token.Position);
+                    }
+                    else return GetAcceptedToken(type, string.Join("", walker.WalkWhile(c => !Regex.IsMatch(walker.Current, @"[,;\s]", RegexOptions.CultureInvariant))), walker.Position);
                 }
             var switchNameSpace = this.SwitchNamespace;
             if (this.SwitchNamespace) this.SwitchNamespace = false;
@@ -244,8 +254,8 @@ namespace MiMFa.Engine.DEAL.JS
                         if(word.Length <= 6) return GetAcceptedToken(TokenType.Statement, word, location);
                     }
 
-                    var p = string.Concat(walker.PeekUntil(ch => string.IsNullOrWhiteSpace(ch)).ToArray());
-                    if (Regex.IsMatch(p, "^\\w+:\\/([\\/][^\\s\\[\\]\\{\\}\\/\\\\]+)+$", RegexOptions.CultureInvariant))
+                    var p = string.Concat(walker.PeekUntil(ch => string.IsNullOrWhiteSpace(ch) || ",;[]".Contains(ch)).ToArray());
+                    if (Regex.IsMatch(p, @"^\w+:\/([\/]([^,;\s\[\]\{\}\/\\]|(\$\{[\w\W]+\}))+)+$", RegexOptions.CultureInvariant))
                         return TokenizePath(walker, location);
 
                     var next = walker.Peek(1);
@@ -256,9 +266,9 @@ namespace MiMFa.Engine.DEAL.JS
 
             var wrd = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w\\.$]", RegexOptions.CultureInvariant)).ToArray());
             var tk = GetAcceptedToken(TokenType.Unknown, wrd, walker.Position);
-            if (tk.Value != wrd)
+            if (!switchNameSpace && tk.Value != wrd)
                 walker.Replace(walker.Position, wrd.Length, tk.Value.ToCharArray().Select(v => v.ToString()).ToArray());
-            if (tk.Type != TokenType.Unknown) {
+            if (!switchNameSpace && tk.Type != TokenType.Unknown) {
                 var ntk = base.TokenizeCode(walker);
                 return ntk.Update(ntk.Type | tk.Type);
             }
@@ -274,13 +284,14 @@ namespace MiMFa.Engine.DEAL.JS
         }
         protected virtual Token TokenizePath(CodeWalker walker, Position location)
         {
-            var value = string.Concat(walker.WalkUntil(ch => string.IsNullOrWhiteSpace(ch)).ToArray());
-            return GetAcceptedToken(TokenType.StringData, value, location);
+            var value = string.Concat(walker.WalkUntil(ch => string.IsNullOrWhiteSpace(ch) || ",;[]".Contains(ch)).ToArray());
+            return GetAcceptedToken(Regex.IsMatch(value, @"\$\{[\w\W]+\}")? TokenType.TemplateStringData: TokenType.StringData, value, location);
         }
 
         protected virtual int UsePath(string path, bool force = false)
         {
             if (string.IsNullOrWhiteSpace(path)) return 0;
+            path = Uri.UnescapeDataString(path);
             var compiler = this.Engine as MiMFa.Engine.Engine;
             if (compiler == null) return 0;
             var resolved = (compiler as Engine)?.Router?.ResolveResource(path) ?? path;
@@ -296,12 +307,12 @@ namespace MiMFa.Engine.DEAL.JS
         protected virtual int UseUrl(string url, bool force = false)
         {
             if (!Engine.Transfer.IsAlive) Engine.Transfer.Initial();
-            Engine.Resource.CreateDirectory(".\\download");
+            Engine.Resource.CreateDirectory(Engine.Resource.TempDirectory);
             var resolvedUrl = Engine.Router?.Resolve(url) ?? url;
             var uri = new Uri(resolvedUrl, UriKind.Absolute);
             var extension = System.IO.Path.GetExtension(uri.AbsolutePath);
             if (!Regex.IsMatch(extension, @"^\.(deal|djs|js)$", RegexOptions.IgnoreCase)) extension = ".djs";
-            var path = Engine.Resource.Resolve(".\\download\\" + resolvedUrl.GetHashCode() + extension);
+            var path = Engine.Resource.Resolve(Engine.Resource.TempDirectory + resolvedUrl.GetHashCode() + extension);
             if (!Engine.Resource.Exists(path))
             {
                 var resp = Engine.Transfer.Get(resolvedUrl);
@@ -314,7 +325,7 @@ namespace MiMFa.Engine.DEAL.JS
         }
         protected virtual int UseFolder(string folder, bool force = false)
         {
-            if (string.IsNullOrWhiteSpace(folder) || folder.Split(System.IO.Path.DirectorySeparatorChar).Last().StartsWith("~")) return 0;
+            if (string.IsNullOrWhiteSpace(folder) || folder.Split(Path.DirectorySeparatorChar).Last().StartsWith("~")) return 0;
             folder = Regex.Replace(folder, "[\\/\\\\]$", "");
             int results = 0;
             try
@@ -322,7 +333,7 @@ namespace MiMFa.Engine.DEAL.JS
                 var rp = Engine.Resource;
                 if (rp != null && rp.Exists(folder))
                 {
-                    var res = UseFile(folder + "\\index", force);
+                    var res = UseFile(folder + Path.DirectorySeparatorChar + Engine.Resource.DefaultName, force);
                     if (res > 0) return res;
                     else
                     {
@@ -342,7 +353,7 @@ namespace MiMFa.Engine.DEAL.JS
             if (string.IsNullOrWhiteSpace(file) || file.Split(System.IO.Path.DirectorySeparatorChar).Last().StartsWith("~")) return 0;
             int num = 0;
             if (!Regex.IsMatch(file, "\\.(deal|djs|js)$", RegexOptions.IgnoreCase))
-                return (num = UseFile(file + ".deal", force)) > 0 ? num : (num = UseFile(file + ".djs", force)) > 0 ? num : UseFile(file + ".js", force);
+                return UseFile(file + ".js", force) + UseFile(file + ".djs", force) + UseFile(file + ".deal", force);
             file = System.IO.Path.GetFullPath(file);
             try
             {

@@ -567,13 +567,17 @@ namespace MiMFa.Engine.DEAL.JS
 
             bool isNamespaced = before?.Is(TokenType.ConcatenatorSymbol) == true;
             
-            string fname = Engine?.GetFunctionName(node.Token.Value);
-            string iname = fname != null ? null : Engine?.GetKeywordName(node.Token.Value);
-            string fcname = Engine?.GetFunctionCommandName(node.Token.Value);
-            string dcname = Engine?.GetDefinitionCommandName(node.Token.Value);
-            string acname = Engine?.GetActionCommandName(node.Token.Value);
+            string nvalue = isNamespaced? "" : node.ToString("");
+
+            string fname = Engine?.GetFunctionName(nvalue);
+            string iname = fname != null ? null : Engine?.GetKeywordName(nvalue);
+            string fcname = Engine?.GetFunctionCommandName(nvalue);
+            string dcname = Engine?.GetDefinitionCommandName(nvalue);
+            string acname = Engine?.GetActionCommandName(nvalue);
             fname = fname ?? fcname;
 
+            if (next?.Is(":") == true)
+                return new Node(node.Token.Update(TokenType.IdentifierKeyword), NodeType.DefineStructure);
             if (node.Is(TokenType.NamespaceKeyword))
                 if (next?.Is(TokenType.ConcatenatorSymbol) == true || !next?.Is(TokenType.Keyword) == true)
                     return node.Add(CompactAssembleNode(walker));
@@ -646,11 +650,14 @@ namespace MiMFa.Engine.DEAL.JS
                     }
                     else if (next?.Is(TokenType.Keyword) == true)
                     {
-                        node.Token.Update(TokenType.NamespaceKeyword);
-                        return node.Update(NodeType.CallStructure).AddRange(
+                        node.Update(NodeType.CallStructure).AddRange(
                             Engine.IsComplementors(next) ? null : Engine.CreateDotNode(),
                             NormalCompactAssembleNode(walker)
                         );
+                        node.Token.Update(TokenType.NamespaceKeyword);
+                        if(before?.Is(TokenType.NamespaceKeyword) == true && before?.Count < 1)
+                            return AssembleKeywordNode(node, walker);
+                        else return node; 
                     }
                     else if (fcname != null && (next == null || Engine.IsSeparators(next) || Engine.IsComplementors(next) || Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next)))
                         return Engine.CreateCallFunctionNode(fcname);
@@ -680,10 +687,18 @@ namespace MiMFa.Engine.DEAL.JS
                 return node.Update(node.Type | type);
             return new Node(new Token(TokenType.Unknown), type, node, NormalCompactAssembleNode(walker));
         }
+        protected override Node AssemblePrefixNode(Node node, NodeWalker walker)
+        {
+            if (walker.PeekProcedure()?.Is(":") == true)
+                return new Node(node.Token.Update(TokenType.IdentifierKeyword), NodeType.DefineStructure);
+            return base.AssemblePrefixNode(node, walker);
+        }
         protected override Node AssembleStartNode(Node node, NodeWalker walker)
         {
             var next = walker.PeekProcedure();
             var next2 = walker.PeekProcedure(1);
+            if (next?.Is(":") == true)
+                return new Node(node.Token.Update(TokenType.IdentifierKeyword), NodeType.DefineStructure);
             switch (node.Token.Value.ToLower())
             {
                 case "will":
@@ -713,6 +728,18 @@ namespace MiMFa.Engine.DEAL.JS
                     }
             }
             return base.AssembleStartNode(node, walker);
+        }
+        protected override Node AssembleMiddleNode(Node node, NodeWalker walker)
+        {
+            if (walker.PeekProcedure()?.Is(":") == true)
+                return new Node(node.Token.Update(TokenType.IdentifierKeyword), NodeType.DefineStructure);
+            return base.AssembleMiddleNode(node, walker);
+        }
+        protected override Node AssembleEndNode(Node node, NodeWalker walker)
+        {
+            if (walker.PeekProcedure()?.Is(":") == true)
+                return new Node(node.Token.Update(TokenType.IdentifierKeyword), NodeType.DefineStructure);
+            return base.AssembleEndNode(node, walker);
         }
         protected override Node AssembleSuffixNode(Node node, NodeWalker walker)
         {
@@ -852,7 +879,6 @@ namespace MiMFa.Engine.DEAL.JS
 
             return base.AssembleSuffixNode(node, walker);
         }
-
 
         private NodeWalker MoveToStartProcedure(ref NodeWalker walker)
         {

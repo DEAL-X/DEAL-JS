@@ -1,9 +1,3 @@
-// DEAL Fetch compatibility layer for the ClearScript host.
-// This implements the supported Fetch request/response subset over Transfer.
-// The hosting V8ScriptEngine must enable EnableTaskPromiseConversion so the
-// .NET Task<JObject> returned by FetchAsync becomes awaitable by JavaScript.
-// Browser-only features (CORS enforcement, service workers, streaming bodies,
-// cache modes and browser-origin policy) are not simulated.
 
 function createError(name, message) {
     const error = new Error(message);
@@ -100,7 +94,7 @@ class DealBlob {
         const chunks = parts.map(part => {
             if (part instanceof DealBlob) return part._bytes;
             if (typeof Blob !== "undefined" && part instanceof Blob) return null;
-            return Make.uint8Array(part);
+            return MAKE.uint8Array(part);
         });
         if (chunks.some(chunk => chunk === null))
             throw new TypeError("Native Blob parts cannot be mixed in this host fallback.");
@@ -112,18 +106,18 @@ class DealBlob {
         this.type = String(options.type || "").toLowerCase();
     }
     arrayBuffer() { return Promise.resolve(this._bytes.slice().buffer); }
-    text() { return Promise.resolve(Make.textFromBytes(this._bytes)); }
-    slice(start = 0, end = this.size, type = "") {
-        const from = start < 0 ? Math.max(this.size + start, 0) : Math.min(start, this.size);
-        const to = end < 0 ? Math.max(this.size + end, 0) : Math.min(end, this.size);
-        return new DealBlob([this._bytes.slice(from, Math.max(from, to))], { type });
+    text() { return Promise.resolve(MAKE.textFromBytes(this._bytes)); }
+    slice(index = 0, count = this.size, type = "") {
+        const fromIndex = index < 0 ? Math.max(this.size + index, 0) : Math.min(index, this.size);
+        const toIndex = count < 0 ? Math.max(this.size + count, 0) : Math.min(count, this.size);
+        return new DealBlob([this._bytes.slice(fromIndex, Math.max(fromIndex, toIndex))], { type });
     }
 }
 const BlobType = typeof Blob !== "undefined" ? Blob : DealBlob;
 
 class Body {
     constructor(bytes, bodyUsed = false) {
-        this._bytes = Make.uint8Array(bytes);
+        this._bytes = MAKE.uint8Array(bytes);
         this.bodyUsed = !!bodyUsed;
     }
     _consume() {
@@ -134,7 +128,7 @@ class Body {
     arrayBuffer() {
         return this._consume().then(bytes => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
     }
-    text() { return this._consume().then(Make.textFromBytes); }
+    text() { return this._consume().then(MAKE.textFromBytes); }
     json() { return this.text().then(text => JSON.parse(text)); }
     blob() { return this._consume().then(bytes => new BlobType([bytes], { type: this.headers?.get("content-type") || "" })); }
     formData() {
@@ -160,7 +154,7 @@ class Request extends Body {
             throw new TypeError("Cannot construct a Request from a body that has already been consumed.");
         const source = input instanceof Request ? input : null;
         const hasBody = Object.prototype.hasOwnProperty.call(init, "body");
-        const body = hasBody ? Make.uint8Array(init.body) : source ? source._bytes.slice() : new Uint8Array(0);
+        const body = hasBody ? MAKE.uint8Array(init.body) : source ? source._bytes.slice() : new Uint8Array(0);
         super(body, false);
         this.url = source ? source.url : String(input);
         this.method = String(init.method || (source && source.method) || "GET").toUpperCase();
@@ -193,7 +187,7 @@ class Request extends Body {
 // ------------------------------------------------------------
 class Response extends Body {
     constructor(body = null, init = {}) {
-        const bytes = body == null ? new Uint8Array(0) : Make.uint8Array(body);
+        const bytes = body == null ? new Uint8Array(0) : MAKE.uint8Array(body);
         super(bytes, false);
         this.status = init.status === undefined ? 200 : Number(init.status);
         if (!Number.isInteger(this.status) || this.status < 0 || this.status > 599)
@@ -224,88 +218,6 @@ class Response extends Body {
 }
 
 // ------------------------------------------------------------
-// Native transport bridge
-// ------------------------------------------------------------
-function getTransport() {
-    const transport = typeof application !== "undefined" && application.Engine && application.Engine.Transfer;
-    if (!transport) throw new Error("The DEAL Transfer host is not available.");
-    if (!transport.IsAlive) transport.Initial();
-    return transport;
-}
-function fetch(input, init) {
-    let request;
-    try {
-        request = input instanceof Request && init === undefined ? input.clone() : new Request(input, init);
-    } catch (error) { return Promise.reject(error); }
-
-    if (request.signal && request.signal.aborted) return Promise.reject(abortError());
-    if (request.redirect !== "follow")
-        return Promise.reject(new TypeError("The host transport currently supports redirect:'follow' only."));
-    if (request.mode !== "cors")
-        return Promise.reject(new TypeError("The host Fetch transport supports mode:'cors' only; it does not emulate browser CORS or navigation modes."));
-    if (request.credentials !== "omit" && request.credentials !== "same-origin" && request.credentials !== "include")
-        return Promise.reject(new TypeError("Invalid credentials mode."));
-    // There is no browser-origin context in ClearScript. The host treats
-    // same-origin and include identically; omit is enforced by Transfer.
-    if (request.cache !== "default")
-        return Promise.reject(new TypeError("The host Fetch transport does not implement browser cache modes."));
-    if (request.integrity)
-        return Promise.reject(new TypeError("Subresource integrity is not implemented by the host Fetch transport."));
-    if (request.referrer)
-        return Promise.reject(new TypeError("Browser referrer policy is not implemented by the host Fetch transport."));
-    if (request.keepalive)
-        return Promise.reject(new TypeError("Browser keepalive semantics are not implemented by the host Fetch transport."));
-
-    let transport, id, abortListener, operation;
-    try {
-        transport = getTransport();
-        id = "fetch-" + Date.now() + "-" + Math.random().toString(36).slice(2);
-        const bodyBase64 = request._bytes.length ? Make.base64FromBytes(request._bytes) : null;
-        const headersJson = JSON.stringify(Object.fromEntries(request.headers.entries()));
-        if (request.signal && typeof request.signal.addEventListener === "function") {
-            abortListener = () => transport.Abort(id);
-            request.signal.addEventListener("abort", abortListener, { once: true });
-        }
-        const pathProvider = typeof application !== "undefined" && application.Engine && application.Engine.Router;
-        const baseAddress = typeof location !== "undefined" ? location.href : null;
-        const resolvedUrl = pathProvider ? pathProvider.Resolve(request.url, baseAddress) : request.url;
-        operation = transport.FetchJsonAsync(request.method, resolvedUrl, null, null, request.timeout, headersJson, id, bodyBase64, request.credentials);
-    } catch (error) {
-        if (abortListener) request.signal.removeEventListener("abort", abortListener);
-        return Promise.reject(error);
-    }
-
-    return Promise.resolve(operation).then(nativeResult => {
-        if (request.signal && request.signal.aborted) throw abortError();
-        const result = JSON.parse(nativeResult.ToString());
-        const response = new Response(Make.bytesFromBase64(result.data || ""), {
-            status: result.status,
-            statusText: result.statusText,
-            headers: result.headers,
-            url: result.url,
-            redirected: result.redirected,
-            type: result.type || "basic"
-        });
-        return response;
-    }).catch(error => {
-        if (request.signal && request.signal.aborted) throw abortError();
-        const hostErrorName = error && (
-            error.name ||
-            (error.GetType && error.GetType().Name) ||
-            (error.hostException && error.hostException.GetType && error.hostException.GetType().Name)
-        );
-        if (request.timeout > 0 && (
-            hostErrorName === "TimeoutException" ||
-            hostErrorName === "TaskCanceledException" ||
-            /task.*cancel|canceled|cancelled/i.test(String(error && error.message || ""))
-        )) throw timeoutError();
-        throw error;
-    }).finally(() => {
-        if (abortListener) request.signal.removeEventListener("abort", abortListener);
-    });
-}
-
-// ------------------------------------------------------------
 // Global exports
 // ------------------------------------------------------------
 globalThis.Headers = Headers;
@@ -313,5 +225,3 @@ globalThis.Request = Request;
 globalThis.Response = Response;
 if (typeof globalThis.AbortController === "undefined") globalThis.AbortController = DealAbortController;
 if (typeof globalThis.AbortSignal === "undefined") globalThis.AbortSignal = DealAbortSignal;
-fetch.isDealFetch = true;
-globalThis.fetch = fetch;

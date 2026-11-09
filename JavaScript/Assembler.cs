@@ -309,6 +309,7 @@ namespace MiMFa.Engine.JavaScript
                             node.ForceLast.Add(n);
                         else node.Add(n);
                     }
+                    else if (n.IsEmpty()) node.Add(walker.Walk());
                 }
                 if (node.Is("{", "[", "(")) walker.Walk();
                 else node.Add(AssembleNode(walker));

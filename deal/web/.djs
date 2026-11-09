@@ -1,6 +1,6 @@
 use deal/core;
-use deal/make/logical.djs;
+use deal/make/logical;
 
-command #download:identifier = Download;
-command #send:identifier = Send;
-command #temporary:identifier = Temporary;
+command #DOWNLOAD:identifier = Download;
+command #SEND:identifier = Send;
+command #TEMPORARY:identifier = Temporary;
