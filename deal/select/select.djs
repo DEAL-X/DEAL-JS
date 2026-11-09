@@ -1,16 +1,16 @@
 // Project fields from an object, array, iterable, or scalar source.
 //
 // Supported projections:
-//   select("*", source)
-//   select("name", source)                    -> [value, ...]
-//   select(["name", "price"], source)          -> [{ name, price }, ...]
-//   select({ title: "name" }, source)          -> [{ title: value }, ...]
-//   select([{ key: "title", value: "name" }], source)
+//   SELECT("*", source)
+//   SELECT("name", source)                    -> [value, ...]
+//   SELECT(["name", "price"], source)          -> [{ name, price }, ...]
+//   SELECT({ title: "name" }, source)          -> [{ title: value }, ...]
+//   SELECT([{ key: "title", value: "name" }], source)
 //
 // DEAL's "FROM" separator is compiled as an argument separator. The source
 // is therefore always the final argument; a trailing empty separator value
 // is tolerated for compatibility with generated calls.
-command #Select:start|function() {
+command #SELECT:start|function() {
     if (arguments.length < 1) return null;
     if (arguments.length === 1) return arguments[0];
 

@@ -2,9 +2,9 @@ use deal/make/string;
 use deal/data/temporary;
 
 // All resource related commands
-command File = function (path = null) {
+command FILE = function (path = null) {
 	return {
-		path: path ?? Temporary.path(),
+		path: path ?? TEMPORARY.path(),
 		directory: function (recursive = false) {
 			return application.Engine.Resource.Entity(this.path).Directory;
 		},
@@ -21,20 +21,20 @@ command File = function (path = null) {
 			return application.Engine.Resource.GetFileContents(this.path, recursive, encoding);
 		},
 		create: function (object = "") {
-			if(!application.Engine.Resource.Exists(this.path)) application.Engine.Resource.SetFileContents(this.path, Make.string(object));
+			if(!application.Engine.Resource.Exists(this.path)) application.Engine.Resource.SetFileContents(this.path, MAKE.string(object));
 			return application.Engine.Resource.Exists(this.path);
 		},
 		read: function (encoding = null) {
 			return application.Engine.Resource.GetFileContents(this.path, encoding);
 		},
 		write: function (object = null) {
-			return application.Engine.Resource.SetFileContents(this.path, Make.string(object));
+			return application.Engine.Resource.SetFileContents(this.path, MAKE.string(object));
 		},
 		prepend: function (object = null) {
-			return application.Engine.Resource.PrependFileContents(this.path, Make.string(object));
+			return application.Engine.Resource.PrependFileContents(this.path, MAKE.string(object));
 		},
 		append: function (object = null) {
-			return application.Engine.Resource.AppendFileContents(this.path, Make.string(object));
+			return application.Engine.Resource.AppendFileContents(this.path, MAKE.string(object));
 		},
 		move: function (destination = null, overwrite = false) {
 			if(!destination) return false;

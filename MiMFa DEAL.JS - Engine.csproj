@@ -24,7 +24,7 @@
     <None Remove="DEAL\web\fetch.djs" />
     <None Remove="DEAL\web\go.djs" />
     <None Remove="DEAL\web\load.djs" />
-    <None Remove="DEAL\web\~request.djs" />
+    <None Remove="DEAL\web\request.djs" />
     <None Remove="Newtonsoft.Json.dll" />
     <None Remove="DEAL\core\functions.djs" />
     <None Remove="DEAL\core\global.js" />
@@ -157,7 +157,7 @@
     <Content Include="DEAL\web\fetch.djs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="DEAL\web\~request.djs">
+    <Content Include="DEAL\web\request.djs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="DEAL\web\send.js">
@@ -265,7 +265,7 @@
     <Resource Include="DEAL\web\fetch.djs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="DEAL\web\~request.djs">
+    <Resource Include="DEAL\web\request.djs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <Resource Include="DEAL\web\send.js">

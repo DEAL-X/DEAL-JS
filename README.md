@@ -366,66 +366,66 @@ All commands represent executable operations.
 #### Action commands
 * By action command there will make a simple callable, but with these features:
     * All action commands must be defined globally.
-    * They will have a special case-insensitive commandName.
+    * They will have a special case-insensitive COMMANDNAME.
     * They will call immediately after definition once.
     * Will be able to call again, just using the name without any parentesis.
-* To define a special action command, use 1-6 `#` signs followed by at least one space before the action `commandName`.
+* To define a special action command, use 1-6 `#` signs followed by at least one space before the action `COMMANDNAME`.
     ```ts
-    # commandName procedure;
+    # COMMANDNAME procedure;
     ```
     or
     ```ts
-    ### commandName procedure;
+    ### COMMANDNAME procedure;
     ```
     or
     ```ts
-    ## commandName: procedure;
+    ## COMMANDNAME: procedure;
     ```
     They will compile to:
     ```js
-    (commandName = (() => js-procedure))();
+    (COMMANDNAME = (() => js-procedure))();
     ```
-* Then to call:
+* Then can call it case-insensitively, with or without parenthesis:
     ```ts
-    commandname
+    commandName
     ```
     It will compile to:
     ```js
-    commandName()
+    COMMANDNAME()
     ```
 
 #### Function commands
 * Every function command behaves like a JavaScript function while following several conventions:
     * All function commands must be defined globally.
-    * They will have a special case-insensitive commandName.
+    * They will have a special case-insensitive COMMANDNAME.
     * All inputs of each command should be optional. So ensure every parameter has a default value.
-    * If the command has no returned output, it should return itself (specially when there is not inputted arguments). 
+    * If the command has no returned output, it can return itself (specially when there is not inputted arguments). 
 * The main syntax to define a special function commands:
     ```ts
-    Command commandName(input1=value1, ...) {	// All inputs of each command must have a default value
+    Command COMMANDNAME(input1=value1, ...) {	// All inputs of each command must have a default value
         procedures
         /*
             // Should return one of the following
             return output;
-            return commandName; // If you don't have any return value, you should return the command directly (usually when you do not have input arguments).
+            return COMMANDNAME; // If you don't have any return value, you should return the command directly (usually when you do not have input arguments).
             // It will be useful when  you want to send a callable version of the command to another one as an input
         */
     }
     ```
     It will compile to:
     ```js
-    function commandName(input1=value1, ...) {
+    function COMMANDNAME(input1=value1, ...) {
         js-procedures
     }
     ```
 * Four ways to call a command:
     * Grammatical:			
         ```ts
-        commandname                            		    // To call without any inputted arguments
+        CommandName                            		    // To call without any inputted arguments
         ```
     * Functional:			
         ```ts
-        commandname(val1_1, CMD2(val2_1, val2_2))		// Exact calling a function
+        commandName(val1_1, CMD2(val2_1, val2_2))		// Exact calling a function
         ```
     * Procedural:			
         ```ts
@@ -433,7 +433,7 @@ All commands represent executable operations.
         ```
     * Optional:			
         ```ts
-        commandname1 ...{								// Sending an object of named values
+        commandname ...{								// Sending an object of named values
             inp1_1: val1_1,
             inp1_2: commandname2 { inp2_1: val2_1, inp2_2: val2_2 } 
         }
@@ -444,10 +444,10 @@ All commands represent executable operations.
 #### Definition commands
 * Every definition command behaves like a JavaScript object while following several conventions:
     * All definition commands must be defined globally.
-    * They will have a special case-insensitive commandName.
+    * They will have a special case-insensitive COMMANDNAME.
 * The main syntax to define a special definition commands:
     ```ts
-    Command commandName = {
+    Command COMMANDNAME = {
         propertykey1 : propertyValue1,
         propertykey2 : propertyValue2,
         /* Exactly same to an object... */
@@ -455,7 +455,7 @@ All commands represent executable operations.
     ```
     It will compile to:
     ```js
-    var commandName = {
+    var COMMANDNAME = {
         js-propertykey1 : js-propertyValue1,
         js-propertykey2 : js-propertyValue2,
         /* Exactly same to an object... */
@@ -463,18 +463,18 @@ All commands represent executable operations.
     ```
 * Then to use:
     ```ts
-    commandname propertykey1
+    commandName propertykey1
     ```
     It will compile to:
     ```js
-    commandName.js-propertykey1
+    COMMANDNAME.js-propertykey1
     ```
 
 #### Delegation commands
 * The simplest but valuable type of commands.
 * Every delegation command behaves like a simple JavaScript variable while following several conventions:
     * All delegation commands must be defined globally.
-    * They will have a special case-insensitive commandName.
+    * They will have a special case-insensitive COMMANDNAME.
     * All words, after being used only one time, a stuck acceptor sign `#keyword`, or wrapping word between sticked single or double asterisks `*keyword*`, will convert to a delegation command.
     * They can convert everything (constant, variable, function, class, etc.), even after their definition.
     * They will not change the behavior of the converted thing.
@@ -669,61 +669,16 @@ const data = await response.json();
 ```
 
 The host transport supports HTTP and HTTPS, common request methods, request and response headers, byte-safe request and response bodies, redirects, request timeouts, cancellation, and a host cookie jar. `credentials: "omit"` disables cookie sending and storage for that request. Because the host has no browser-origin context, `same-origin` and `include` both use the host cookie jar.
-
-This is a host-side Fetch compatibility layer, not a complete browser Fetch implementation. It does not enforce browser CORS policy or implement service workers, browser cache modes, opaque `no-cors` responses, browser referrer policy, integrity checks, keepalive semantics, or streaming response bodies. Unsupported request options are rejected rather than silently ignored. URL-encoded `formData()` parsing is supported; multipart `FormData` uploads require a browser XHR runtime.
-
-At the .NET layer, the HTTP transport is kept separate from browser control: `Transfer` and `FetchRequest` are in `MiMFa.Net.Fetch`; the browser provider and drivers are in `MiMFa.Net.Browsers` and `MiMFa.Net.Browsers.Drivers`. The shared `Router` remains in `MiMFa.Net`. A host can construct a request directly with `new Transfer().FetchAsync(new FetchRequest { Url = ... })`; DEAL's JavaScript `fetch()` compatibility layer uses this transport internally.
-
-The ClearScript V8 host must enable `V8ScriptEngineFlags.EnableTaskPromiseConversion` for .NET `Task` results to be awaitable from JavaScript.
-
-#### Cross-browser browser object model
-
-The ClearScript host exposes `application.Engine.Browser` as the DEAL `browser` object. `BrowserTabs` directly contains `BrowserTab` handles; there is no parallel `BrowserTabInfo` type. Tab handles resolve their page session lazily, avoiding the creation of page connections merely to enumerate tabs. The public `Browser` type is a browser-independent provider facade. It delegates browser operations to a selected `BrowserDriver` and a protocol-neutral `BrowserSession`; each tab is represented by a `BrowserPageSession`. The provider and page objects do not need to know whether the selected implementation uses DevTools Protocol or WebDriver BiDi.
-
-The default constructor continues to select Chrome for backward compatibility. The .NET host can select another driver explicitly:
-
-```csharp
-using MiMFa.Net.Browsers;
-using MiMFa.Net.Browsers.Drivers;
-
-// Default: ChromeDriver
-var chromeBrowser = new Browser();
-
-// Edge shares the Chromium implementation.
-var edgeBrowser = new Browser(driver: new EdgeDriver());
-
-// Firefox uses geckodriver and WebDriver BiDi.
-var firefoxBrowser = new Browser(driver: new FirefoxDriver());
-
-// Optional explicit executable paths:
-var firefoxWithCustomDriver = new Browser(
-    driver: new FirefoxDriver(driverPath: @"C:\tools\geckodriver.exe"));
-```
-
-`ChromeDriver` and `EdgeDriver` inherit from `ChromiumDriver`, which owns the shared Chromium process, profile, and debugging-endpoint setup. `FirefoxDriver` is independent and uses geckodriver to create a WebDriver BiDi session. Firefox requires a compatible Firefox/geckodriver installation; geckodriver must be discoverable on `PATH` or supplied through `driverPath`.
-
-The public .NET API uses **PascalCase** names only. ClearScript resolves member names without regard to casing, so both the familiar JavaScript-style spelling and the canonical .NET spelling address the same member:
-
-```javascript
-const titleA = browser.tab.window.document.title;
-const titleB = browser.Tab.Window.Document.Title;
-
-const urlA = browser.tab.window.location.href;
-const urlB = browser.Tab.Window.Location.Href;
-```
-
-These are synchronous property reads. They return values rather than .NET `Task` objects. The host waits for the selected browser to answer each remote property read; the returned value is not a local DOM object.
-
 The common object hierarchy is:
 
-- `browser`: the `Browser` provider.
-- `browser.Driver`: the selected browser driver.
-- `browser.Session`: the active protocol-neutral browser session.
-- `browser.Tab`: the currently displayed tab in the provider's browser session.
-- `browser.Tabs`: the synchronous `BrowserTabs` collection of `BrowserTab` handles; `browser.Tabs.Current` resolves the current tab.
-- `browser.Tab.Window`: the remote Window proxy.
-- `browser.Tab.Windows`: the child-frame collection.
-- `browser.Downloads`, `browser.Permissions`, and `browser.Runtime`: optional browser-level services.
+- `BROWSER`: the `Browser` provider.
+- `BROWSER.Driver`: the selected browser driver.
+- `BROWSER.Session`: the active protocol-neutral browser session.
+- `BROWSER.Tab`: the currently displayed tab in the provider's browser session.
+- `BROWSER.Tabs`: the synchronous `BrowserTabs` collection of `BrowserTab` handles; `BROWSER.Tabs.Current` resolves the current tab.
+- `BROWSER.Tab.Window`: the remote Window proxy.
+- `BROWSER.Tab.Windows`: the child-frame collection.
+- `BROWSER.Downloads`, `BROWSER.Permissions`, and `BROWSER.Runtime`: optional browser-level services.
 
 `WindowId` exposes the native application-window identifier when the selected backend provides one; Firefox uses BiDi browsing-context IDs and therefore reports `null` for this Chromium-specific concept. `Cookies.Document` is based on the standard `document.cookie` API; `Cookies.All` uses the Chromium CDP cookie command and is not available through Firefox.
 
@@ -740,15 +695,15 @@ The Window proxy exposes `Document`, `Location`, `History`, `Navigator`, `Screen
 
 Browser properties return native values synchronously. The non-`Async` convenience methods are synchronous as well; explicitly named `...Async()` counterparts remain awaitable. DEAL source uses familiar lower-case browser-object spelling because ClearScript resolves the public PascalCase .NET members without regard to casing:
 
-```deal
-Consider tab is browser.open("https://example.com/");
-Consider title is browser.tab.window.document.title;
+```ts
+Consider tab is browser open https://example.com/;
+Consider title is browser tab window document title;
 
-browser.tab.window.storage.local.setItem("key", "value");
-Consider value is browser.tab.window.storage.local.getItem("key");
+browser tab window storage local setItem("key", "value");
+Consider value is browser tab window storage local getItem("key");
 
-browser.tab.navigate("https://example.org/");
-browser.tab.back();
+go https://example.org/;
+browser tab back();
 ```
 
 The File System Access API is accessed through the browser's native file pickers. Availability depends on the browser, its secure-context rules, permissions, and user-activation requirements. The `Open` and `Save` operations return remote handles; their explicit `...Async()` counterparts remain available.
@@ -772,13 +727,6 @@ browser.tab.load("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
 
 Consider response is await fetch("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
 Consider html is await response.text();
-```
-
-Configure the provider from the .NET host when needed:
-
-```csharp
-engine.Router.RootDirectory = @"D:\Projects\MyScraper";
-engine.Router.RootAddress = "https://example.com/app/";
 ```
 
 The selected browser loads local files through `file://` and applies its normal security restrictions. Host Fetch supports local-file `GET` and `HEAD` requests, returns status `200`, an absolute `file://` response URL, an inferred content type, and the file bytes. Missing files reject the Fetch promise. Local file reads do not use HTTP cookies or HTTP request headers.

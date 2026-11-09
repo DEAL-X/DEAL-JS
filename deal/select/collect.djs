@@ -1,13 +1,13 @@
 // Build one record from named fields, objects, and positional values.
 //
 // Accepted inputs:
-//   collect({ key: value }, { other: value })
-//   collect({ key: "name", value: value })
-//   collect(value1, value2) -> { COLUMN1: value1, COLUMN2: value2 }
+//   COLLECT({ key: value }, { other: value })
+//   COLLECT({ key: "name", value: value })
+//   COLLECT(value1, value2) -> { COLUMN1: value1, COLUMN2: value2 }
 //
 // Arrays are recursively expanded. Later values replace earlier values
 // when the same key is supplied more than once.
-command #Collect:start|function() {
+command #COLLECT:start|function() {
     if (arguments.length < 1) return null;
 
     const result = {};

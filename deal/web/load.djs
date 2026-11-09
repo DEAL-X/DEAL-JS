@@ -1,1 +1,1 @@
-async command #load:start|function() => will application.Engine.Browser.Load(...arguments);
+async command #LOAD:start|function() => will application.Engine.Browser.Load(...arguments);

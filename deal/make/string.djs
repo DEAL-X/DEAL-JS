@@ -1,4 +1,4 @@
-#Make.string:function = function (object = null) {
+#MAKE.string:function = function (object = null) {
     if (object === null || object === undefined)
         return String(object);
 

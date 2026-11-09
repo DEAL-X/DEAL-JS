@@ -1,3 +1,3 @@
 use deal/core;
 
-command #Make:identifier = {};
+command #MAKE:identifier = {};

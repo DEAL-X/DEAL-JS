@@ -12,7 +12,7 @@
 
 // Select all elements or values matching the specified selector
 // from a document, element, object, array, or iterable.
-command #All:start|function:string() {
+command #ALL:start|function:string() {
     let [query, source] = detect_Selector_Arguments(...arguments);
 
     if (query == null) return source;

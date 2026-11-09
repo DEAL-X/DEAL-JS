@@ -9,7 +9,7 @@ let #data = null;
 // A loaded document updates LOADED and DATA.
 // A web response updates FETCHED, RESPONSE, and DATA when successful.
 // Ordinary data updates DATA unless status is explicitly false.
-command Handle(inputtedData = null, status = null) {
+command HANDLE(inputtedData = null, status = null) {
     // Reset all handlers when no input data is provided.
     if (inputtedData == null) {
         if(status == null) {

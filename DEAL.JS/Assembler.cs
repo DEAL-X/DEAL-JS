@@ -753,20 +753,20 @@ namespace MiMFa.Engine.DEAL.JS
                     case "then":
                     case "otherwise":
                     case "anyway":
-                        string handler = $"handle({ArgumentName});";
+                        string handler = $"HANDLE({ArgumentName});";
                         if (node.Token.Is("otherwise"))
                         {
-                            handler = $"handle({ArgumentName}, false);";
+                            handler = $"HANDLE({ArgumentName}, false);";
                             node.Token.Update(TokenType.FunctionKeyword, $"{dot}catch");
                         }
                         else if (node.Token.Is("anyway"))
                         {
-                            handler = $"handle({ArgumentName});";
+                            handler = $"HANDLE({ArgumentName});";
                             node.Token.Update(TokenType.FunctionKeyword, $"{dot}finally");
                         }
                         else
                         {
-                            handler = $"handle({ArgumentName}, true);";
+                            handler = $"HANDLE({ArgumentName}, true);";
                             node.Token.Update(TokenType.FunctionKeyword, $"{dot}then");
                         }
 

@@ -1,4 +1,4 @@
-Temporary.keep = function (key, value, expires = 0, path = "/", $secure = false) {
+TEMPORARY.keep = function (key, value, expires = 0, path = "/", $secure = false) {
     time = "";
     if (expires) {
         var date = new Date();
@@ -10,7 +10,7 @@ Temporary.keep = function (key, value, expires = 0, path = "/", $secure = false)
     document.cookie = `${encodeURIComponent(key)}=${encodeURIComponent(value || "")}${time}${$secure}; path=${path}`;
 };
 
-Temporary.give = function(key) {
+TEMPORARY.give = function(key) {
     let nameEQ = encodeURIComponent(key) + "=";
     let ca = document.cookie.split(';');
     for (let i = 0; i < ca.length; i++) {
@@ -21,11 +21,11 @@ Temporary.give = function(key) {
     return null;
 };
 
-Temporary.take = function(key, path = "/") {
+TEMPORARY.take = function(key, path = "/") {
     document.cookie = `${encodeURIComponent(key)}=; Max-Age=-99999999; Secure; path=${path}`;
 };
 
-Temporary.remove = function() {
+TEMPORARY.remove = function() {
     let cookies = document.cookie.split(";");
     for (let i = 0; i < cookies.length; i++) {
         let cookie = cookies[i];

@@ -1,7 +1,7 @@
 use deal/core;
 
-command Number = Number;
+reserve number = "Number";
 
-command #Array:identifier = Array;
-command #Math:identifier = Math;
-command #Regex:identifier = RegExp;
+reserve #array:identifier = "Array";
+reserve #math:identifier = "Math";
+reserve #regex:identifier = "RegExp";

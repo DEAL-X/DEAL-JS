@@ -1,78 +1,78 @@
 use deal/make/string;
 
 // All resource related commands
-command Local = {};
+command LOCAL = {};
 
-#Local.folder:function = function (path = null, recursive = false) {
+#LOCAL.folder:function = function (path = null, recursive = false) {
 	if(!path) return null;
 	return application.Engine.Resource.GetFolderContents(path, recursive);
 };
-#Local.file:function = function (path = null, encoding = null) {
+#LOCAL.file:function = function (path = null, encoding = null) {
 	if(!path) return null;
 	return application.Engine.Resource.GetFileContents(path, encoding);
 };
-#Local.content:function = function (path = null, recursive = false, encoding = null) {
+#LOCAL.content:function = function (path = null, recursive = false, encoding = null) {
 	if(!path) return null;
 	return application.Engine.Resource.GetContents(path, recursive, encoding);
 };
-#Local.create:function = function (path = null, object = "") {
+#LOCAL.create:function = function (path = null, object = "") {
 	if(!path) return false;
-	if(!application.Engine.Resource.Exists(path)) application.Engine.Resource.SetFileContents(path, Make.string(object));
+	if(!application.Engine.Resource.Exists(path)) application.Engine.Resource.SetFileContents(path, MAKE.string(object));
 	return application.Engine.Resource.Exists(path);
 };
-#Local.directory:function = function (path = null) {
+#LOCAL.directory:function = function (path = null) {
 	if(!path) return false;
 	application.Engine.Resource.CreateDirectory(path);
 	return application.Engine.Resource.Exists(path);
 };
-#Local.name:function = function (path = null) {
+#LOCAL.name:function = function (path = null) {
 	if(!path) return null;
 	let ent = application.Engine.Resource.Entity(path)
 	if(ent.IsFile) return application.Engine.Resource.FileName(path);
 	else if(ent.IsFolder) return application.Engine.Resource.FolderName(path);
 };
-#Local.read:function = function (path = null, recursive = false, encoding = null) {
+#LOCAL.read:function = function (path = null, recursive = false, encoding = null) {
 	if(!path) return null;
 	let ent = application.Engine.Resource.Entity(path)
 	if(ent.IsFile) return application.Engine.Resource.GetFileContents(path, encoding);
 	else if(ent.IsFolder) return application.Engine.Resource.GetFolderContents(path, recursive);
 };
-#Local.write:function = function (path = null, object = null) {
+#LOCAL.write:function = function (path = null, object = null) {
 	if(!path) return false;
-	return application.Engine.Resource.SetFileContents(path, Make.string(object));
+	return application.Engine.Resource.SetFileContents(path, MAKE.string(object));
 };
-#Local.prepend:function = function (path = null, object = null) {
+#LOCAL.prepend:function = function (path = null, object = null) {
 	if(!path) return false;
-	return application.Engine.Resource.PrependFileContents(path, Make.string(object));
+	return application.Engine.Resource.PrependFileContents(path, MAKE.string(object));
 };
-#Local.append:function = function (path = null, object = null) {
+#LOCAL.append:function = function (path = null, object = null) {
 	if(!path) return false;
-	return application.Engine.Resource.AppendFileContents(path, Make.string(object));
+	return application.Engine.Resource.AppendFileContents(path, MAKE.string(object));
 };
-#Local.move:function = function (source = null, destination = null, overwrite = false) {
+#LOCAL.move:function = function (source = null, destination = null, overwrite = false) {
 	if(!source || !destination) return false;
 	application.Engine.Resource.Move(source, destination, overwrite);
 	return true;
 };
-#Local.copy:function = function (source = null, destination = null, overwrite = false) {
+#LOCAL.copy:function = function (source = null, destination = null, overwrite = false) {
 	if(!source || !destination) return false;
 	application.Engine.Resource.Copy(source, destination, overwrite);
 	return true;
 };
-#Local.rename = function (path = null, newName = null, overwrite = false) {
+#LOCAL.rename = function (path = null, newName = null, overwrite = false) {
 	if(!path || !newName) return false;
 	application.Engine.Resource.Rename(path, newName, overwrite);
 	return true;
 };
-#Local.delete:function = function (path = null) {
+#LOCAL.delete:function = function (path = null) {
 	if(!path) return false;
 	return application.Engine.Resource.Delete(path);
 };
-#Local.entity:function = function (path = null) {
+#LOCAL.entity:function = function (path = null) {
 	if(!path) return null;
 	return application.Engine.Resource.Entity(path);
 };
-#Local.exists:function = function (path = null) {
+#LOCAL.exists:function = function (path = null) {
 	if(!path) return false;
 	return application.Engine.Resource.Exists(path);
 };

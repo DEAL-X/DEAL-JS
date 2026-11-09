@@ -42,7 +42,7 @@ command #FETCH:start|function(input, init = {}) {
     try {
         transport = getTransport();
         id = "fetch-" + Date.now() + "-" + Math.random().toString(36).slice(2);
-        const bodyBase64 = request._bytes.length ? Make.base64FromBytes(request._bytes) : null;
+        const bodyBase64 = request._bytes.length ? MAKE.base64FromBytes(request._bytes) : null;
         const headersJson = JSON.stringify(Object.fromEntries(request.headers.entries()));
         if (request.signal && typeof request.signal.addEventListener === "function") {
             abortListener = () => transport.Abort(id);
@@ -60,7 +60,7 @@ command #FETCH:start|function(input, init = {}) {
     return Promise.resolve(operation).then(nativeResult => {
         if (request.signal && request.signal.aborted) throw abortError();
         const result = JSON.parse(nativeResult.ToString());
-        const response = new Response(Make.bytesFromBase64(result.data || ""), {
+        const response = new Response(MAKE.bytesFromBase64(result.data || ""), {
             status: result.status,
             statusText: result.statusText,
             headers: result.headers,
@@ -87,4 +87,4 @@ command #FETCH:start|function(input, init = {}) {
     });
 }
 
-Fetch.isDealFetch = true;
+#FETCH.isDealFetch = true;

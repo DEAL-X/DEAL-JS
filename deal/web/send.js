@@ -34,7 +34,7 @@ static _defaultMessage(result, selector, append = false) {
     if (text == null || text === "") return;
     text = String(text);
     if (!/class\s*=\s*(["'])[\s\S]*\bresult\b[\s\S]*\1/.test(text))
-        text = Struct.result(text);
+        text = STRUCT.result(text);
     try {
         if (append) _(selector).append(text);
         else _(selector).prepend(text);
