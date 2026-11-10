@@ -86,7 +86,7 @@ let gradeNormal = grade[--a][--b][c--].trim(" ", "n", "r").toLowerCase();
 (FillList = (() => {
     (ReadFile = (() => {
         MyFile = resource.file(open());
-        LOG.subject("Process started!");
+        Log.subject("Process started!");
 
         if (MyFile != null) {
             Txt = MyFile.content;
@@ -108,7 +108,7 @@ let gradeNormal = grade[--a][--b][c--].trim(" ", "n", "r").toLowerCase();
             } else log.success("Process finished successfully!");
         }
         catch (err) {
-            LOG.error("Could not finish the process because: " + err);
+            Log.error("Could not finish the process because: " + err);
         }
     }))();
 }))();

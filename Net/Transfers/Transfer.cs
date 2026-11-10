@@ -33,6 +33,7 @@ namespace MiMFa.Net.Transfers
         public Router Router { get; set; }
 
         public bool IsAlive { get; private set; } = false;
+        //public bool IsFetched => if data is fetched successfully;
 
         public Transfer()
         {

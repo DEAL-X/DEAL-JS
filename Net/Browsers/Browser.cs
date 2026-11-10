@@ -29,6 +29,7 @@ namespace MiMFa.Net.Browsers
         public string Endpoint => Driver.Endpoint;
         public int Timeout { get => Driver.Timeout; set => Driver.Timeout = value; }
         public bool IsAlive => Driver.IsAlive;
+        //[TODO] public bool IsLoaded => Session.Tab.IsLoaded;
         public int? WindowId => Session.WindowId;
         public BrowserPage CurrentPage => Session.CurrentPage;
         public BrowserTab Tab => Session.Tab;
@@ -42,7 +43,6 @@ namespace MiMFa.Net.Browsers
             Permissions = new BrowserPermissions(this);
             Runtime = new BrowserRuntime(this);
         }
-
 
 
         public void Dispose()

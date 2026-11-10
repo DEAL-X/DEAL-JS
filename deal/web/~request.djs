@@ -1,4 +1,4 @@
-command #REQUEST::string(
+command #request::string(
 	method = 'POST',
 	url = null,
 	data = null,

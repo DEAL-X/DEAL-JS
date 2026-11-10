@@ -350,6 +350,7 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 ### Commands
 All commands represent executable operations.
 * That are case-insensitive.
+* The root of a command will be accessible in all pure JS files too as a global variable.
 * Can be overridden in code.
 * A very small set that the compiler itself needs for parsing or semantic analysis defined built in.
 * They will include the following cases:
@@ -358,63 +359,65 @@ All commands represent executable operations.
     * All user-defined commands (You defined using the COMMAND statement).
 * The user-defined command will be accessible exactly like other global commands, too.
 * They can define in four ways:
-    * Action
-    * Function
-    * Definition
-    * Delegation
+    * Action commands
+    * Function commands
+    * Definition commands
+    * Delegation commands
 
 #### Action commands
 * By action command there will make a simple callable, but with these features:
     * All action commands must be defined globally.
-    * They will have a special case-insensitive COMMANDNAME.
+    * They will be accessible case-insensitively through DEAL codes.
+    * They will accessible in all pure JS files as a global variable (with the same defined name).
     * They will call immediately after definition once.
     * Will be able to call again, just using the name without any parentesis.
-* To define a special action command, use 1-6 `#` signs followed by at least one space before the action `COMMANDNAME`.
+* To define a special action command, use 1-6 `#` signs followed by at least one space before the action `commandName`.
     ```ts
-    # COMMANDNAME procedure;
+    # commandName procedure;
     ```
     or
     ```ts
-    ### COMMANDNAME procedure;
+    ### commandName procedure;
     ```
     or
     ```ts
-    ## COMMANDNAME: procedure;
+    ## commandName: procedure;
     ```
     They will compile to:
     ```js
-    (COMMANDNAME = (() => js-procedure))();
+    (commandName = (() => js-procedure))();
     ```
 * Then can call it case-insensitively, with or without parenthesis:
     ```ts
-    commandName
+    COMMANDName
     ```
     It will compile to:
     ```js
-    COMMANDNAME()
+    commandName()
     ```
 
 #### Function commands
 * Every function command behaves like a JavaScript function while following several conventions:
     * All function commands must be defined globally.
-    * They will have a special case-insensitive COMMANDNAME.
+    * They will be accessible case-insensitively through DEAL codes.
+    * They will accessible in all pure JS files as a global variable (with the same defined name).
     * All inputs of each command should be optional. So ensure every parameter has a default value.
     * If the command has no returned output, it can return itself (specially when there is not inputted arguments). 
 * The main syntax to define a special function commands:
     ```ts
-    Command COMMANDNAME(input1=value1, ...) {	// All inputs of each command must have a default value
+    Command commandName(input1=value1, ...) {	// All inputs of each command must have a default value
         procedures
         /*
             // Should return one of the following
             return output;
-            return COMMANDNAME; // If you don't have any return value, you should return the command directly (usually when you do not have input arguments).
+            return commandName; // If you don't have any return value, can return the command directly (usually when you do not have input arguments).
             // It will be useful when  you want to send a callable version of the command to another one as an input
         */
     }
     ```
     It will compile to:
     ```js
-    function COMMANDNAME(input1=value1, ...) {
+    function commandName(input1=value1, ...) {
         js-procedures
     }
     ```
@@ -433,7 +436,7 @@ All commands represent executable operations.
         ```
     * Optional:			
         ```ts
-        commandname ...{								// Sending an object of named values
+        COMMANDname ...{								// Sending an object of named values
             inp1_1: val1_1,
             inp1_2: commandname2 { inp2_1: val2_1, inp2_2: val2_2 } 
         }
@@ -444,10 +447,11 @@ All commands represent executable operations.
 #### Definition commands
 * Every definition command behaves like a JavaScript object while following several conventions:
     * All definition commands must be defined globally.
-    * They will have a special case-insensitive COMMANDNAME.
+    * They will be accessible case-insensitively through DEAL codes.
+    * They will accessible in all pure JS files as a global variable (with the same defined name).
 * The main syntax to define a special definition commands:
     ```ts
-    Command COMMANDNAME = {
+    Command commandName = {
         propertykey1 : propertyValue1,
         propertykey2 : propertyValue2,
         /* Exactly same to an object... */
@@ -455,7 +459,7 @@ All commands represent executable operations.
     ```
     It will compile to:
     ```js
-    var COMMANDNAME = {
+    var commandName = {
         js-propertykey1 : js-propertyValue1,
         js-propertykey2 : js-propertyValue2,
         /* Exactly same to an object... */
@@ -463,18 +467,18 @@ All commands represent executable operations.
     ```
 * Then to use:
     ```ts
-    commandName propertykey1
+    CommandName propertykey1
     ```
     It will compile to:
     ```js
-    COMMANDNAME.js-propertykey1
+    commandName.js-propertykey1
     ```
 
 #### Delegation commands
 * The simplest but valuable type of commands.
 * Every delegation command behaves like a simple JavaScript variable while following several conventions:
     * All delegation commands must be defined globally.
-    * They will have a special case-insensitive COMMANDNAME.
+    * They will have a special case-insensitive commandName.
     * All words, after being used only one time, a stuck acceptor sign `#keyword`, or wrapping word between sticked single or double asterisks `*keyword*`, will convert to a delegation command.
     * They can convert everything (constant, variable, function, class, etc.), even after their definition.
     * They will not change the behavior of the converted thing.
@@ -586,6 +590,59 @@ DEAL allows optional readability words that improve the natural flow of the lang
 
 ---
 
+### Selectors:
+Selectors describe what should be selected, but not only DOM elements, potentially anything.
+* Built into the compiler.
+* They define how resources are identified (CSS, XPath, RegEx, Id, Class, Index, Location, ...)
+* You have multiple special predefined DEAL commands in core, to extract elements from the resource too:
+    ```ts
+    ALL selector						// To select all elements using the specified selector from the document/elements/object/array
+    ```
+    ```ts
+    ONE selector						// To select one element using the specified selector from the document/elements/object/array
+    ```
+    ```ts
+    ANY selector				    	// An enumerator to select all/one elements using the specified selector from the document/elements/object/array
+    ```
+    ```ts
+    ALL/ONE/ANY selector FROM parent 	// To select all/one from the parent document/elements/object/array
+    ```
+* Selectors effectively makes DEAL a universal extraction language, not just a scripting language, Because you can use one of the DEAL Selectors with the syntax below, everywhere you need:
+    * CSS:
+        ```ts
+        table>tbody>tr			    // Write CSS selector directly, But if it has spaces or {} should wrapped by single/double quotes
+        ```
+    * XPath:
+        ```ts
+        \table/tbody/tr\	        // Using backslash wrapped path to use a XPath route
+        ```
+    * RegEx:
+        ```ts
+        /(?<=<tr>)(?=<\/tr>)/gi		// You can use a Regular Expression Pattern to filter elements based on their outerHTML
+        ```
+    * Tag:
+        ```ts
+        tagName					    // Select element/s using type directly the elementName
+        ```
+    * Id:
+        ```ts
+        #tagId				    // Select an element using type element Id after a #
+        ```
+    * Class:
+        ```ts
+        .tagClass					// Select element/s using type element class after a dot('.')
+        ```
+    * Location:
+        ```ts
+        500, 700, 999				// The location of element on the screen(x,y,z) or a dimensional array or object
+        ```
+    * Index:
+        ```ts
+        12							// The index of the child
+        ```
+
+---
+
 ### Handlers
 There are multiple defined variables accessible globally, which users can interact with.
 * A very small set of them defined bult-in (APPLICATION, BROWSER, WINDOW, DOCUMENT, RESPONSE, ITS, ...)
@@ -597,16 +654,19 @@ There are multiple defined variables accessible globally, which users can intera
     BROWSER 			    // The current browser
     ```
     ```ts
-    WINDOW   		        // The current window/tab
+    TAB   		            // The current tab
     ```
     ```ts
-    NAVIGATOR			    // The current window/tab navigator
+    WINDOW   		        // The current tab window
     ```
     ```ts
-    HISTORY 			    // The current window/tab navigator history
+    NAVIGATOR			    // The current tab window navigator
     ```
     ```ts
-    DOCUMENT 		        // The current loaded document in the window
+    HISTORY 			    // The current tab window navigator history
+    ```
+    ```ts
+    DOCUMENT 		        // The current loaded document in the tab window
     ```
     ```ts
     RESPONSE			    // The latest response received

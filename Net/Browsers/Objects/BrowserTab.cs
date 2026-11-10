@@ -20,6 +20,8 @@ namespace MiMFa.Net.Browsers.Objects
         public object Title => Page.EvaluateValue("document.title");
         public string WebSocketDebuggerUrl { get; set; }
         public bool IsCurrent { get; set; }
+        //[TODO] public bool IsActive => Window.IsActive;
+        //[TODO] public bool IsLoaded => Window.IsLoaded;
         public BrowserWindow Window { get; }
         public BrowserWindows Windows { get; }
 

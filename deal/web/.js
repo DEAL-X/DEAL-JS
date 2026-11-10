@@ -94,7 +94,7 @@ class DealBlob {
         const chunks = parts.map(part => {
             if (part instanceof DealBlob) return part._bytes;
             if (typeof Blob !== "undefined" && part instanceof Blob) return null;
-            return MAKE.uint8Array(part);
+            return Make.uint8Array(part);
         });
         if (chunks.some(chunk => chunk === null))
             throw new TypeError("Native Blob parts cannot be mixed in this host fallback.");
@@ -106,7 +106,7 @@ class DealBlob {
         this.type = String(options.type || "").toLowerCase();
     }
     arrayBuffer() { return Promise.resolve(this._bytes.slice().buffer); }
-    text() { return Promise.resolve(MAKE.textFromBytes(this._bytes)); }
+    text() { return Promise.resolve(Make.textFromBytes(this._bytes)); }
     slice(index = 0, count = this.size, type = "") {
         const fromIndex = index < 0 ? Math.max(this.size + index, 0) : Math.min(index, this.size);
         const toIndex = count < 0 ? Math.max(this.size + count, 0) : Math.min(count, this.size);
@@ -117,7 +117,7 @@ const BlobType = typeof Blob !== "undefined" ? Blob : DealBlob;
 
 class Body {
     constructor(bytes, bodyUsed = false) {
-        this._bytes = MAKE.uint8Array(bytes);
+        this._bytes = Make.uint8Array(bytes);
         this.bodyUsed = !!bodyUsed;
     }
     _consume() {
@@ -128,7 +128,7 @@ class Body {
     arrayBuffer() {
         return this._consume().then(bytes => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
     }
-    text() { return this._consume().then(MAKE.textFromBytes); }
+    text() { return this._consume().then(Make.textFromBytes); }
     json() { return this.text().then(text => JSON.parse(text)); }
     blob() { return this._consume().then(bytes => new BlobType([bytes], { type: this.headers?.get("content-type") || "" })); }
     formData() {
@@ -154,7 +154,7 @@ class Request extends Body {
             throw new TypeError("Cannot construct a Request from a body that has already been consumed.");
         const source = input instanceof Request ? input : null;
         const hasBody = Object.prototype.hasOwnProperty.call(init, "body");
-        const body = hasBody ? MAKE.uint8Array(init.body) : source ? source._bytes.slice() : new Uint8Array(0);
+        const body = hasBody ? Make.uint8Array(init.body) : source ? source._bytes.slice() : new Uint8Array(0);
         super(body, false);
         this.url = source ? source.url : String(input);
         this.method = String(init.method || (source && source.method) || "GET").toUpperCase();
@@ -187,7 +187,7 @@ class Request extends Body {
 // ------------------------------------------------------------
 class Response extends Body {
     constructor(body = null, init = {}) {
-        const bytes = body == null ? new Uint8Array(0) : MAKE.uint8Array(body);
+        const bytes = body == null ? new Uint8Array(0) : Make.uint8Array(body);
         super(bytes, false);
         this.status = init.status === undefined ? 200 : Number(init.status);
         if (!Number.isInteger(this.status) || this.status < 0 || this.status > 599)

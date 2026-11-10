@@ -5,4 +5,4 @@ reserve global as						"globalThis";
 
 reserve empty as						"''";
 
-command TIME() => (new Date()).getTime();
+command time() => (new Date()).getTime();

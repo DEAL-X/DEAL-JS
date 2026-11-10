@@ -16,7 +16,7 @@ use deal/make/string;
 //     * L: upper case letters
 //     * u: encode URI component
 //     * U: decode URI component
-#MAKE.normal:function = function (text = null, method = "NFKCTB", replacement = "") {
+#Make.normal:function = function (text = null, method = "NFKCTB", replacement = "") {
     if (text === null || text === undefined) return text;
 
     const options = String(method);
@@ -32,7 +32,7 @@ use deal/make/string;
         }
     }
 
-    text = MAKE.string(text);
+    text = Make.string(text);
     if (form && typeof text.normalize === "function")
         text = text.normalize(form);
 

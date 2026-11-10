@@ -255,7 +255,7 @@ namespace MiMFa.Engine.DEAL.JS
                     }
 
                     var p = string.Concat(walker.PeekUntil(ch => string.IsNullOrWhiteSpace(ch) || ",;[]".Contains(ch)).ToArray());
-                    if (Regex.IsMatch(p, @"^\w+:\/([\/]([^,;\s\[\]\{\}\/\\]|(\$\{[\w\W]+\}))+)+$", RegexOptions.CultureInvariant))
+                    if (Regex.IsMatch(p, @"^((\w+:)|\.)[\/\\]([\/\\]([^,;\s\[\]\{\}\/\\]|(\$\{[\w\W]+\}))+)+$", RegexOptions.CultureInvariant))
                         return TokenizePath(walker, location);
 
                     var next = walker.Peek(1);
@@ -319,7 +319,7 @@ namespace MiMFa.Engine.DEAL.JS
                 if (!resp.Value<bool>("ok")) return 0;
                 var encoded = resp.Value<byte[]>("data") ?? null;
                 var content = System.Text.Encoding.UTF8.GetString(encoded);
-                Engine.Resource.SetFileContents(path, content);
+                Engine.Resource.SetFileText(path, content);
             }
             return UsePath(path, force);
         }
@@ -364,7 +364,7 @@ namespace MiMFa.Engine.DEAL.JS
                 {
                     int c = (compiler as Engine).Dependencies.Count + (Regex.IsMatch(file, @"[\\/]\.(deal|djs|js)$", RegexOptions.IgnoreCase)?0:UseFile(rp.ParentDirectory(file).TrimEnd('/','\\')+Path.DirectorySeparatorChar));
                     (compiler as Engine).UseDependency(
-                        new Input(rp.GetFileContents(file, System.Text.Encoding.UTF8), file), 
+                        new Input(rp.GetFileText(file, System.Text.Encoding.UTF8), file), 
                         force
                     );
                     return (compiler as Engine).Dependencies.Count - c;

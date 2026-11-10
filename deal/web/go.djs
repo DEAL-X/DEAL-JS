@@ -1,1 +1,4 @@
-async command #GO:start|function() => will application.Engine.Browser.Async(...arguments);
+async command #go:start|function() {
+	BROWSER_initializeHandlers();
+	return will application.Engine.Browser.Go(...arguments);
+}

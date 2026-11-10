@@ -163,15 +163,20 @@ namespace MiMFa.Engine.DEAL.JS
                         if (next2?.Is("than") == true) walker.MoveToProcedure();
                         walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, ">"), walker);
                     }
+                    
                     else if (next?.Is("instance") == true && next2?.Is("of") == true) return ParseEndToken(token.Clone(TokenType.Middle | TokenType.Symbol, " instanceof "), walker.MoveToProcedure(2));
                     else if (next?.Is("instance") == true) return ParseEndToken(token.Clone(TokenType.Middle | TokenType.Symbol, " instanceof "), walker.MoveToProcedure());
+                    
                     else if (next?.Is("nan") == true) return ParseEndToken(token.Clone(TokenType.End | TokenType.Symbol, " === NaN"), walker.MoveToProcedure());
                     else if (next?.Is("infinity") == true) return ParseEndToken(token.Clone(TokenType.End | TokenType.Symbol, " === Infinity"), walker.MoveToProcedure());
                     else if (next?.Is("-") == true && next2?.Is("infinity") == true) return ParseEndToken(token.Clone(TokenType.End | TokenType.Symbol, " === -Infinity"), walker.MoveToProcedure(2));
-                    else if (before?.Is(TokenType.StringData) != true && next?.Is("", "empty") == true)
-                    {
-                        walker.MoveToProcedure(); return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "+ \"\" == \"\"", null), walker);
-                    }
+                    else if (next?.Is("null") == true) return ParseEndToken(token.Clone(TokenType.End | TokenType.Symbol, " === null"), walker.MoveToProcedure());
+                    else if (next?.Is("", "empty") == true) 
+                        if(before?.Is(TokenType.StringData) == true) return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, " == \"\"", null), walker.MoveToProcedure());
+                        else return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "+ \"\" == \"\"", null), walker.MoveToProcedure());
+
+                    else if (before?.Is(TokenType.Keyword) == true && next?.Is(TokenType.Keyword) == true) return ParseSuffixToken(token.Clone(TokenType.Suffix, token.Value+ next.Value), walker.MoveToProcedure());
+                    
                     else return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "=="), walker);
 
                 case "equal":

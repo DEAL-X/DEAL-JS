@@ -8,7 +8,6 @@ namespace MiMFa.Net.Browsers.Objects
 {
     public sealed class BrowserWindow : BrowserRemote
     {
-
         public BrowserDocument Document { get; }
         public BrowserLocation Location { get; }
         public BrowserHistory History { get; }
@@ -22,6 +21,10 @@ namespace MiMFa.Net.Browsers.Objects
         public object Name => EvaluateValue("window.name");
         public object InnerWidth => EvaluateValue("window.innerWidth");
         public object InnerHeight => EvaluateValue("window.innerHeight");
+
+        //[TODO] public bool IsActive => if the window is active;
+        //[TODO] public bool IsLoaded => Document.IsLoaded;
+
         internal BrowserWindow(BrowserTab tab) : base(tab)
         {
             Document = new BrowserDocument(tab);
