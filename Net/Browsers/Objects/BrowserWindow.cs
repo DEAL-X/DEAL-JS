@@ -17,13 +17,11 @@ namespace MiMFa.Net.Browsers.Objects
         public BrowserCookies Cookies { get; }
         public BrowserStorage Storage { get; }
 
-
         public object Name => EvaluateValue("window.name");
         public object InnerWidth => EvaluateValue("window.innerWidth");
         public object InnerHeight => EvaluateValue("window.innerHeight");
-
-        //[TODO] public bool IsActive => if the window is active;
-        //[TODO] public bool IsLoaded => Document.IsLoaded;
+        public bool IsActive => IsActiveAsync().GetAwaiter().GetResult();
+        public bool IsLoaded => Document.IsLoaded;
 
         internal BrowserWindow(BrowserTab tab) : base(tab)
         {
@@ -37,6 +35,13 @@ namespace MiMFa.Net.Browsers.Objects
             Storage = new BrowserStorage(tab);
         }
 
+        public Task<bool> IsActiveAsync() => IsActiveCoreAsync();
+        private async Task<bool> IsActiveCoreAsync()
+        {
+            string result = await EvaluateAsync("document.hasFocus() && document.visibilityState === 'visible'").ConfigureAwait(false);
+            return bool.TryParse(result, out var active) && active;
+        }
+        public Task<bool> IsLoadedAsync() => Document.IsLoadedAsync();
         public string GetName() => GetNameAsync().GetAwaiter().GetResult();
         public Task<string> GetNameAsync() => EvaluateAsync("window.name");
         public string GetInnerWidth() => GetInnerWidthAsync().GetAwaiter().GetResult();

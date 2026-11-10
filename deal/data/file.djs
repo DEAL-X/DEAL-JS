@@ -1,6 +1,48 @@
 use deal/make/string;
 use deal/data/temporary;
 
+function File_parseLine(line) {
+	try {
+		const value = JSON.parse(line);
+		if(value !== null && typeof value === "object" && !Array.isArray(value)) return value;
+	} catch(error) {}
+	return line;
+}
+
+function File_text(value) {
+	if(typeof value === "string") return value;
+	try { return JSON.stringify(value); }
+	catch(error) { return Make.string(value); }
+}
+
+function File_isXPath(query) {
+	return typeof query === "string" && /^(?:\/|\.\/|\.\.\/|@|(?:count|boolean|contains|starts-with|string|number|not|normalize-space|name|local-name)\s*\()/i.test(query.trim());
+}
+
+function File_matches(value, query) {
+	if(query === null || query === undefined) return true;
+	if(query instanceof RegExp) {
+		query.lastIndex = 0;
+		return query.test(File_text(value));
+	}
+	if(typeof query === "string") {
+		if(File_isXPath(query)) return application.Engine.XmlQuery.Matches(value, query);
+		return File_text(value).includes(query);
+	}
+	if(typeof query === "object" && !Array.isArray(query)) {
+		for(const key of Object.keys(query)) {
+			if(value === null || typeof value !== "object" || !Object.prototype.hasOwnProperty.call(value, key) || !File_matches(value[key], query[key]))
+				return false;
+		}
+		return true;
+	}
+	return value === query;
+}
+
+function File_isTextQuery(query) {
+	return (typeof query === "string" && !File_isXPath(query)) || query instanceof RegExp;
+}
+
 // All resource related commands
 command File (path = null) {
 	return {
@@ -32,7 +74,8 @@ command File (path = null) {
 				yield line;
 		},
 		fields: function * (encoding = null) {
-			// [TODO] Get the file as a generator of parsed each lines to an object, or string if its not an object {}
+			for(const line of this.lines(encoding))
+				yield File_parseLine(line);
 		},
 		read: function (encoding = null) {
 			return application.Engine.Resource.GetFileText(this.path, encoding);
@@ -46,35 +89,29 @@ command File (path = null) {
 		append: function (object = null) {
 			return application.Engine.Resource.AppendFileText(this.path, Make.string(object));
 		},
-		// To return the first finded line or object
-		// The query can be one of these multi-types-conditions:
-		//		A simple string to search between each line and return the first found line string
-		//		A Regex pattern to search between each line and return the first found line string
-		//		A XPath pattern to search between each objects and return the first found line object
-		//		A graph object to search between each objects and return the first found line object, the graph can be
-		//			{
-		//				keyName: one of the above multi-types-conditions,
-		//				...
-		//			}
+		// String and RegExp queries search raw lines. XPath and object graphs search parsed JSON objects.
 		find: function (query, encoding = null) {
 			return this.first(query, encoding);
 		},
-		// To return the first finded line or object
-		// The query can be one of the previous multi-types-query
 		first: function (query = null, encoding = null) {
-			// if(query === null) [TODO] return the first line of the file
-			// [TODO] Get the first finded line or object according to the query
+			for(const result of this.search(query, encoding)) return result;
+			return null;
 		},
-		// To return the last finded line or object
-		// The query can be one of the previous multi-types-query
 		last: function (query = null, encoding = null) {
-			// if(query === null) [TODO] return the last line of the file
-			// [TODO] Get the last finded line or object according to the query
+			let result = null;
+			for(const item of this.search(query, encoding)) result = item;
+			return result;
 		},
-		// To return the generator for each finded lines or objects
-		// The query can be one of the previous multi-types-query
-		search: function * (query, encoding = null) {
-			// [TODO] Get all finded lines or objects according to the query
+		search: function * (query = null, encoding = null) {
+			const textQuery = File_isTextQuery(query);
+			for(const line of this.lines(encoding)) {
+				if(query === null || query === undefined) {
+					yield line;
+					continue;
+				}
+				const value = textQuery ? line : File_parseLine(line);
+				if(File_matches(value, query)) yield value;
+			}
 		},
 		move: function (destination = null, overwrite = false) {
 			if(!destination) return false;

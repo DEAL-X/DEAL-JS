@@ -17,7 +17,7 @@ namespace MiMFa.Engine.JavaScript
         public Router Router { get; set; }
         public Transfer Transfer { get; set; }
         public Browser Browser { get; set; }
-
+        public XmlQuery XmlQuery { get; } = new XmlQuery();
 
         public Engine(StageBase[] compileStages = null, StageBase executeStage = null, Options options = null, ResourceProvider resourceProvider = null)
             : base(compileStages ?? new StageBase[] {
@@ -87,6 +87,5 @@ namespace MiMFa.Engine.JavaScript
         public virtual bool IsFinalizers(Token token) => token != null && token.Is(TokenType.End, TokenType.TerminatorSymbol);
         public virtual bool IsOrganizers(Node node) => IsOrganizers(node?.Token);
         public virtual bool IsOrganizers(Token token) => token != null && token.Is(TokenType.Statement, TokenType.TerminatorSymbol);
-
     }
 }
