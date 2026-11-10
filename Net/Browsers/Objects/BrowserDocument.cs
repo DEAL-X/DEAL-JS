@@ -8,7 +8,6 @@ namespace MiMFa.Net.Browsers.Objects
 {
     public sealed class BrowserDocument : BrowserRemote
     {
-
         public object Title => EvaluateValue("document.title");
         public object Url => EvaluateValue("document.URL");
         public object Cookie => EvaluateValue("document.cookie");
@@ -16,6 +15,8 @@ namespace MiMFa.Net.Browsers.Objects
         public object VisibilityState => EvaluateValue("document.visibilityState");
         public object Html => EvaluateValue("document.documentElement ? document.documentElement.outerHTML : null");
         public object Text => EvaluateValue("document.documentElement ? document.documentElement.innerText : null");
+        public bool IsLoaded => IsLoadedAsync().GetAwaiter().GetResult();
+
         internal BrowserDocument(BrowserTab tab) : base(tab) { }
 
         public string GetTitle() => GetTitleAsync().GetAwaiter().GetResult();
@@ -24,6 +25,8 @@ namespace MiMFa.Net.Browsers.Objects
         public Task<string> GetUrlAsync() => EvaluateAsync("document.URL");
         public string GetReadyState() => GetReadyStateAsync().GetAwaiter().GetResult();
         public Task<string> GetReadyStateAsync() => EvaluateAsync("document.readyState");
+        public async Task<bool> IsLoadedAsync() =>
+            string.Equals(await GetReadyStateAsync().ConfigureAwait(false), "complete", StringComparison.OrdinalIgnoreCase);
         public string GetHtml() => GetHtmlAsync().GetAwaiter().GetResult();
         public Task<string> GetHtmlAsync() => EvaluateAsync("document.documentElement ? document.documentElement.outerHTML : null");
         public string GetText() => GetTextAsync().GetAwaiter().GetResult();
