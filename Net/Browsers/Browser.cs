@@ -29,7 +29,7 @@ namespace MiMFa.Net.Browsers
         public string Endpoint => Driver.Endpoint;
         public int Timeout { get => Driver.Timeout; set => Driver.Timeout = value; }
         public bool IsAlive => Driver.IsAlive;
-        //[TODO] public bool IsLoaded => Session.Tab.IsLoaded;
+        public bool IsLoaded => Session.Tab?.IsLoaded ?? false;
         public int? WindowId => Session.WindowId;
         public BrowserPage CurrentPage => Session.CurrentPage;
         public BrowserTab Tab => Session.Tab;
@@ -44,7 +44,6 @@ namespace MiMFa.Net.Browsers
             Runtime = new BrowserRuntime(this);
         }
 
-
         public void Dispose()
         {
             Session.Dispose();
@@ -58,6 +57,7 @@ namespace MiMFa.Net.Browsers
 
         public bool IsAvailable() => Session.IsAvailable();
         public Task<bool> IsAvailableAsync() => Session.IsAvailableAsync();
+        public Task<bool> IsLoadedAsync() => Session.Tab == null ? Task.FromResult(false) : Session.Tab.IsLoadedAsync();
 
         public bool Activate(BrowserTab tab) => tab != null && Session.Activate(tab.Id);
         public bool Activate(string targetId) => Session.Activate(targetId);
@@ -74,22 +74,18 @@ namespace MiMFa.Net.Browsers
         public BrowserTab OpenTab(string url = null, int timeoutMilliseconds = 0) => Session.OpenTab(url, timeoutMilliseconds);
         public Task<BrowserTab> OpenTabAsync(string url = null, int timeoutMilliseconds = 0) => Session.OpenTabAsync(url, timeoutMilliseconds);
         public BrowserPage OpenPage(string url = null, int timeoutMilliseconds = 0) => Session.OpenPage(url, timeoutMilliseconds);
-       
         public BrowserTab Open(string url = null, int timeoutMilliseconds = 0) => Session.OpenTab(url ?? "about:blank", timeoutMilliseconds);
         public Task<BrowserPage> OpenAsync(string url = null, int timeoutMilliseconds = 0) => Session.OpenAsync(url, timeoutMilliseconds);
-
         public BrowserPage Load(string url, int timeoutMilliseconds = 0) => Session.Load(url, timeoutMilliseconds);
         public Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = 0) => Session.LoadAsync(url, timeoutMilliseconds);
         public string Reload() => Session.Reload();
         public Task<string> ReloadAsync() => Session.ReloadAsync();
-
         public string Go(string address, int timeoutMilliseconds = 0) => Session.Go(address, timeoutMilliseconds);
         public Task<string> GoAsync(string address, int timeoutMilliseconds = 0) => Session.GoAsync(address, timeoutMilliseconds);
         public string GoBack() => Session.GoBack();
         public Task<string> GoBackAsync() => Session.GoBackAsync();
         public string GoForward() => Session.GoForward();
         public Task<string> GoForwardAsync() => Session.GoForwardAsync();
-
         public string SetLocation(string address, bool addHistoryEntry = false) => Session.SetLocation(address, addHistoryEntry);
         public Task<string> SetLocationAsync(string address, bool addHistoryEntry = false) => Session.SetLocationAsync(address, addHistoryEntry);
 
@@ -99,6 +95,7 @@ namespace MiMFa.Net.Browsers
                 return commandSession.SendBrowserCommand(method, parameters);
             throw new NotSupportedException("The selected browser driver does not support browser-level protocol commands.");
         }
+
         internal Task<JObject> SendBrowserCommandAsync(string method, JObject parameters = null)
         {
             if (Session is IBrowserCommandSession commandSession)
