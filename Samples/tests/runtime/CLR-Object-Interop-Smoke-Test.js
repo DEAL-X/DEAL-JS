@@ -36,6 +36,10 @@ function clrObjectInteropSmokeTest(application) {
     if (!dictionary.ContainsKey("one") || Number(dictionary["two"]) !== 2)
         throw new Error("Make.dictionaryObject did not preserve typed key/value pairs.");
 
+    const intType = Make.typeObject("System.Int32");
+    if (Number(Make.convertObject("42", intType)) !== 42)
+        throw new Error("Make.convertObject did not convert through System.Convert.ChangeType.");
+
     const dynamicRecord = Make.objectObject({ name: "DEAL.JS", revision: 1 });
     if (dynamicRecord.name !== "DEAL.JS" || dynamicRecord.revision !== 1)
         throw new Error("Make.objectObject did not create a populated ExpandoObject.");
