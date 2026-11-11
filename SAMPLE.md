@@ -182,7 +182,38 @@ The provider does not assume that the first item returned by a browser protocol 
 
 After `browser.tab.close()` closes the current tab, the provider waits for the browsing context to disappear, identifies the remaining visible page, and updates its current-tab reference. If the browser is minimized and no visible page is reported, it falls back to an adjacent tab. Closing the last tab creates a replacement blank tab so the browser remains available.
 
-## 9. Sample directory
+## 9. JavaScript-to-.NET collection interop
+
+ClearScript does not automatically convert a V8 JavaScript array literal into every strongly typed .NET collection parameter. Load the shared converters and expose ExtendedHostFunctions to V8 once:
+
+~~~csharp
+using Microsoft.ClearScript;
+
+engine.AddHostObject("host", new ExtendedHostFunctions());
+~~~
+
+Then load the module and convert values at .NET call boundaries:
+
+~~~deal
+Use deal/make/object;
+
+Consider names is ["Ada", "Grace"];
+Consider namesArray is Make.arrayObject(names, "System.String");
+Consider namesList is Make.listObject(names, "System.String");
+Consider namesEnumerable is Make.iteratorObject(names, "System.String");
+Consider metadata is Make.dictionaryObject({ project: "DEAL.JS", active: true });
+Consider payload is Make.bytesObject("DEAL.JS");
+~~~
+
+Available converters include Make.objectObject, Make.valueObject, Make.arrayObject, Make.listObject, Make.iteratorObject, Make.enumerableObject, Make.dictionaryObject, Make.hashSetObject, Make.queueObject, Make.stackObject, Make.stringArrayObject, and Make.bytesObject.
+
+The default object conversion recursively maps JavaScript arrays to System.Object[] and plain objects to Dictionary<string, object>. Typed object population requires a .NET type with a parameterless constructor and writable properties; its optional third memberTypes argument maps property names to CLR type names for nested typed members. Make.iteratorObject materializes a List<T>, which implements IEnumerable<T>.
+
+The file helpers use the converters internally: File.lines(values) and File.fields(values) write CLR string[] values, while File.contents and Local.write pass CLR byte[] values.
+
+For complete runnable examples, see Tutorial 04 (Samples/tutorials/04-DotNet-Interop.djs), the file-export practical (Samples/practicals/Clr-Interop-File-Export.djs), and the CLR interop smoke test (Samples/tests/runtime/Clr-Interop-Smoke-Test.js).
+
+## 10. Sample directory
 
 The samples are grouped by purpose:
 
@@ -190,4 +221,4 @@ The samples are grouped by purpose:
 - [tutorials/](Samples/tutorials/) — descriptive, progressive DEAL.JS learning examples.
 - [practicals/](Samples/practicals/) — larger, realistic DEAL.JS workflows that can be adapted to real projects.
 
-Start with [01 - Getting Started](Samples/tutorials/01-Getting-Started.djs), then try [02 - Browser and Fetch](Samples/tutorials/02-Browser-and-Fetch.djs). For a complete scraping workflow, see [Web Scraper](Samples/practicals/Web-Scraper.djs).
+Start with [01 - Getting Started](Samples/tutorials/01-Getting-Started.djs), then try [02 - Browser and Fetch](Samples/tutorials/02-Browser-and-Fetch.djs). For a complete scraping workflow, see [Web Scraping 1](Samples/practicals/Web-Scraping-1.djs).

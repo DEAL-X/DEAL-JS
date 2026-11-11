@@ -10,3 +10,5 @@
 - `fixtures/` contains local files used by runtime tests.
 
 For each stress test, compare the generated JavaScript from `inputs/` with the corresponding file in `expected/`. The `results/` copy records the output captured from the implementation at the time it was saved. These files are kept separate so differences are easy to inspect.
+
+- runtime/Clr-Interop-Smoke-Test.js verifies CLR array, list, enumerable, dictionary, hash-set, byte-array, and ResourceProvider line-writing conversions. It requires ExtendedHostFunctions exposed as host and deal/make/object loaded.

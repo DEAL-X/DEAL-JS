@@ -4,5 +4,7 @@ The browser provider uses the driver selected by the .NET host (Chrome by defaul
 
 These examples are larger, adaptable workflows rather than isolated syntax demonstrations. Browser tab collections are exposed directly as `BrowserTabs` collections of `BrowserTab` handles; the page session for a handle is resolved only when needed. They use DEAL source as the primary implementation language and assume the host has initialized the browser provider and loaded the `deal/web` module.
 
-- [Web scraper](Web-Scraper.djs) — visit a list of pages and collect page titles and headings.
-- [Batch website collector](Batch-Website-Collector.djs) — process a URL collection and store structured results.
+- [Web scraping 1](Web-Scraping-1.djs) — visit a list of pages and collect page titles and headings.
+- [Website collecting](Website-Collecting.djs) — process a URL collection and store structured results.
+
+- [CLR interop file export](Clr-Interop-File-Export.djs) — serialize structured records and write/read them through .NET resource APIs using explicit collection and byte converters.

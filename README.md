@@ -819,4 +819,40 @@ The sample collection is divided by intent rather than keeping unrelated files t
 - **[Tutorials](Samples/tutorials/)** contains progressive, commented DEAL.JS examples intended to teach the language and its browser integration.
 - **[Practicals](Samples/practicals/)** contains larger, adaptable examples for real workflows, including browser-based scraping and batch collection.
 
-For the recommended learning path, begin with [01 - Getting Started](Samples/tutorials/01-Getting-Started.djs), continue with [02 - Browser and Fetch](Samples/tutorials/02-Browser-and-Fetch.djs), and then study [Web Scraper](Samples/practicals/Web-Scraper.djs).
+For the recommended learning path, begin with [01 - Getting Started](Samples/tutorials/01-Getting-Started.djs), continue with [02 - Browser and Fetch](Samples/tutorials/02-Browser-and-Fetch.djs), and then study [Web Scraping 1](Samples/practicals/Web-Scraping-1.djs).
+
+
+## JavaScript-to-.NET collection interop
+
+JavaScript arrays and plain objects are not automatically interchangeable with strongly typed .NET arrays and generic collections in ClearScript. Use the converters in deal/make/object.djs when calling .NET APIs that require string[], List<T>, IEnumerable<T>, dictionaries, or byte arrays.
+
+The host must expose ClearScript's ExtendedHostFunctions once, under the global name host:
+
+~~~csharp
+using Microsoft.ClearScript;
+
+engine.AddHostObject("host", new ExtendedHostFunctions());
+~~~
+
+Only expose ExtendedHostFunctions to scripts you trust: it enables script-side access to imported .NET types.
+
+Load the conversion module:
+
+~~~deal
+Use deal/make/object;
+~~~
+
+Common conversions:
+
+~~~deal
+Consider names is ["Ada", "Grace"];
+Consider clrArray is Make.arrayObject(names, "System.String");          // string[]
+Consider clrList is Make.listObject([1, 2, 3], "System.Int32");         // List<int>
+Consider clrEnumerable is Make.iteratorObject(names, "System.String"); // IEnumerable<string>
+Consider clrMap is Make.dictionaryObject({ name: "DEAL.JS" });          // Dictionary<string, object>
+Consider clrBytes is Make.bytesObject("Hello");                         // byte[]
+~~~
+
+Make.iteratorObject returns a typed List<T>, which implements IEnumerable<T>; it is a materialized collection, not a lazy iterator. Make.objectObject(value, "Namespace.Type", memberTypes) can populate a .NET type with a parameterless constructor and writable properties; memberTypes optionally maps property names to CLR type names for nested typed members. Without a target type, nested JavaScript arrays and plain objects are recursively converted to CLR arrays and dictionaries.
+
+The File.lines(...), File.fields(...), File.contents, and Local.write(...) helpers use these conversions internally. See the .NET interop tutorial (Samples/tutorials/04-DotNet-Interop.djs), the file-export practical (Samples/practicals/Clr-Interop-File-Export.djs), and the runtime smoke test (Samples/tests/runtime/Clr-Interop-Smoke-Test.js).
