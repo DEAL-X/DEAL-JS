@@ -1,3 +1,4 @@
+use deal/make;
 use deal/make/string;
 use deal/make/collection;
 use deal/make/object;
@@ -89,7 +90,7 @@ command File (path = null, encoding = null, sequential = true) {
 		set count (length) {
 			let cnt = this.count;
 			if(length > cnt) while(length-- > cnt) application.Engine.Resource.AppendFileLine(this.path, "", this.encoding);
-			else return application.Engine.Resource.SetFileLines(this.path, Make.arrayObject(Make.array(application.Engine.Resource.GetFileLines(this.path, this.encoding)).slice(0, length), "System.String"), this.encoding);
+			else return application.Engine.Resource.SetFileLines(this.path, Make.stringArrayObject(Make.array(application.Engine.Resource.GetFileLines(this.path, this.encoding)).slice(0, length)), this.encoding);
 		},
 		get exists () {
 			return application.Engine.Resource.Exists(this.path);
@@ -105,7 +106,7 @@ command File (path = null, encoding = null, sequential = true) {
 			return application.Engine.Resource.GetFileContents(this.path);
 		},
 		set contents (contents) {
-			return application.Engine.Resource.SetFileContents(this.path, Make.bytesObject(contents));
+			return application.Engine.Resource.SetFileContents(this.path, Make.byteArrayObject(contents));
 		},
 		get text () {
 			return application.Engine.Resource.GetFileText(this.path, this.encoding);
@@ -117,43 +118,25 @@ command File (path = null, encoding = null, sequential = true) {
 			if(object === null) return application.Engine.Resource.GetFileLine(this.path, index, this.encoding);
 			else return application.Engine.Resource.SetFileLine(this.path, index, Make.string(object), this.encoding);
 		},
-		lines: function () {
-			if(arguments.length === 0) {
-				const path = this.path;
-				const fileEncoding = this.encoding;
+		lines: function (...values) {
+			if(values.length === 0) {
+				const lines = application.Engine.Resource.GetFileLines(this.path, this.encoding);
 				return (function * () {
-					const lines = application.Engine.Resource.GetFileLines(path, fileEncoding);
 					if(lines == null) return;
 					for(const line of lines) yield line;
 				})();
 			}
-			const values = arguments.length === 1 && Array.isArray(arguments[0])
-				? arguments[0]
-				: Array.from(arguments);
-			return application.Engine.Resource.SetFileLines(
-				this.path,
-				Make.arrayObject(values.map(value => Make.string(value)), "System.String"),
-				this.encoding
-			);
+			return application.Engine.Resource.SetFileLines(this.path, Make.stringArrayObject(values.map(o => Make.string(o))), this.encoding);
 		},
-		fields: function () {
-			if(arguments.length === 0) {
-				const path = this.path;
-				const fileEncoding = this.encoding;
+		fields: function (...values) {
+			if(values.length === 0) {
+				const lines = application.Engine.Resource.GetFileLines(this.path, this.encoding);
 				return (function * () {
-					const lines = application.Engine.Resource.GetFileLines(path, fileEncoding);
 					if(lines == null) return;
 					for(const line of lines) yield _parseLine(line);
 				})();
 			}
-			const values = arguments.length === 1 && Array.isArray(arguments[0])
-				? arguments[0]
-				: Array.from(arguments);
-			return application.Engine.Resource.SetFileLines(
-				this.path,
-				Make.arrayObject(values.map(_text), "System.String"),
-				this.encoding
-			);
+			return application.Engine.Resource.SetFileLines(this.path, Make.stringArrayObject(values.map(_text)), this.encoding);
 		},
 		create: function (object = "") {
 			if(!application.Engine.Resource.Exists(this.path)) application.Engine.Resource.SetFileText(this.path, Make.string(object));

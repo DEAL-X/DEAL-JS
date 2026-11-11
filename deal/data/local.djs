@@ -1,3 +1,4 @@
+use deal/make;
 use deal/make/string;
 use deal/make/object;
 
@@ -40,7 +41,7 @@ command Local = {};
 };
 #Local.write:function = function (path = null, object = null) {
 	if(!path) return false;
-	return application.Engine.Resource.SetFileContents(path, Make.bytesObject(object));
+	return application.Engine.Resource.SetFileContents(path, Make.byteArrayObject(Make.string(object)));
 };
 #Local.prepend:function = function (path = null, object = null) {
 	if(!path) return false;
