@@ -36,6 +36,10 @@ function clrObjectInteropSmokeTest(application) {
     if (!dictionary.ContainsKey("one") || dictionary["two"] !== 2)
         throw new Error("Make.dictionaryObject did not preserve typed key/value pairs.");
 
+    const dynamicRecord = Make.objectObject({ name: "DEAL.JS", revision: 1 });
+    if (dynamicRecord.name !== "DEAL.JS" || dynamicRecord.revision !== 1)
+        throw new Error("Make.objectObject did not create a populated ExpandoObject.");
+
     const hashSet = Make.hashSetObject(values, "System.String");
     if (hashSet.Count !== 3)
         throw new Error("Make.hashSetObject returned an unexpected item count.");
@@ -68,6 +72,7 @@ function clrObjectInteropSmokeTest(application) {
             byteArrayType: clrBytes.GetType().FullName,
             listType: clrList.GetType().FullName,
             dictionaryCount: dictionary.Count,
+            dynamicObjectType: dynamicRecord.GetType().FullName,
             hashSetCount: hashSet.Count,
             lineCount: 3
         };
