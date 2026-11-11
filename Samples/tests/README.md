@@ -11,7 +11,7 @@
 - `Browser-Driver-Smoke-Test.js` — run separately with ChromeDriver, EdgeDriver, and FirefoxDriver. It covers tab creation, navigation, activation, closing, and current-tab resolution without relying on an external website.
 - `Browser-Object-Model-Smoke-Test.js` — exercises browser object proxies and Chromium-specific optional file-picker checks.
 - `Native-Web-Smoke-Test.js` — exercises Fetch, local-file requests, browser navigation, abort handling, and request-body lifecycle.
-- `CLR-Object-Interop-Smoke-Test.js` — requires ClearScript `ExtendedHostFunctions` exposed as global `host`, plus the `deal/make` module. It verifies that `Make.arrayObject` produces `System.String[]`, that list and enumerable converters produce generic .NET collections, that dictionaries and sets preserve their values, and that `ResourceProvider.SetFileLines` accepts both the CLR array and `IEnumerable<string>` implementation.
+- `CLR-Object-Interop-Smoke-Test.js` — requires ClearScript `ExtendedHostFunctions` exposed as global `host`, plus the `deal/make` module. It verifies that `Make.arrayObject` and `Make.stringArrayObject` produce `System.String[]`, `Make.byteArrayObject` produces `System.Byte[]`, that list and enumerable converters produce generic .NET collections, that dictionaries and sets preserve their values, and that `ResourceProvider.SetFileLines` and `SetFileContents` accept the converted CLR arrays.
 
 ## Compiler stress tests
 
