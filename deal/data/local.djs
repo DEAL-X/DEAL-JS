@@ -1,3 +1,4 @@
+use deal/make;
 use deal/make/string;
 use deal/make/object;
 
