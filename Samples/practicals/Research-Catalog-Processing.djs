@@ -67,6 +67,18 @@ for each raw of sourceRecords,
             schema_version: schemaVersion
         };
 
+// Guard the fixture contract: two accepted records and three explicit rejections.
+if (accepted.length !== 2 || rejected.length !== 3)
+    throw new Error("The catalog fixture must produce exactly two accepted and three rejected records.");
+
+if (accepted[0].final_price !== 17.55 || accepted[1].final_price !== 0)
+    throw new Error("Derived prices or valid zero-value handling changed.");
+
+if (rejected.filter(item => item.reason === "duplicate_identifier").length !== 1 ||
+    rejected.filter(item => item.reason === "missing_price").length !== 1 ||
+    rejected.filter(item => item.reason === "out_of_range_discount").length !== 1)
+    throw new Error("The fixture rejection categories do not match the data contract.");
+
 Consider acceptedFile is File(application.Engine.Resource.Resolve("catalog-accepted.jsonl"), null, false);
 Consider rejectedFile is File(application.Engine.Resource.Resolve("catalog-rejected.jsonl"), null, false);
 
