@@ -19,7 +19,11 @@ function _clrType(type = "System.Object") {
 }
 
 function _clrGenericType(definition, ...arguments) {
-    return _clrHost().type(definition).MakeGenericType(...arguments.map(_clrType));
+    const clr = _clrHost();
+    const types = clr.newArr(clr.type("System.Type"), arguments.length);
+    for (let index = 0; index < arguments.length; index++)
+        types.SetValue(_clrType(arguments[index]), index);
+    return clr.type(definition).MakeGenericType(types);
 }
 
 function _clrValues(values, mapper = null) {
@@ -128,21 +132,19 @@ function _clrCreateCollection(definition, values, elementType, method, mapper = 
     return result;
 };
 
-// Convert a JavaScript object into System.Dynamic.ExpandoObject.
-#Make.expandoObject:function = function (value = {}) {
-    const clr = _clrHost();
-    const result = clr.newObj(_clrType("System.Dynamic.ExpandoObject"));
-    const dictionaryType = _clrGenericType(
-        "System.Collections.Generic.IDictionary`2",
-        "System.String",
-        "System.Object"
-    );
-    const dictionary = clr.cast(dictionaryType, result);
-    if (value != null) {
-        for (const key of Object.keys(value))
-            dictionary.Add(key, value[key]);
-    }
-    return result;
+// Convert values into System.Collections.Generic.LinkedList<T>.
+#Make.linkedListObject:function = function (values = [], elementType = "System.Object", mapper = null) {
+    return _clrCreateCollection("System.Collections.Generic.LinkedList`1", values, elementType, "AddLast", mapper);
+};
+
+// Convert values into System.Collections.Generic.SortedSet<T>.
+#Make.sortedSetObject:function = function (values = [], elementType = "System.Object", mapper = null) {
+    return _clrCreateCollection("System.Collections.Generic.SortedSet`1", values, elementType, "Add", mapper);
+};
+
+// Convert a JavaScript object into Dictionary<string, object>.
+#Make.objectDictionary:function = function (value = {}) {
+    return Make.dictionaryObject(value, "System.String", "System.Object");
 };
 
 // Convert a value using System.Convert.ChangeType. This is intended for
