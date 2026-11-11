@@ -56,6 +56,11 @@ function _clrCreateCollection(definition, values, elementType, method, mapper = 
     if (value != null && typeof value.GetType === "function" &&
         value.GetType().FullName === "System.Byte[]")
         return value;
+    if (value != null && typeof value !== "string" && !Array.isArray(value) &&
+        typeof value[Symbol.iterator] === "function" &&
+        !(typeof ArrayBuffer !== "undefined" &&
+            (value instanceof ArrayBuffer || ArrayBuffer.isView(value))))
+        value = Array.from(value);
     const bytes = Make.uint8Array(value);
     return Make.arrayObject(bytes, "System.Byte", item => _clrHost().toByte(item));
 };
