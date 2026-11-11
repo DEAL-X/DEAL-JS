@@ -12,4 +12,4 @@ These examples are complete, adaptable workflows rather than isolated syntax dem
 
 Browser examples require the .NET host to initialize the browser provider and load `deal/web`. The selected browser driver is supplied by the host; Chrome is the default, with Edge and Firefox available through their respective drivers.
 
-Examples that use CLR collection converters require ClearScript `ExtendedHostFunctions` to be exposed as global `host` and the `deal/make` module to be loaded. The converter layer is in `deal/make/object.djs`; it creates actual CLR arrays and collection instances for .NET method parameters.
+Examples that use CLR collection converters require ClearScript `ExtendedHostFunctions` to be exposed as global `host` and the `deal/make` module to be loaded. The converter layer is in `deal/make/object.djs`; it creates actual CLR arrays and collection instances for .NET method parameters. The `File` and `Local` modules use these converters internally for byte-content and line-array writes.
