@@ -824,7 +824,7 @@ The converters create actual CLR objects; they do not merely wrap JavaScript val
 
 | Converter | CLR result |
 |---|---|
-| `Make.arrayObject(values, "System.String")` | `System.String[]` |
+| `Make.arrayObject(values, "System.String")` / `Make.stringArrayObject(values)` | `System.String[]` |
 | `Make.listObject(values, "System.String")` | `List<string>` |
 | `Make.iteratorObject(values, "System.String")` | `List<string>`, assignable to `IEnumerable<string>` |
 | `Make.dictionaryObject(object, "System.String", "System.Int32")` | `Dictionary<string, int>` |
@@ -834,6 +834,7 @@ The converters create actual CLR objects; they do not merely wrap JavaScript val
 | `Make.linkedListObject(values, "System.String")` | `LinkedList<string>` |
 | `Make.sortedSetObject(values, "System.String")` | `SortedSet<string>` |
 | `Make.arrayListObject(values)` | `ArrayList` |
+| `Make.byteArrayObject(value)` | `System.Byte[]` from text, byte arrays, or byte iterables |
 | `Make.hashTableObject(object)` | `Hashtable` |
 | `Make.convertObject(value, "System.Int32")` | `Convert.ChangeType` result |
 
@@ -849,7 +850,7 @@ Consider lines is Make.arrayObject(["first", "second"], "System.String");
 application.Engine.Resource.SetFileLines(path, lines, null);
 ```
 
-`Make.iteratorObject` returns a concrete `List<T>`, because an interface such as `IEnumerable<T>` cannot be instantiated. That list is assignable to `IEnumerable<T>` and can be passed to APIs expecting the interface. See [the CLR interop tutorial](Samples/tutorials/04-CLR-Object-Interop.djs) and [the runtime smoke test](Samples/tests/runtime/CLR-Object-Interop-Smoke-Test.js).
+`Make.iteratorObject` returns a concrete `List<T>`, because an interface such as `IEnumerable<T>` cannot be instantiated. That list is assignable to `IEnumerable<T>` and can be passed to APIs expecting the interface. The `File` and `Local` modules also use these converters internally when calling `SetFileLines` and `SetFileContents`, so their JavaScript-facing APIs do not leak CLR array requirements. See [the CLR interop tutorial](Samples/tutorials/04-CLR-Object-Interop.djs) and [the runtime smoke test](Samples/tests/runtime/CLR-Object-Interop-Smoke-Test.js).
 
 ## DEAL.JS samples
 
