@@ -14,7 +14,7 @@ function _clrType(type = "System.Object") {
     const clr = _clrHost();
     if (type == null) return clr.type("System.Object");
     if (typeof type === "string") return clr.type(type);
-    if (typeof type === "object" && typeof type.FullName === "string") return type;
+    if (type != null && typeof type.FullName === "string") return type;
     throw new TypeError("A CLR type name or System.Type instance is required.");
 }
 
