@@ -315,7 +315,7 @@
     <None Update="Samples\practicals\Website-Collecting.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Samples\practicals\File.djs">
+    <None Update="Samples\practicals\File-1.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Samples\practicals\Web-Scraping-2.djs">
