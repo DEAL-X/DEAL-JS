@@ -1,4 +1,5 @@
 use deal/make/collection;
+use deal/make/logical;
 
 // ClearScript interop helpers.
 // The host must expose Microsoft.ClearScript.ExtendedHostFunctions as "host".
@@ -41,6 +42,22 @@ function _clrCreateCollection(definition, values, elementType, method, mapper = 
 // Resolve a ClearScript host-type reference from a CLR type name or existing reference.
 #Make.typeObject:function = function (type = "System.Object") {
     return _clrType(type);
+};
+
+
+// Convert values into a CLR string[] with predictable string coercion.
+#Make.stringArrayObject:function = function (values = []) {
+    return Make.arrayObject(values, "System.String", value => String(value));
+};
+
+// Convert text, byte arrays, ArrayBuffers, or byte iterables into a CLR byte[].
+// An existing CLR byte[] is returned unchanged.
+#Make.byteArrayObject:function = function (value = null) {
+    if (value != null && typeof value.GetType === "function" &&
+        value.GetType().FullName === "System.Byte[]")
+        return value;
+    const bytes = Make.uint8Array(value);
+    return Make.arrayObject(bytes, "System.Byte", item => _clrHost().toByte(item));
 };
 
 // Convert a JavaScript array or iterable into a real CLR array (T[]).
