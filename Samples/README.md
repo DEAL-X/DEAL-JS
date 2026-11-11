@@ -11,7 +11,7 @@ Recommended learning path:
 1. [Getting started](tutorials/01-Getting-Started.djs) — values, collections, iteration, and output.
 2. [Browser and Fetch](tutorials/02-Browser-and-Fetch.djs) — browser control and asynchronous HTTP requests.
 3. [Commands](tutorials/03-Commands.djs) — reusable command syntax.
-4. [CLR object interoperability](tutorials/04-CLR-Object-Interop.djs) — JavaScript-to-.NET arrays and collections.
+4. [CLR object interoperability](tutorials/04-CLR-Object-Interop.djs) — JavaScript-to-.NET arrays and collections, including byte[] and string[].
 
 Recommended practical: [Research Catalog Processing](practicals/Research-Catalog-Processing.djs), which demonstrates normalization, validation, duplicate detection, provenance fields, and separate accepted/rejected JSONL outputs. Its five-record fixture asserts two accepted records and three rejections: one duplicate identifier, one missing price, and one out-of-range discount. The browser-oriented examples are [Web Scraping 1](practicals/Web-Scraping-1.djs), [Web Scraping 2](practicals/Web-Scraping-2.djs), and [Website Collecting](practicals/Website-Collecting.djs).
 
