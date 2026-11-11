@@ -43,7 +43,7 @@ for each raw of sourceRecords,
 
     If id is empty,
         reject(raw, "missing_identifier");
-    Else if seen has id,
+    Else if seen.has(id),
         reject(raw, "duplicate_identifier");
     Else if priceText is empty,
         seen.add(id);
