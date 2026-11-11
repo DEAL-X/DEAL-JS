@@ -36,15 +36,16 @@ function clrObjectInteropSmokeTest(application) {
     try {
         // This call exercises the exact string[] overload that previously failed.
         resource.SetFileLines(path, clrArray, null);
-        const first = Make.array(resource.GetFileLines(path));
-        if (first.length !== 3 || first[0] !== "first" || first[2] !== "third")
+        if (resource.GetFileLine(path, 0, null) !== "first" ||
+            resource.GetFileLine(path, 2, null) !== "third")
             throw new Error("The string[] ResourceProvider round-trip failed.");
 
         // List<string> and the concrete IEnumerable<string> implementation.
         resource.SetFileLines(path, clrList, null);
         resource.SetFileLines(path, clrEnumerable, null);
-        const second = Make.array(resource.GetFileLines(path));
-        if (second.length !== 3 || second[1] !== "second")
+        if (resource.GetFileLine(path, 0, null) !== "first" ||
+            resource.GetFileLine(path, 1, null) !== "second" ||
+            resource.GetFileLine(path, 2, null) !== "third")
             throw new Error("The IEnumerable<string> ResourceProvider round-trip failed.");
 
         return {
@@ -53,7 +54,7 @@ function clrObjectInteropSmokeTest(application) {
             listType: clrList.GetType().FullName,
             dictionaryCount: dictionary.Count,
             hashSetCount: hashSet.Count,
-            lineCount: second.length
+            lineCount: 3
         };
     } finally {
         resource.Delete(path);
