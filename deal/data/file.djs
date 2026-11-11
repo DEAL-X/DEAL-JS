@@ -90,7 +90,7 @@ command File (path = null, encoding = null, sequential = true) {
 		set count (length) {
 			let cnt = this.count;
 			if(length > cnt) while(length-- > cnt) application.Engine.Resource.AppendFileLine(this.path, "", this.encoding);
-			else return application.Engine.Resource.SetFileLines(this.path, Make.stringArrayObject(Array.from(application.Engine.Resource.GetFileLines(this.path, this.encoding)).slice(0, length)), this.encoding);
+			else return application.Engine.Resource.SetFileLines(this.path, Make.stringArrayObject(Make.array(application.Engine.Resource.GetFileLines(this.path, this.encoding)).slice(0, length)), this.encoding);
 		},
 		get exists () {
 			return application.Engine.Resource.Exists(this.path);
