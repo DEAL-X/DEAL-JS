@@ -828,6 +828,7 @@ The converters create actual CLR objects; they do not merely wrap JavaScript val
 | `Make.listObject(values, "System.String")` | `List<string>` |
 | `Make.iteratorObject(values, "System.String")` | `List<string>`, assignable to `IEnumerable<string>` |
 | `Make.dictionaryObject(object, "System.String", "System.Int32")` | `Dictionary<string, int>` |
+| `Make.objectObject(object)` / `Make.expandoObject(object)` | `System.Dynamic.ExpandoObject` with populated properties |
 | `Make.hashSetObject(values, "System.String")` | `HashSet<string>` |
 | `Make.queueObject(values, "System.String")` | `Queue<string>` |
 | `Make.stackObject(values, "System.String")` | `Stack<string>` |
