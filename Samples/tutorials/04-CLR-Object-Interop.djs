@@ -30,6 +30,10 @@ Consider counts is Make.dictionaryObject(
 Consider clrStrings is Make.stringArrayObject(values);
 Consider clrBytes is Make.byteArrayObject("DEAL.JS");
 
+// Convert a primitive using a CLR type reference.
+Consider integerType is Make.typeObject("System.Int32");
+Consider convertedNumber is Make.convertObject("42", integerType);
+
 // Plain JavaScript records can also become dynamic .NET objects.
 Consider dynamicRecord is Make.objectObject({ name: "DEAL.JS", revision: 1 });
 
@@ -57,6 +61,7 @@ Print {
     byteArrayType: clrBytes.GetType().FullName,
     listType: clrList.GetType().FullName,
     dictionaryType: counts.GetType().FullName,
+    convertedNumber: convertedNumber,
     dynamicObjectType: dynamicRecord.GetType().FullName,
     dynamicObjectName: dynamicRecord.name,
     dictionaryCount: counts.Count,
