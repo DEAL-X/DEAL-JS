@@ -33,7 +33,7 @@ function clrObjectInteropSmokeTest(application) {
         "System.String",
         "System.Int32"
     );
-    if (!dictionary.ContainsKey("one") || dictionary["two"] !== 2)
+    if (!dictionary.ContainsKey("one") || Number(dictionary["two"]) !== 2)
         throw new Error("Make.dictionaryObject did not preserve typed key/value pairs.");
 
     const dynamicRecord = Make.objectObject({ name: "DEAL.JS", revision: 1 });
@@ -55,7 +55,7 @@ function clrObjectInteropSmokeTest(application) {
 
         resource.SetFileContents(binaryPath, clrBytes);
         const storedBytes = resource.GetFileContents(binaryPath);
-        if (storedBytes[0] !== 65 || storedBytes[2] !== 67)
+        if (Number(storedBytes[0]) !== 65 || Number(storedBytes[2]) !== 67)
             throw new Error("The CLR byte[] ResourceProvider round-trip failed.");
 
         // List<string> and the concrete IEnumerable<string> implementation.
