@@ -1,7 +1,5 @@
 use deal/make;
 use deal/make/string;
-use deal/make/object;
-use deal/make/collection;
 use deal/data/temporary;
 
 
