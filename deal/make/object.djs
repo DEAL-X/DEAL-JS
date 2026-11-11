@@ -157,6 +157,28 @@ function _clrCreateCollection(definition, values, elementType, method, mapper = 
     return _clrCreateCollection("System.Collections.Generic.SortedSet", values, elementType, "Add", mapper);
 };
 
+// Convert a JavaScript object into System.Dynamic.ExpandoObject.
+#Make.expandoObject:function = function (value = {}) {
+    const clr = _clrHost();
+    const result = clr.newObj(_clrType("System.Dynamic.ExpandoObject"));
+    const dictionaryType = _clrGenericType(
+        "System.Collections.Generic.IDictionary",
+        "System.String",
+        "System.Object"
+    );
+    const dictionary = clr.cast(dictionaryType, result);
+    if (value != null) {
+        for (const key of Object.keys(value))
+            dictionary.Add(key, value[key]);
+    }
+    return result;
+};
+
+// Generic object conversion defaults to a dynamic .NET object.
+#Make.objectObject:function = function (value = {}) {
+    return Make.expandoObject(value);
+};
+
 // Convert a JavaScript object into Dictionary<string, object>.
 #Make.objectDictionary:function = function (value = {}) {
     return Make.dictionaryObject(value, "System.String", "System.Object");
