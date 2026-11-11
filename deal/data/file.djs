@@ -68,7 +68,7 @@ command File (path = null, encoding = null, sequential = true) {
 			return application.Engine.Resource.Entity(this.path).FullName;
 		},
 		set fullname (newName) {
-			application.Engine.Resource.Rename(this.path, newName, false);
+			this.path = application.Engine.Resource.Combine(this.directory, newName);
 		},
 		get name () {
 			return application.Engine.Resource.Entity(this.path).Name;
@@ -85,8 +85,20 @@ command File (path = null, encoding = null, sequential = true) {
 		get count () {
 			return Make.array(application.Engine.Resource.GetFileLines(this.path, this.encoding)).length;
 		},
+		set count (length) {
+			let cnt = this.count;
+			if(length > cnt) while(length-- > cnt) application.Engine.Resource.AppendFileLine(this.path, "", this.encoding);
+			else return application.Engine.Resource.SetFileLines(this.path, Array.from(application.Engine.Resource.GetFileLines(this.path, this.encoding)).slice(0, length), this.encoding);
+		},
 		get exists () {
 			return application.Engine.Resource.Exists(this.path);
+		},
+		set exists (stay) {
+			if(stay) {
+				if(!application.Engine.Resource.Exists(this.path))
+					application.Engine.Resource.Create(this.path);
+			}
+			else application.Engine.Resource.Delete(this.path);
 		},
 		get contents () {
 			return application.Engine.Resource.GetFileContents(this.path);
@@ -100,14 +112,26 @@ command File (path = null, encoding = null, sequential = true) {
 		set text (text) {
 			return application.Engine.Resource.SetFileText(this.path, text, this.encoding);
 		},
+		line: function(index, object = null) {
+			if(object === null) return application.Engine.Resource.GetFileLine(this.path, index, this.encoding);
+			else return application.Engine.Resource.SetFileLine(this.path, index, Make.string(object), this.encoding);
+		},
 		lines: function * () {
-			const lines = application.Engine.Resource.GetFileLines(this.path, this.encoding);
-			if(lines == null) return;
-			for(const line of lines) yield line;
+			if(arguments.length === 0) {
+				const lines = application.Engine.Resource.GetFileLines(this.path, this.encoding);
+				if(lines == null) return;
+				for(const line of lines) yield line;
+			} 
+			else return application.Engine.Resource.SetFileLines(this.path, index, arguments.map(o => Make.string(o)), this.encoding);
 		},
 		fields: function * () {
-			for(const line of this.lines())
-				yield _parseLine(line);
+			if(arguments.length === 0) {
+				const lines = application.Engine.Resource.GetFileLines(this.path, this.encoding);
+				if(lines == null) return;
+				for(const line of lines)
+					yield _parseLine(line);
+			}
+			else return application.Engine.Resource.SetFileLines(this.path, index, arguments.map(o => Make.string(o)), this.encoding);
 		},
 		create: function (object = "") {
 			if(!application.Engine.Resource.Exists(this.path)) application.Engine.Resource.SetFileText(this.path, Make.string(object));
