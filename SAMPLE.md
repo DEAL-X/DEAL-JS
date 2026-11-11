@@ -217,5 +217,5 @@ Consider list is Make.listObject(["third", "fourth"], "System.String");
 application.Engine.Resource.SetFileLines(path, list, null);
 ```
 
-The object-conversion module also provides `stringArrayObject`, `byteArrayObject`, `dictionaryObject`, `hashSetObject`, `queueObject`, `stackObject`, `linkedListObject`, `sortedSetObject`, `arrayListObject`, `hashTableObject`, `typeObject`, and `convertObject`. The `File` and `Local` modules use these conversions internally when writing file lines and byte contents. See [Tutorial 04](Samples/tutorials/04-CLR-Object-Interop.djs) for a complete example and [the runtime smoke test](Samples/tests/runtime/CLR-Object-Interop-Smoke-Test.js) for the actual .NET type and file-provider checks.
+The object-conversion module also provides `stringArrayObject`, `byteArrayObject`, `objectObject` / `expandoObject`, `dictionaryObject`, `hashSetObject`, `queueObject`, `stackObject`, `linkedListObject`, `sortedSetObject`, `arrayListObject`, `hashTableObject`, `typeObject`, and `convertObject`. The `File` and `Local` modules use these conversions internally when writing file lines and byte contents. See [Tutorial 04](Samples/tutorials/04-CLR-Object-Interop.djs) for a complete example and [the runtime smoke test](Samples/tests/runtime/CLR-Object-Interop-Smoke-Test.js) for the actual .NET type and file-provider checks.
 
