@@ -6,7 +6,7 @@ These examples are complete, adaptable workflows rather than isolated syntax dem
 - [Web Scraping 1](Web-Scraping-1.djs) — visit multiple pages in a reused browser tab and collect titles and headings.
 - [Web Scraping 2](Web-Scraping-2.djs) — extract search-result fields, follow pagination, and filter duplicate records.
 - [Website Collecting](Website-Collecting.djs) — asynchronously retrieve JSON resources, handle HTTP failures, and collect structured responses.
-- [Research Catalog Processing](Research-Catalog-Processing.djs) — normalize records, validate required fields and numeric ranges, reject duplicate identifiers, attach provenance metadata, and persist accepted and rejected JSONL outputs separately.
+- [Research Catalog Processing](Research-Catalog-Processing.djs) — normalize records, validate required fields and numeric ranges, reject duplicate identifiers, attach provenance metadata, assert the five-record fixture's expected 2/3 disposition and rejection categories, and persist accepted and rejected JSONL outputs separately.
 
 ## Host requirements
 
