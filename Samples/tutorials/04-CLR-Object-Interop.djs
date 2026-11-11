@@ -30,6 +30,9 @@ Consider counts is Make.dictionaryObject(
 Consider clrStrings is Make.stringArrayObject(values);
 Consider clrBytes is Make.byteArrayObject("DEAL.JS");
 
+// Plain JavaScript records can also become dynamic .NET objects.
+Consider dynamicRecord is Make.objectObject({ name: "DEAL.JS", revision: 1 });
+
 // Other common collection types.
 Consider uniqueValues is Make.hashSetObject(values, "System.String");
 Consider pendingValues is Make.queueObject(values, "System.String");
@@ -54,6 +57,8 @@ Print {
     byteArrayType: clrBytes.GetType().FullName,
     listType: clrList.GetType().FullName,
     dictionaryType: counts.GetType().FullName,
+    dynamicObjectType: dynamicRecord.GetType().FullName,
+    dynamicObjectName: dynamicRecord.name,
     dictionaryCount: counts.Count,
     hashSetCount: uniqueValues.Count,
     queueCount: pendingValues.Count,
