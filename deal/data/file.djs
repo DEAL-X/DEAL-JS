@@ -83,7 +83,7 @@ command File (path = null, encoding = null, sequential = true) {
 			this.fullname = this.name + newExt;
 		},
 		get count () {
-			return application.Engine.Resource.GetFileLines(this.path, this.encoding).Count();
+			return Make.array(application.Engine.Resource.GetFileLines(this.path, this.encoding)).length;
 		},
 		get exists () {
 			return application.Engine.Resource.Exists(this.path);
@@ -101,8 +101,9 @@ command File (path = null, encoding = null, sequential = true) {
 			return application.Engine.Resource.SetFileText(this.path, text, this.encoding);
 		},
 		lines: function * () {
-			for(const line of application.Engine.Resource.GetFileLines(this.path, this.encoding))
-				yield line;
+			const lines = application.Engine.Resource.GetFileLines(this.path, this.encoding);
+			if(lines == null) return;
+			for(const line of lines) yield line;
 		},
 		fields: function * () {
 			for(const line of this.lines())
@@ -138,12 +139,14 @@ command File (path = null, encoding = null, sequential = true) {
 			return null;
 		},
 		last: function (query = null) {
-			for(const result of this.search(query, false)) return result;
-			return null;
+			let result = null;
+			for(const item of this.search(query)) result = item;
+			return result;
 		},
 		search: function * (query = null, foreward = true) {
 			const textQuery = _isTextQuery(query);
-			for(const line of foreward?this.lines():this.lines().reverse()) {
+			const lines = foreward ? this.lines() : Make.array(this.lines()).reverse();
+			for(const line of lines) {
 				if(query === null || query === undefined) {
 					yield line;
 					continue;

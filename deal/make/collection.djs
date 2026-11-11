@@ -10,9 +10,9 @@
 };
 
 #Make.iterator:function = function * (value) {
-    if (Array.isArray(value)) for(const v of value) yield v;
-    else if (typeof value !== "string" && typeof value[Symbol.iterator] === "function")
-        return value;
+    if (Array.isArray(value)) yield* value;
+    else if (value != null && typeof value !== "string" && typeof value[Symbol.iterator] === "function")
+        yield* value;
     else yield value;
 };
 
