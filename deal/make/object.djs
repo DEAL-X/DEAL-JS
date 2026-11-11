@@ -14,16 +14,14 @@ function _clrType(type = "System.Object") {
     const clr = _clrHost();
     if (type == null) return clr.type("System.Object");
     if (typeof type === "string") return clr.type(type);
-    if (type != null && typeof type.FullName === "string") return type;
-    throw new TypeError("A CLR type name or System.Type instance is required.");
+    // A value returned by host.type() is already a ClearScript host-type reference.
+    if (type != null) return type;
+    throw new TypeError("A CLR type name or ClearScript host-type reference is required.");
 }
 
 function _clrGenericType(definition, ...arguments) {
     const clr = _clrHost();
-    const types = clr.newArr(clr.type("System.Type"), arguments.length);
-    for (let index = 0; index < arguments.length; index++)
-        types.SetValue(_clrType(arguments[index]), index);
-    return clr.type(definition).MakeGenericType(types);
+    return clr.type(definition, ...arguments.map(_clrType));
 }
 
 function _clrValues(values, mapper = null) {
