@@ -63,6 +63,9 @@ namespace MiMFa.Engine.JavaScript
 
                 case "implements":
                 case "extends":
+                    walker.Move(word.Length);
+                    walker.MoveToProcedure();
+                    return new Token(TokenType.Statement, word, location);
                 case "interface":
                 case "class":
                 case "enum":
@@ -72,7 +75,7 @@ namespace MiMFa.Engine.JavaScript
                 case "function":
                     walker.Move(word.Length);
                     walker.MoveToProcedure();
-                    return new Token(TokenType.Statement, word, location);
+                    return new Token(TokenType.Start | TokenType.Statement, word, location);
 
                 case "await":
                 case "async":

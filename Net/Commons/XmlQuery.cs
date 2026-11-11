@@ -52,9 +52,9 @@ namespace MiMFa.Net
 
             JToken token = value as JToken ?? JToken.FromObject(value);
             if (token.Type == JTokenType.Object)
-                return JsonConvert.DeserializeXmlNode(token.ToString(Formatting.None), "root")?.OuterXml ?? "<root />";
+                return JsonConvert.DeserializeXmlNode(token.ToString(Newtonsoft.Json.Formatting.None), "root")?.OuterXml ?? "<root />";
             if (token.Type == JTokenType.Array)
-                return JsonConvert.DeserializeXmlNode("{\"root\":" + token.ToString(Formatting.None) + "}")?.OuterXml ?? "<root />";
+                return JsonConvert.DeserializeXmlNode("{\"root\":" + token.ToString(Newtonsoft.Json.Formatting.None) + "}")?.OuterXml ?? "<root />";
 
             return "<root>" + SecurityElementEscape(Convert.ToString(value, CultureInfo.InvariantCulture)) + "</root>";
         }

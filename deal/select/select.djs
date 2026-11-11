@@ -2,10 +2,11 @@
 //
 // Supported projections:
 //   select("*", source)
-//   select("name", source)                    -> [value, ...]
+//   select("name", source)                     -> [value, ...]
 //   select(["name", "price"], source)          -> [{ name, price }, ...]
 //   select({ title: "name" }, source)          -> [{ title: value }, ...]
 //   select([{ key: "title", value: "name" }], source)
+//   select(selectorFunc, source)
 //
 // DEAL's "FROM" separator is compiled as an argument separator. The source
 // is therefore always the final argument; a trailing empty separator value
@@ -27,6 +28,9 @@ command #select:start|function() {
     // remain intact.
     if (projections.length === 1 && Array.isArray(projections[0]))
         projections = projections[0];
+
+    if(Array.isArray(source) && "function" === typeof projections[0]) 
+        return source.map(projections[0]);
 
     const isObject = value =>
         value !== null && typeof value === "object" && !Array.isArray(value);

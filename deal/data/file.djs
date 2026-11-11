@@ -1,116 +1,155 @@
 use deal/make/string;
+use deal/make/collection;
 use deal/data/temporary;
 
-function File_parseLine(line) {
-	try {
-		const value = JSON.parse(line);
-		if(value !== null && typeof value === "object" && !Array.isArray(value)) return value;
-	} catch(error) {}
-	return line;
-}
-
-function File_text(value) {
-	if(typeof value === "string") return value;
-	try { return JSON.stringify(value); }
-	catch(error) { return Make.string(value); }
-}
-
-function File_isXPath(query) {
-	return typeof query === "string" && /^(?:\/|\.\/|\.\.\/|@|(?:count|boolean|contains|starts-with|string|number|not|normalize-space|name|local-name)\s*\()/i.test(query.trim());
-}
-
-function File_matches(value, query) {
-	if(query === null || query === undefined) return true;
-	if(query instanceof RegExp) {
-		query.lastIndex = 0;
-		return query.test(File_text(value));
-	}
-	if(typeof query === "string") {
-		if(File_isXPath(query)) return application.Engine.XmlQuery.Matches(value, query);
-		return File_text(value).includes(query);
-	}
-	if(typeof query === "object" && !Array.isArray(query)) {
-		for(const key of Object.keys(query)) {
-			if(value === null || typeof value !== "object" || !Object.prototype.hasOwnProperty.call(value, key) || !File_matches(value[key], query[key]))
-				return false;
-		}
-		return true;
-	}
-	return value === query;
-}
-
-function File_isTextQuery(query) {
-	return (typeof query === "string" && !File_isXPath(query)) || query instanceof RegExp;
-}
 
 // All resource related commands
-command File (path = null) {
+command File (path = null, encoding = null, sequential = true) {
+	
+	function _parseLine(line) {
+		try {
+			const value = JSON.parse(line);
+			if(value !== null && typeof value === "object" && !Array.isArray(value)) return value;
+		} catch(error) {}
+		return line;
+	}
+
+	function _text(value) {
+		if(typeof value === "string") return value;
+		try { return JSON.stringify(value); }
+		catch(error) { return Make.string(value); }
+	}
+
+	function _isXPath(query) {
+		return typeof query === "string" && /^(?:\/|\.\/|\.\.\/|@|(?:count|boolean|contains|starts-with|string|number|not|normalize-space|name|local-name)\s*\()/i.test(query.trim());
+	}
+
+	function _matches(value, query) {
+		if(query === null || query === undefined) return true;
+		if(query instanceof RegExp) {
+			query.lastIndex = 0;
+			return query.test(_text(value));
+		}
+		if(typeof query === "string") {
+			if(_isXPath(query)) return application.Engine.XmlQuery.Matches(value, query);
+			return _text(value).includes(query);
+		}
+		if(typeof query === "object" && !Array.isArray(query)) {
+			for(const key of Object.keys(query)) {
+				if(value === null || typeof value !== "object" || !Object.prototype.hasOwnProperty.call(value, key) || !_matches(value[key], query[key]))
+					return false;
+			}
+			return true;
+		}
+		return value === query;
+	}
+
+	function _isTextQuery(query) {
+		return (typeof query === "string" && !_isXPath(query)) || query instanceof RegExp;
+	}
+
 	return {
-		path: path ?? Temporary.path(),
-		directory: function () {
+		encoding: encoding,
+		sequential: sequential,
+		get path () {
+			return path ?? Temporary.path();
+		},
+		set path (newPath) {
+			application.Engine.Resource.Move(this.path, newPath);
+			path = newPath;
+		},
+		get directory () {
 			return application.Engine.Resource.Entity(this.path).Directory;
 		},
-		fullname: function () {
-			return application.Engine.Resource.FileName(this.path).FullName;
+		set directory (val) {
+			this.path = application.Engine.Resource.Resolve(application.Engine.Resource.Combine(val, this.fullname));
 		},
-		name: function () {
-			return application.Engine.Resource.FileName(this.path).Name;
+		get fullname () {
+			return application.Engine.Resource.Entity(this.path).FullName;
 		},
-		extension: function () {
-			return application.Engine.Resource.FileName(this.path).Extension;
+		set fullname (newName) {
+			application.Engine.Resource.Rename(this.path, newName, false);
 		},
-		content: function () {
+		get name () {
+			return application.Engine.Resource.Entity(this.path).Name;
+		},
+		set name (newName) {
+			this.fullname = newName + this.extension;
+		},
+		get extension () {
+			return application.Engine.Resource.Entity(this.path).Extension;
+		},
+		set extension (newExt) {
+			this.fullname = this.name + newExt;
+		},
+		get count () {
+			return application.Engine.Resource.GetFileLines(this.path, this.encoding).Count();
+		},
+		get exists () {
+			return application.Engine.Resource.Exists(this.path);
+		},
+		get contents () {
 			return application.Engine.Resource.GetFileContents(this.path);
+		},
+		set contents (contents) {
+			return application.Engine.Resource.SetFileContents(this.path, contents);
+		},
+		get text () {
+			return application.Engine.Resource.GetFileText(this.path, this.encoding);
+		},
+		set text (text) {
+			return application.Engine.Resource.SetFileText(this.path, text, this.encoding);
+		},
+		lines: function * () {
+			for(const line of application.Engine.Resource.GetFileLines(this.path, this.encoding))
+				yield line;
+		},
+		fields: function * () {
+			for(const line of this.lines())
+				yield _parseLine(line);
 		},
 		create: function (object = "") {
 			if(!application.Engine.Resource.Exists(this.path)) application.Engine.Resource.SetFileText(this.path, Make.string(object));
 			return application.Engine.Resource.Exists(this.path);
 		},
-		text: function (encoding = null) {
-			return application.Engine.Resource.GetFileText(this.path, encoding);
+		clear: function (object = null) {
+			return application.Engine.Resource.SetFileText(this.path, "", this.encoding);
 		},
-		lines: function * (encoding = null) {
-			for(const line of application.Engine.Resource.GetFileLines(this.path, encoding))
-				yield line;
-		},
-		fields: function * (encoding = null) {
-			for(const line of this.lines(encoding))
-				yield File_parseLine(line);
-		},
-		read: function (encoding = null) {
-			return application.Engine.Resource.GetFileText(this.path, encoding);
+		read: function () {
+			return application.Engine.Resource.GetFileText(this.path, this.encoding);
 		},
 		write: function (object = null) {
-			return application.Engine.Resource.SetFileText(this.path, Make.string(object));
+			return application.Engine.Resource.SetFileText(this.path, Make.string(object), this.encoding);
 		},
 		prepend: function (object = null) {
-			return application.Engine.Resource.PrependFileText(this.path, Make.string(object));
+			if(sequential) return application.Engine.Resource.PrependFileLine(this.path, Make.string(object), this.encoding);
+			else return application.Engine.Resource.PrependFileText(this.path, Make.string(object), this.encoding);
 		},
 		append: function (object = null) {
-			return application.Engine.Resource.AppendFileText(this.path, Make.string(object));
+			if(sequential) return application.Engine.Resource.AppendFileLine(this.path, Make.string(object), this.encoding);
+			else return application.Engine.Resource.AppendFileText(this.path, Make.string(object), this.encoding);
 		},
 		// String and RegExp queries search raw lines. XPath and object graphs search parsed JSON objects.
-		find: function (query, encoding = null) {
-			return this.first(query, encoding);
+		find: function (query) {
+			return this.first(query);
 		},
-		first: function (query = null, encoding = null) {
-			for(const result of this.search(query, encoding)) return result;
+		first: function (query = null) {
+			for(const result of this.search(query)) return result;
 			return null;
 		},
-		last: function (query = null, encoding = null) {
-			let result = null;
-			for(const item of this.search(query, encoding)) result = item;
-			return result;
+		last: function (query = null) {
+			for(const result of this.search(query, false)) return result;
+			return null;
 		},
-		search: function * (query = null, encoding = null) {
-			const textQuery = File_isTextQuery(query);
-			for(const line of this.lines(encoding)) {
+		search: function * (query = null, foreward = true) {
+			const textQuery = _isTextQuery(query);
+			for(const line of foreward?this.lines():this.lines().reverse()) {
 				if(query === null || query === undefined) {
 					yield line;
 					continue;
 				}
-				const value = textQuery ? line : File_parseLine(line);
-				if(File_matches(value, query)) yield value;
+				const value = textQuery ? line : _parseLine(line);
+				if(_matches(value, query)) yield value;
 			}
 		},
 		move: function (destination = null, overwrite = false) {
@@ -127,9 +166,6 @@ command File (path = null) {
 		},
 		delete: function () {
 			return application.Engine.Resource.Delete(this.path);
-		},
-		exists: function () {
-			return application.Engine.Resource.Exists(this.path);
 		},
 		entity: function () {
 			return application.Engine.Resource.Entity(this.path);

@@ -1,5 +1,7 @@
 // Practical: collect page titles and headings from a list of websites.
 // The browser object must be initialized by the host before this file runs.
+// HOW TO USE:
+// Use Samples/practicals/Web-Scraping-1.djs;
 
 Use deal/core;
 Use deal/web;

@@ -9,6 +9,13 @@
     return typeof mapper === "function" ? result.map(mapper) : result;
 };
 
+#Make.iterator:function = function * (value) {
+    if (Array.isArray(value)) for(const v of value) yield v;
+    else if (typeof value !== "string" && typeof value[Symbol.iterator] === "function")
+        return value;
+    else yield value;
+};
+
 #Make.matrix:function = function (object) {
     if (object == null) return [];
     if (!Array.isArray(object)) {

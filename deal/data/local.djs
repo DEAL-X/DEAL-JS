@@ -51,18 +51,15 @@ command Local = {};
 };
 #Local.move:function = function (source = null, destination = null, overwrite = false) {
 	if(!source || !destination) return false;
-	application.Engine.Resource.Move(source, destination, overwrite);
-	return true;
+	return application.Engine.Resource.Move(source, destination, overwrite);
 };
 #Local.copy:function = function (source = null, destination = null, overwrite = false) {
 	if(!source || !destination) return false;
-	application.Engine.Resource.Copy(source, destination, overwrite);
-	return true;
+	return application.Engine.Resource.Copy(source, destination, overwrite);
 };
 #Local.rename = function (path = null, newName = null, overwrite = false) {
 	if(!path || !newName) return false;
-	application.Engine.Resource.Rename(path, newName, overwrite);
-	return true;
+	return application.Engine.Resource.Rename(path, newName, overwrite);
 };
 #Local.delete:function = function (path = null) {
 	if(!path) return false;

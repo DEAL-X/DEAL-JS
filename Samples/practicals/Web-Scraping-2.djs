@@ -1,4 +1,5 @@
-// open @"D:\Product\Technology\MiMFa DEAL\MiMFa DEAL.JS - Engine\Samples\practicals\Professional-Web-Scraper.djs", then print compile data
+// HOW TO USE:
+// Use Samples/practicals/Web-Scraping-2.djs;
 
 Log subject "The process is started";
 

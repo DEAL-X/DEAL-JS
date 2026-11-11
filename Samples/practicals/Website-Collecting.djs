@@ -1,5 +1,7 @@
 // Practical: collect structured information from multiple pages.
 // Browser navigation is synchronous; network Fetch calls are explicitly awaited.
+// HOW TO USE:
+// Use Samples/practicals/Website-Collecting.djs;
 
 Use deal/core;
 Use deal/web;
