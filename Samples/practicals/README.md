@@ -7,9 +7,6 @@ These examples are complete, adaptable workflows rather than isolated syntax dem
 - [Web Scraping 2](Web-Scraping-2.djs) — extract search-result fields, follow pagination, and filter duplicate records.
 - [Website Collecting](Website-Collecting.djs) — asynchronously retrieve JSON resources, handle HTTP failures, and collect structured responses.
 - [Research Catalog Processing](Research-Catalog-Processing.djs) — normalize records, validate required fields and numeric ranges, reject duplicate identifiers, attach provenance metadata, assert the five-record fixture's expected 2/3 disposition and rejection categories, and persist accepted and rejected JSONL outputs separately.
-
-## Host requirements
-
-Browser examples require the .NET host to initialize the browser provider and load `deal/web`. The selected browser driver is supplied by the host; Chrome is the default, with Edge and Firefox available through their respective drivers.
-
-Examples that use CLR collection converters require ClearScript `ExtendedHostFunctions` to be exposed as global `host` and the `deal/make` module to be loaded. The converter layer is in `deal/make/object.djs`; it creates actual CLR arrays and collection instances for .NET method parameters. The `File` and `Local` modules use these converters internally for byte-content and line-array writes.
+- [Web scraping 1](Web-Scraping-1.djs) — visit a list of pages and collect page titles and headings.
+- [Website collecting](Website-Collecting.djs) — process a URL collection and store structured results.
+- [CLR interop file export](Clr-Interop-File-Export.djs) — serialize structured records and write/read them through .NET resource APIs using explicit collection and byte converters.

@@ -1,5 +1,6 @@
 use deal/make;
 use deal/make/string;
+use deal/make/object;
 
 // All resource related commands
 command Local = {};
