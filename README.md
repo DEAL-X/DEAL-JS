@@ -837,7 +837,7 @@ The converters create actual CLR objects; they do not merely wrap JavaScript val
 | `Make.hashTableObject(object)` | `Hashtable` |
 | `Make.convertObject(value, "System.Int32")` | `Convert.ChangeType` result |
 
-A type argument may be a CLR type name or a `System.Type` returned by `Make.typeObject`. Collection converters accept JavaScript arrays and iterables; an optional mapper can transform each element before insertion. Values still need to be convertible to the requested CLR element type.
+A type argument may be a CLR type name or a ClearScript host-type reference returned by `Make.typeObject`. Collection converters accept JavaScript arrays and iterables; an optional mapper can transform each element before insertion. Values still need to be convertible to the requested CLR element type.
 
 For example, this passes a real `.NET string[]` to the existing `SetFileLines(string, string[], Encoding)` overload:
 
