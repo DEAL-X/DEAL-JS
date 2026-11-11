@@ -41,7 +41,7 @@ for each raw of sourceRecords,
     Consider priceText is normalizeText(raw.price);
     Consider discount is Number(raw.discount);
 
-    If id is empty,
+    If !id,
         reject(raw, "missing_identifier");
     Else if seen.has(id),
         reject(raw, "duplicate_identifier");
