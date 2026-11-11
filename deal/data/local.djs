@@ -1,4 +1,5 @@
 use deal/make/string;
+use deal/make/object;
 
 // All resource related commands
 command Local = {};
@@ -39,7 +40,7 @@ command Local = {};
 };
 #Local.write:function = function (path = null, object = null) {
 	if(!path) return false;
-	return application.Engine.Resource.SetFileContents(path, Make.string(object));
+	return application.Engine.Resource.SetFileContents(path, Make.byteArrayObject(Make.string(object)));
 };
 #Local.prepend:function = function (path = null, object = null) {
 	if(!path) return false;
