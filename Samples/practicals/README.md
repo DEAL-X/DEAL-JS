@@ -1,8 +1,15 @@
 # DEAL.JS practical examples
 
-The browser provider uses the driver selected by the .NET host (Chrome by default, with Edge and Firefox available). Practical DEAL source uses the common browser-object API; driver-specific optional capabilities should be checked by the host.
+These examples are complete, adaptable workflows rather than isolated syntax demonstrations. They use DEAL source as the primary implementation language and load only the modules required by each workflow.
 
-These examples are larger, adaptable workflows rather than isolated syntax demonstrations. Browser tab collections are exposed directly as `BrowserTabs` collections of `BrowserTab` handles; the page session for a handle is resolved only when needed. They use DEAL source as the primary implementation language and assume the host has initialized the browser provider and loaded the `deal/web` module.
+- [File](File-1.djs) — append structured values to a temporary file and read the result.
+- [Web Scraping 1](Web-Scraping-1.djs) — visit multiple pages in a reused browser tab and collect titles and headings.
+- [Web Scraping 2](Web-Scraping-2.djs) — extract search-result fields, follow pagination, and filter duplicate records.
+- [Website Collecting](Website-Collecting.djs) — asynchronously retrieve JSON resources, handle HTTP failures, and collect structured responses.
+- [Research Catalog Processing](Research-Catalog-Processing.djs) — normalize records, validate required fields and numeric ranges, reject duplicate identifiers, attach provenance metadata, assert the five-record fixture's expected 2/3 disposition and rejection categories, and persist accepted and rejected JSONL outputs separately.
 
-- [Web scraper](Web-Scraper.djs) — visit a list of pages and collect page titles and headings.
-- [Batch website collector](Batch-Website-Collector.djs) — process a URL collection and store structured results.
+## Host requirements
+
+Browser examples require the .NET host to initialize the browser provider and load `deal/web`. The selected browser driver is supplied by the host; Chrome is the default, with Edge and Firefox available through their respective drivers.
+
+Examples that use CLR collection converters require ClearScript `ExtendedHostFunctions` to be exposed as global `host` and the `deal/make` module to be loaded. The converter layer is in `deal/make/object.djs`; it creates actual CLR arrays and collection instances for .NET method parameters. The `File` and `Local` modules use these converters internally for byte-content and line-array writes.

@@ -811,12 +811,56 @@ Reuse https://example.com/lib.djs;
 Both instructions resolve resources through the compiler's shared path and resource resolution. `USE` skips a dependency already registered by the current compiler; `REUSE` forces that dependency to be processed again. `REUSE` does not imply a separate download or cache-refresh policy for remote modules.
 
 
+## CLR object interoperability
+
+DEAL.JS can call .NET APIs through its ClearScript host. JavaScript arrays and objects are not automatically interchangeable with every CLR collection parameter, so use the explicit converters in `deal/make/object.djs`. The module is included by `Use deal/make;` and expects the host to expose ClearScript's `ExtendedHostFunctions` instance as the global `host`:
+
+```csharp
+using Microsoft.ClearScript;
+engine.AddHostObject("host", new ExtendedHostFunctions());
+```
+
+The converters create actual CLR objects; they do not merely wrap JavaScript values:
+
+| Converter | CLR result |
+|---|---|
+| `Make.arrayObject(values, "System.String")` / `Make.stringArrayObject(values)` | `System.String[]` |
+| `Make.listObject(values, "System.String")` | `List<string>` |
+| `Make.iteratorObject(values, "System.String")` | `List<string>`, assignable to `IEnumerable<string>` |
+| `Make.dictionaryObject(object, "System.String", "System.Int32")` | `Dictionary<string, int>` |
+| `Make.objectObject(object)` / `Make.expandoObject(object)` | `System.Dynamic.ExpandoObject` with populated properties |
+| `Make.hashSetObject(values, "System.String")` | `HashSet<string>` |
+| `Make.queueObject(values, "System.String")` | `Queue<string>` |
+| `Make.stackObject(values, "System.String")` | `Stack<string>` |
+| `Make.linkedListObject(values, "System.String")` | `LinkedList<string>` |
+| `Make.sortedSetObject(values, "System.String")` | `SortedSet<string>` |
+| `Make.arrayListObject(values)` | `ArrayList` |
+| `Make.byteArrayObject(value)` | `System.Byte[]` from text, byte arrays, or byte iterables |
+| `Make.hashTableObject(object)` | `Hashtable` |
+| `Make.convertObject(value, "System.Int32")` | `Convert.ChangeType` result |
+
+A type argument may be a CLR type name or a ClearScript host-type reference returned by `Make.typeObject`. Collection converters accept JavaScript arrays and iterables; an optional mapper can transform each element before insertion. Values still need to be convertible to the requested CLR element type.
+
+For example, this passes a real `.NET string[]` to the existing `SetFileLines(string, string[], Encoding)` overload:
+
+```deal
+Use deal/core;
+Use deal/make;
+
+Consider lines is Make.arrayObject(["first", "second"], "System.String");
+application.Engine.Resource.SetFileLines(path, lines, null);
+```
+
+`Make.iteratorObject` returns a concrete `List<T>`, because an interface such as `IEnumerable<T>` cannot be instantiated. That list is assignable to `IEnumerable<T>` and can be passed to APIs expecting the interface. The `File` and `Local` modules also use these converters internally when calling `SetFileLines` and `SetFileContents`, so their JavaScript-facing APIs do not leak CLR array requirements. See [the CLR interop tutorial](Samples/tutorials/04-CLR-Object-Interop.djs) and [the runtime smoke test](Samples/tests/runtime/CLR-Object-Interop-Smoke-Test.js).
+
 ## DEAL.JS samples
 
 The sample collection is divided by intent rather than keeping unrelated files together:
 
 - **[Tests](Samples/tests/)** contains DEAL and JavaScript compiler stress inputs, their expected JavaScript and captured result files, plus browser and Fetch smoke tests.
 - **[Tutorials](Samples/tutorials/)** contains progressive, commented DEAL.JS examples intended to teach the language and its browser integration.
-- **[Practicals](Samples/practicals/)** contains larger, adaptable examples for real workflows, including browser-based scraping and batch collection.
+- **[Practicals](Samples/practicals/)** contains larger, adaptable workflows, including browser scraping and the research-catalog processing pipeline.
 
-For the recommended learning path, begin with [01 - Getting Started](Samples/tutorials/01-Getting-Started.djs), continue with [02 - Browser and Fetch](Samples/tutorials/02-Browser-and-Fetch.djs), and then study [Web Scraper](Samples/practicals/Web-Scraper.djs).
+The [Research Catalog Processing](Samples/practicals/Research-Catalog-Processing.djs) fixture validates five synthetic records, expecting two accepted records and three rejections (duplicate identifier, missing price, and out-of-range discount), with explicit checks for derived values and provenance metadata.
+
+For the recommended learning path, begin with [01 - Getting Started](Samples/tutorials/01-Getting-Started.djs), continue with [02 - Browser and Fetch](Samples/tutorials/02-Browser-and-Fetch.djs), then study [04 - CLR Object Interop](Samples/tutorials/04-CLR-Object-Interop.djs). For a complete data workflow, see [Research Catalog Processing](Samples/practicals/Research-Catalog-Processing.djs).
