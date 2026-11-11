@@ -10,6 +10,14 @@ function clrObjectInteropSmokeTest(application) {
     if (clrArray.GetType().FullName !== "System.String[]")
         throw new Error("Make.arrayObject did not create System.String[].");
 
+    const clrStrings = Make.stringArrayObject(values);
+    if (clrStrings.GetType().FullName !== "System.String[]")
+        throw new Error("Make.stringArrayObject did not create System.String[].");
+
+    const clrBytes = Make.byteArrayObject([65, 66, 67]);
+    if (clrBytes.GetType().FullName !== "System.Byte[]")
+        throw new Error("Make.byteArrayObject did not create System.Byte[].");
+
     const clrList = Make.listObject(values, "System.String");
     if (clrList.GetType().GetGenericTypeDefinition().FullName !== "System.Collections.Generic.List`1" ||
         clrList.GetType().GetGenericArguments()[0].FullName !== "System.String")
@@ -33,12 +41,18 @@ function clrObjectInteropSmokeTest(application) {
         throw new Error("Make.hashSetObject returned an unexpected item count.");
 
     const path = resource.Resolve("clr-object-interop-smoke.txt");
+    const binaryPath = resource.Resolve("clr-object-interop-bytes-smoke.bin");
     try {
         // This call exercises the exact string[] overload that previously failed.
         resource.SetFileLines(path, clrArray, null);
         if (resource.GetFileLine(path, 0, null) !== "first" ||
             resource.GetFileLine(path, 2, null) !== "third")
             throw new Error("The string[] ResourceProvider round-trip failed.");
+
+        resource.SetFileContents(binaryPath, clrBytes);
+        const storedBytes = resource.GetFileContents(binaryPath);
+        if (storedBytes[0] !== 65 || storedBytes[2] !== 67)
+            throw new Error("The CLR byte[] ResourceProvider round-trip failed.");
 
         // List<string> and the concrete IEnumerable<string> implementation.
         resource.SetFileLines(path, clrList, null);
@@ -51,6 +65,7 @@ function clrObjectInteropSmokeTest(application) {
         return {
             passed: true,
             arrayType: clrArray.GetType().FullName,
+            byteArrayType: clrBytes.GetType().FullName,
             listType: clrList.GetType().FullName,
             dictionaryCount: dictionary.Count,
             hashSetCount: hashSet.Count,
@@ -58,5 +73,6 @@ function clrObjectInteropSmokeTest(application) {
         };
     } finally {
         resource.Delete(path);
+        resource.Delete(binaryPath);
     }
 }
