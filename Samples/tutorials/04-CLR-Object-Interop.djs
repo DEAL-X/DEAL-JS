@@ -26,6 +26,10 @@ Consider counts is Make.dictionaryObject(
     "System.Int32"
 );
 
+// Convenience converters for string[] and byte[].
+Consider clrStrings is Make.stringArrayObject(values);
+Consider clrBytes is Make.byteArrayObject("DEAL.JS");
+
 // Other common collection types.
 Consider uniqueValues is Make.hashSetObject(values, "System.String");
 Consider pendingValues is Make.queueObject(values, "System.String");
@@ -46,6 +50,8 @@ application.Engine.Resource.SetFileLines(enumerablePath, clrEnumerable, null);
 
 Print {
     arrayType: clrArray.GetType().FullName,
+    stringArrayType: clrStrings.GetType().FullName,
+    byteArrayType: clrBytes.GetType().FullName,
     listType: clrList.GetType().FullName,
     dictionaryType: counts.GetType().FullName,
     dictionaryCount: counts.Count,
