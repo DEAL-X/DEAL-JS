@@ -11,12 +11,14 @@ function clrObjectInteropSmokeTest(application) {
         throw new Error("Make.arrayObject did not create System.String[].");
 
     const clrList = Make.listObject(values, "System.String");
-    if (clrList.GetType().FullName !== "System.Collections.Generic.List`1[System.String]")
+    if (clrList.GetType().GetGenericTypeDefinition().FullName !== "System.Collections.Generic.List`1" ||
+        clrList.GetType().GetGenericArguments()[0].FullName !== "System.String")
         throw new Error("Make.listObject did not create List<string>.");
 
     const clrEnumerable = Make.iteratorObject(values, "System.String");
-    if (clrEnumerable.GetType().FullName !== "System.Collections.Generic.List`1[System.String]")
-        throw new Error("Make.iteratorObject must return a concrete IEnumerable<T> implementation.");
+    if (clrEnumerable.GetType().GetGenericTypeDefinition().FullName !== "System.Collections.Generic.List`1" ||
+        clrEnumerable.GetType().GetGenericArguments()[0].FullName !== "System.String")
+        throw new Error("Make.iteratorObject must return a concrete List<string> implementing IEnumerable<string>.");
 
     const dictionary = Make.dictionaryObject(
         { one: 1, two: 2 },
