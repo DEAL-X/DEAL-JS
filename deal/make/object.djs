@@ -38,7 +38,7 @@ function _clrCreateCollection(definition, values, elementType, method, mapper = 
     return result;
 }
 
-// Resolve a CLR System.Type from a type name or an existing Type object.
+// Resolve a ClearScript host-type reference from a CLR type name or existing reference.
 #Make.typeObject:function = function (type = "System.Object") {
     return _clrType(type);
 };
@@ -55,7 +55,7 @@ function _clrCreateCollection(definition, values, elementType, method, mapper = 
 
 // Convert values into System.Collections.Generic.List<T>.
 #Make.listObject:function = function (values = [], elementType = "System.Object", mapper = null) {
-    return _clrCreateCollection("System.Collections.Generic.List`1", values, elementType, "Add", mapper);
+    return _clrCreateCollection("System.Collections.Generic.List", values, elementType, "Add", mapper);
 };
 
 // Return a concrete List<T>, which implements IEnumerable<T>.
@@ -67,7 +67,7 @@ function _clrCreateCollection(definition, values, elementType, method, mapper = 
 // Convert a JavaScript object, Map, or iterable of [key, value] pairs into Dictionary<TKey, TValue>.
 #Make.dictionaryObject:function = function (value = {}, keyType = "System.String", valueType = "System.Object", mapper = null) {
     const clr = _clrHost();
-    const type = _clrGenericType("System.Collections.Generic.Dictionary`2", keyType, valueType);
+    const type = _clrGenericType("System.Collections.Generic.Dictionary", keyType, valueType);
     const result = clr.newObj(type);
     let entries = [];
 
@@ -99,17 +99,17 @@ function _clrCreateCollection(definition, values, elementType, method, mapper = 
 
 // Convert values into System.Collections.Generic.HashSet<T>.
 #Make.hashSetObject:function = function (values = [], elementType = "System.Object", mapper = null) {
-    return _clrCreateCollection("System.Collections.Generic.HashSet`1", values, elementType, "Add", mapper);
+    return _clrCreateCollection("System.Collections.Generic.HashSet", values, elementType, "Add", mapper);
 };
 
 // Convert values into System.Collections.Generic.Queue<T>.
 #Make.queueObject:function = function (values = [], elementType = "System.Object", mapper = null) {
-    return _clrCreateCollection("System.Collections.Generic.Queue`1", values, elementType, "Enqueue", mapper);
+    return _clrCreateCollection("System.Collections.Generic.Queue", values, elementType, "Enqueue", mapper);
 };
 
 // Convert values into System.Collections.Generic.Stack<T>.
 #Make.stackObject:function = function (values = [], elementType = "System.Object", mapper = null) {
-    return _clrCreateCollection("System.Collections.Generic.Stack`1", values, elementType, "Push", mapper);
+    return _clrCreateCollection("System.Collections.Generic.Stack", values, elementType, "Push", mapper);
 };
 
 // Convert values into the non-generic System.Collections.ArrayList.
@@ -132,12 +132,12 @@ function _clrCreateCollection(definition, values, elementType, method, mapper = 
 
 // Convert values into System.Collections.Generic.LinkedList<T>.
 #Make.linkedListObject:function = function (values = [], elementType = "System.Object", mapper = null) {
-    return _clrCreateCollection("System.Collections.Generic.LinkedList`1", values, elementType, "AddLast", mapper);
+    return _clrCreateCollection("System.Collections.Generic.LinkedList", values, elementType, "AddLast", mapper);
 };
 
 // Convert values into System.Collections.Generic.SortedSet<T>.
 #Make.sortedSetObject:function = function (values = [], elementType = "System.Object", mapper = null) {
-    return _clrCreateCollection("System.Collections.Generic.SortedSet`1", values, elementType, "Add", mapper);
+    return _clrCreateCollection("System.Collections.Generic.SortedSet", values, elementType, "Add", mapper);
 };
 
 // Convert a JavaScript object into Dictionary<string, object>.
