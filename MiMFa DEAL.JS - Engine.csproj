@@ -18,6 +18,8 @@
     <None Remove="DEAL\data\file.djs" />
     <None Remove="DEAL\data\log.djs" />
     <None Remove="DEAL\data\temporary.djs" />
+    <None Remove="DEAL\make\object.djs" />
+    <None Remove="DEAL\select\accept.djs" />
     <None Remove="DEAL\struct\struct.djs" />
     <None Remove="DEAL\web\.js" />
     <None Remove="DEAL\web\browser.djs" />
@@ -57,6 +59,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DEAL\data\log.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DEAL\make\object.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DEAL\select\accept.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DEAL\select\collect.djs">
@@ -312,6 +320,12 @@
     <None Update="deal\web\transfer.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Samples\practicals\Interop-File.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Samples\practicals\Research-Catalog-Processing.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Samples\practicals\Website-Collecting.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -319,9 +333,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Samples\practicals\Web-Scraping-2.djs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Samples\practicals\README.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Samples\practicals\Web-Scraping-1.djs">
@@ -378,6 +389,12 @@
     <None Update="Samples\tests\runtime\Browser-Object-Model-Smoke-Test.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Samples\tests\runtime\Clr-Interop-Smoke-Test.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Samples\tests\runtime\CLR-Object-Interop-Smoke-Test.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Samples\tests\runtime\Native-Web-Smoke-Test.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -390,7 +407,10 @@
     <None Update="Samples\tutorials\03-Commands.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Samples\tutorials\README.md">
+    <None Update="Samples\tutorials\04-CLR-Object-Interop.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Samples\tutorials\04-DotNet-Interop.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

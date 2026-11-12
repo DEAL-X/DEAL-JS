@@ -175,9 +175,7 @@ namespace MiMFa.Engine.DEAL.JS
                         if(before?.Is(TokenType.StringData) == true) return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, " == \"\"", null), walker.MoveToProcedure());
                         else return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "+ \"\" == \"\"", null), walker.MoveToProcedure());
 
-                    else if (before?.Is(TokenType.Keyword) == true && next?.Is(TokenType.Keyword) == true) return ParseSuffixToken(token.Clone(TokenType.Suffix, token.Value+ next.Value), walker.MoveToProcedure());
-                    
-                    else return ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol, "=="), walker);
+                    else return base.ParseSymbolToken(token.Clone(TokenType.Middle | TokenType.Symbol), walker);
 
                 case "equal":
                     if (Engine.IsDelimiters(next))

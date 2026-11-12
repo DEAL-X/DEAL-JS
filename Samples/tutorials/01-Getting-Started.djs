@@ -4,8 +4,8 @@
 Use deal/core;
 
 // Define a collection and a destination.
-Consider values is [1, 2, 3, 4, 5];
-Consider doubled is [];
+Consider values be [1, 2, 3, 4, 5];
+Consider doubled be [];
 
 // Iterate using a declarative DEAL instruction.
 For each value of values,

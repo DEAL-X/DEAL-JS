@@ -1,7 +1,7 @@
-﻿using MiMFa.Engine.Core;
+﻿using MiMFa.Core.Resources;
+using MiMFa.Engine.Core;
 using MiMFa.Engine.Model;
 using MiMFa.Engine.Put;
-using MiMFa.Engine.Resource;
 using MiMFa.Engine.Stage;
 using System;
 using System.Collections.Generic;
@@ -24,7 +24,7 @@ namespace MiMFa.Engine.DEAL.JS
                     new Parser(),
                     new Assembler(),
                     new Generator()
-                }, executeStage, options ?? new Options(), resourceProvider ?? new ResourceProvider())
+                }, executeStage, options ?? new Options(), resourceProvider ?? new UniversalResourceProvider())
         {
         }
 

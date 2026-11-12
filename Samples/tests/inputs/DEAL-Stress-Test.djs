@@ -24,8 +24,8 @@ Reserve every = "for";
 // ------------------------------------------------------------
 // Definitions
 // ------------------------------------------------------------
-Consider myConstant constant is procedure;
-Consider myVariable variable is equal procedure;
+Consider myConstant constant be procedure;
+Consider myVariable variable be equal procedure;
 Consider let letVariable be procedure;
 Consider directVariable equals procedure;
 
@@ -51,7 +51,7 @@ Command normalized (value = "") is:
     * replace (/\s+/gu   to the " ")
     * trim it
 
-Consider title const is equal:
+Consider title const be equal:
     Normalized "  alpha   study ";
 
 // ------------------------------------------------------------

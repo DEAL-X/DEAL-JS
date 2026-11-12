@@ -48,9 +48,9 @@ command #fetch:start|function(input, init = {}) {
             abortListener = () => transport.Abort(id);
             request.signal.addEventListener("abort", abortListener, { once: true });
         }
-        const pathProvider = typeof application !== "undefined" && application.Engine && application.Engine.Router;
+        const pathProvider = typeof application !== "undefined" && application.Engine && application.Engine.Resource;
         const baseAddress = typeof location !== "undefined" ? location.href : null;
-        const resolvedUrl = pathProvider ? pathProvider.Resolve(request.url, baseAddress) : request.url;
+        const resolvedUrl = pathProvider ? pathProvider.Normalize(request.url, baseAddress) : request.url;
         operation = transport.FetchJsonAsync(request.method, resolvedUrl, null, null, request.timeout, headersJson, id, bodyBase64, request.credentials);
     } catch (error) {
         if (abortListener) request.signal.removeEventListener("abort", abortListener);

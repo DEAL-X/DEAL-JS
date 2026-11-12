@@ -14,7 +14,7 @@ namespace MiMFa.Engine.DEAL.JS
         public int BreakSectionSwitch { get; set; } = 0;
         public int BreakSequenceSwitch { get; set; } = 0;
         public string ArgumentName { get; set; } = "argument";
-        public string[] AssignSigns => new string[] { "=", "==", "===", "=>", "->", ":", "as" };
+        public string[] AssignSigns => new string[] { "=", "==", "===", "=>", "->", ":", "as", "is", "be", "of", "in" };
 
         public override bool Initialize(MiMFa.Engine.Engine engine)
         {
@@ -363,7 +363,7 @@ namespace MiMFa.Engine.DEAL.JS
                     {
                         walker.MoveToProcedure();
                         MoveToStartProcedure(ref walker);
-                        NormalSectionAssembleNode(walker);
+                        onFalse = NormalSectionAssembleNode(walker);
                     }
                     bool isnormal = onFalse == null || (
                         Engine.IsGlobalNeeder(onTrue) ||
@@ -373,9 +373,13 @@ namespace MiMFa.Engine.DEAL.JS
                         before.Is("{", "do", "begin", "end", "else") ||
                         before.Is(TokenType.TerminatorSymbol)
                     );
-                    if (isnormal) return node.Update(NodeType.ConditionStructure).AddRange(
-                          cond, Engine.CreateLineNode(onTrue), onFalse == null ? null : Engine.CreateLineNode(Engine.CreateNode("else", TokenType.Statement, NodeType.ConditionStructure, onFalse))
-                      );
+                    if (isnormal) 
+                        if(onFalse == null) return node.Update(NodeType.ConditionStructure).AddRange(
+                            cond, Engine.CreateLineNode(onTrue)
+                        );
+                        else return node.Update(NodeType.ConditionStructure).AddRange(
+                            cond, Engine.CreateLineNode(onTrue), Engine.CreateLineNode(Engine.CreateNode("else", TokenType.Statement, NodeType.ConditionStructure, onFalse))
+                         );
                     else return Engine.CreatePackNode(
                         cond.AddRange(Engine.CreateNode("?", TokenType.Symbol | TokenType.Middle, NodeType.Depend, Engine.TrimSeparators(onTrue), Engine.CreateNode(":", TokenType.Symbol | TokenType.Middle, NodeType.Depend, Engine.TrimSeparators(onFalse))))
                     );
@@ -516,7 +520,21 @@ namespace MiMFa.Engine.DEAL.JS
             var before = walker.PeekProcedure(-2);
             var next = walker.PeekProcedure();
 
-            if (Engine.IsSeparators(node))
+            if (node.Is("is"))
+            {
+                if (node.Count <= 0 && before?.Is(TokenType.Keyword) == true && next?.Is(TokenType.Keyword) == true)
+                {
+                    node.Token.Update(TokenType.Suffix, "."+node.Token.Value + next.Value);
+                    node.Type = NodeType.Append;
+                    return AssembleSuffixNode(node, walker.MoveToProcedure());
+                }
+                else
+                {
+                    node.Token.Value = "==";
+                    return base.AssembleSymbolNode(node, walker);
+                }
+            }
+            else if (Engine.IsSeparators(node))
             {
                 //if (
                 //    (Engine.IsConnectors(next) || Engine.IsComplementors(next) || Engine.IsMediators(next) || Engine.IsFinalizers(next)) &&
@@ -551,6 +569,8 @@ namespace MiMFa.Engine.DEAL.JS
                 node.Token.Update(TokenType.StringData, Newtonsoft.Json.JsonConvert.ToString(node.Token.Value));
                 return node.Update(NodeType.Chunk);
             }
+            else if (Engine.IsMediators(node) && Engine.IsSeparators(next))
+                return base.AssembleSymbolNode(node, walker.MoveToProcedure());
 
             //if (next?.Is(TokenType.Symbol) == true && !Engine.IsSeparators(next)  && !Engine.IsInitializers(next))
             //{
@@ -565,8 +585,8 @@ namespace MiMFa.Engine.DEAL.JS
             var next = walker.PeekProcedure();
             var next2 = walker.PeekProcedure(1);
 
-            bool isNamespaced = before?.Is(TokenType.ConcatenatorSymbol) == true;
-            
+            bool isNamespaced = before?.Is(TokenType.IdentifierKeyword, TokenType.NamespaceKeyword, TokenType.ConcatenatorSymbol) == true;
+
             string nvalue = isNamespaced? "" : node.ToString("");
 
             string fname = Engine?.GetFunctionName(nvalue);
@@ -575,6 +595,9 @@ namespace MiMFa.Engine.DEAL.JS
             string dcname = Engine?.GetDefinitionCommandName(nvalue);
             string acname = Engine?.GetActionCommandName(nvalue);
             fname = fname ?? fcname;
+
+            bool isDirect = node.Value.Contains(".");
+            bool isCommand = !isNamespaced && !string.IsNullOrWhiteSpace(fcname??dcname??acname);
 
             if (next?.Is(":") == true)
                 return new Node(node.Token.Update(TokenType.IdentifierKeyword), NodeType.DefineStructure);
@@ -589,6 +612,7 @@ namespace MiMFa.Engine.DEAL.JS
                     node.Add(AssembleNode(walker));
                     if (walker.PeekProcedure()?.Is("{") == true)
                         return node.Update(NodeType.DefineStructure).Add(AssembleNode(walker));
+                    else if (isCommand) node.Token.Value = acname ?? fname ?? node.Token.Value;
                     return node;
                 }
                 else if (before?.Is(TokenType.ConcatenatorSymbol) == true) return node;
@@ -610,7 +634,7 @@ namespace MiMFa.Engine.DEAL.JS
                                 NormalCompactAssembleNode(walker)
                             );
                     }
-                    else if (next?.Is(TokenType.Symbol) != true) node.Add(Engine.CreatePackNode(TrimmedSequenceAssembleNode(walker)));
+                    else if (next?.Is(TokenType.Symbol) != true && !isDirect) node.Add(Engine.CreatePackNode(TrimmedSequenceAssembleNode(walker)));
                 }
             }
             else if (before?.Is("class", "interface", "enum", "implements", "extends") != true)
@@ -619,7 +643,7 @@ namespace MiMFa.Engine.DEAL.JS
                 else
                 {
                     if(!isNamespaced) node.Token.Update(TokenType.IdentifierKeyword, fname ?? dcname ?? iname);
-                    
+
                     if (
                         !node.Is("this") &&
                         (
@@ -655,12 +679,17 @@ namespace MiMFa.Engine.DEAL.JS
                             NormalCompactAssembleNode(walker)
                         );
                         node.Token.Update(TokenType.NamespaceKeyword);
-                        if(before?.Is(TokenType.NamespaceKeyword) == true && before?.Count < 1)
+                        if (before?.Is(TokenType.NamespaceKeyword) == true && before?.Count < 1)
                             return AssembleKeywordNode(node, walker);
-                        else return node; 
+                        else return node;
                     }
-                    else if (fcname != null && (next == null || Engine.IsSeparators(next) || Engine.IsComplementors(next) || Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next)))
+                    if (fcname != null && (next == null || Engine.IsSeparators(next) || Engine.IsComplementors(next) || Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next))) 
                         return Engine.CreateCallFunctionNode(fcname);
+                    else if (
+                        !isDirect &&
+                        (before == null || before.Is(TokenType.TerminatorSymbol, TokenType.IdentifierKeyword, TokenType.NamespaceKeyword)) &&
+                        (next == null || next.Is(TokenType.TerminatorSymbol) || Engine.IsComplementors(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next))
+                    ) return node.Add(Engine.CreatePackNode());
                     else if (Engine.IsDelimiters(next))
                     {
                         if (

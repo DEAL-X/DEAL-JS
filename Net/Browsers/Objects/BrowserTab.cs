@@ -108,7 +108,7 @@ namespace MiMFa.Net.Browsers.Objects
             return new BrowserFileSystemFileHandle(Page, objectId);
         }
 
-        internal string ResolveAddress(string address) => _browser.Router == null ? address : _browser.Router.Resolve(address, Page.Url);
+        internal string ResolveAddress(string address) => _browser.Resource == null ? address : _browser.Resource.Normalize(address, Page.Url);
 
         private static string NormalizePickerOptions(string optionsJson)
         {

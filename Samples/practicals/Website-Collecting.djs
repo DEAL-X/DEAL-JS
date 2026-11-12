@@ -6,17 +6,17 @@
 Use deal/core;
 Use deal/web;
 
-Consider sources is [
+Consider sources be [
     "https://example.com/data.json",
     "https://example.org/data.json"
 ];
-Consider collection is [];
+Consider collection be [];
 
 For each address of sources,
     Try,
-        Consider response is await fetch(address, { headers: { "Accept": "application/json" } });
+        Consider response be await fetch(address, { headers: { "Accept": "application/json" } });
         If response.ok,
-            Consider record is await response.json();
+            Consider record be await response.json();
             Append collection, { source: address, data: record };
         Otherwise,
             Log warning "HTTP " + response.status + " from " + address;

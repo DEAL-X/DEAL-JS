@@ -190,7 +190,7 @@ namespace MiMFa.Net.Browsers.Sessions
         {
             await _driver.EnsureSessionAsync().ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(url)) url = "about:blank";
-            else if (_browser.Router != null) url = _browser.Router.Resolve(url);
+            else if (_browser.Resource != null) url = _browser.Resource.Normalize(url);
 
             JObject created = await _driver.SendAsync("browsingContext.create", new JObject
             {
@@ -224,7 +224,7 @@ namespace MiMFa.Net.Browsers.Sessions
         public override async Task<string> GoAsync(string address, int timeoutMilliseconds = 0)
         {
             if (string.IsNullOrWhiteSpace(address)) return await GoBackAsync().ConfigureAwait(false);
-            string url = _browser.Router == null ? address : _browser.Router.Resolve(address, CurrentPage?.Url);
+            string url = _browser.Resource == null ? address : _browser.Resource.Normalize(address, CurrentPage?.Url);
             if (CurrentPage == null)
                 return (await OpenAsync(url, timeoutMilliseconds).ConfigureAwait(false)).Url;
             return await CurrentPage.NavigateAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : _driver.Timeout).ConfigureAwait(false);
@@ -244,7 +244,7 @@ namespace MiMFa.Net.Browsers.Sessions
         public override async Task<string> SetLocationAsync(string address, bool addHistoryEntry)
         {
             if (CurrentPage == null) throw new InvalidOperationException("There is no current browser tab.");
-            string url = _browser.Router == null ? address : _browser.Router.Resolve(address, CurrentPage.Url);
+            string url = _browser.Resource == null ? address : _browser.Resource.Normalize(address, CurrentPage.Url);
             string operation = addHistoryEntry ? "pushState" : "replaceState";
             return await CurrentPage.EvaluateAsync("history." + operation + "(null, null, " +
                 Newtonsoft.Json.JsonConvert.ToString(url) + "); location.href").ConfigureAwait(false);

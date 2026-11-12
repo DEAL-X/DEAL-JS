@@ -12,7 +12,7 @@ using System.IO;
 
 namespace MiMFa.Engine.DEAL.JS
 {
-    public class Tokenizer : MiMFa.Engine.JavaScript.Tokenizer
+    public class Tokenizer : JavaScript.Tokenizer
     {
         public new Engine Engine { get; set; }
         public Dictionary<string, TokenType> Acceptors { get; set; } = new Dictionary<string, TokenType>();
@@ -294,12 +294,12 @@ namespace MiMFa.Engine.DEAL.JS
             path = Uri.UnescapeDataString(path);
             var compiler = this.Engine as MiMFa.Engine.Engine;
             if (compiler == null) return 0;
-            var resolved = (compiler as Engine)?.Router?.ResolveResource(path) ?? path;
+            var resolved = (compiler as Engine)?.Resource?.Normalize(path) ?? path;
             if (Uri.TryCreate(resolved, UriKind.Absolute, out var address) &&
                 (address.Scheme == Uri.UriSchemeHttp || address.Scheme == Uri.UriSchemeHttps))
                 return UseUrl(resolved, force);
-            if (address != null && address.IsFile) path = address.LocalPath;
-            var val = compiler?.Resource?.Resolve(path);
+            else if (address != null && address.IsFile) path = address.LocalPath;
+            var val = compiler?.Resource?.Normalize(path);
             if (!string.IsNullOrEmpty(val) && val.EndsWith("\\")) return UseFolder(val, force);
             int num;
             return (num = UseFile(val, force)) > 0 ? num : UseFolder(val, force);
@@ -308,11 +308,11 @@ namespace MiMFa.Engine.DEAL.JS
         {
             if (!Engine.Transfer.IsAlive) Engine.Transfer.Initial();
             Engine.Resource.CreateDirectory(Engine.Resource.TempDirectory);
-            var resolvedUrl = Engine.Router?.Resolve(url) ?? url;
+            var resolvedUrl = Engine.Resource?.Normalize(url) ?? url;
             var uri = new Uri(resolvedUrl, UriKind.Absolute);
             var extension = System.IO.Path.GetExtension(uri.AbsolutePath);
             if (!Regex.IsMatch(extension, @"^\.(deal|djs|js)$", RegexOptions.IgnoreCase)) extension = ".djs";
-            var path = Engine.Resource.Resolve(Engine.Resource.TempDirectory + resolvedUrl.GetHashCode() + extension);
+            var path = Engine.Resource.Normalize(Engine.Resource.TempDirectory + resolvedUrl.GetHashCode() + extension);
             if (!Engine.Resource.Exists(path))
             {
                 var resp = Engine.Transfer.Get(resolvedUrl);
@@ -354,7 +354,7 @@ namespace MiMFa.Engine.DEAL.JS
             int num = 0;
             if (!Regex.IsMatch(file, "\\.(deal|djs|js)$", RegexOptions.IgnoreCase))
                 return UseFile(file + ".js", force) + UseFile(file + ".djs", force) + UseFile(file + ".deal", force);
-            file = System.IO.Path.GetFullPath(file);
+            file = Engine.Resource.Normalize(file);
             try
             {
                 var compiler = this.Engine as MiMFa.Engine.Engine;

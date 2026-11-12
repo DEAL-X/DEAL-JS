@@ -7,7 +7,7 @@ This guide introduces DEAL.JS through executable DEAL source. The browser API fo
 ```deal
 Use deal/core;
 
-Consider values is [1, 2, 3];
+Consider values be [1, 2, 3];
 For each value of values,
     Print value;
 ```
@@ -37,11 +37,11 @@ The browser-facing convenience methods are synchronous. They complete the host o
 Use deal/core;
 Use deal/web;
 
-Consider tab is browser.open("https://example.com");
+Consider tab be browser.open("https://example.com");
 
-Consider title is browser.tab.window.document.title;
-Consider currentUrl is browser.tab.window.location.href;
-Consider online is browser.tab.window.navigator.onLine;
+Consider title be browser.tab.window.document.title;
+Consider currentUrl be browser.tab.window.location.href;
+Consider online be browser.tab.window.navigator.onLine;
 
 browser.tab.navigate("https://example.org/results");
 browser.tab.back();
@@ -89,28 +89,28 @@ The browser provider delegates common operations to a protocol-neutral browser s
 Browser properties return values, not .NET `Task` objects. This includes properties such as:
 
 ```deal
-Consider title is browser.tab.window.document.title;
-Consider url is browser.tab.window.location.href;
-Consider historyLength is browser.tab.window.history.length;
-Consider isOnline is browser.tab.window.navigator.onLine;
-Consider screenWidth is browser.tab.window.screen.width;
-Consider frameCount is browser.tab.windows.length;
-Consider tabs is browser.tabs;
+Consider title be browser.tab.window.document.title;
+Consider url be browser.tab.window.location.href;
+Consider historyLength be browser.tab.window.history.length;
+Consider isOnline be browser.tab.window.navigator.onLine;
+Consider screenWidth be browser.tab.window.screen.width;
+Consider frameCount be browser.tab.windows.length;
+Consider tabs be browser.tabs;
 ```
 
 The non-`Async` convenience methods are synchronous too:
 
 ```deal
-Consider tab is browser.open("https://example.com");
-Consider heading is browser.tab.window.document.querySelector("h1");
-Consider allHeadings is browser.tab.window.document.querySelectorAll("h1");
+Consider tab be browser.open("https://example.com");
+Consider heading be browser.tab.window.document.querySelector("h1");
+Consider allHeadings be browser.tab.window.document.querySelectorAll("h1");
 
-Consider stored is browser.tab.window.storage.local.getItem("sample");
+Consider stored be browser.tab.window.storage.local.getItem("sample");
 browser.tab.window.storage.local.setItem("sample", "value");
 
-Consider handles is browser.tab.open();
-Consider file is handles[0].getFile();
-Consider content is file.text();
+Consider handles be browser.tab.open();
+Consider file be handles[0].getFile();
+Consider content be file.text();
 ```
 
 The corresponding explicitly named `...Async()` methods remain asynchronous and return Tasks. Use them from JavaScript with `await` when asynchronous composition is desired. For example, `GetFileAsync()`, `ReadTextAsync()`, and `NavigateAsync()` remain awaitable; `GetFile()`, `Text()`, and `Navigate()` are synchronous convenience methods.
@@ -122,14 +122,14 @@ Synchronous calls that access the selected browser block the calling host thread
 Fetch remains asynchronous because it represents a network or file request:
 
 ```deal
-Consider response is await fetch("https://example.com/data", {
+Consider response be await fetch("https://example.com/data", {
     method: "GET",
     headers: { "Accept": "application/json" },
     timeout: 15000
 });
 
 If response.ok,
-    Consider data is await response.json();
+    Consider data be await response.json();
     Print data;
 Otherwise,
     Log error "Request failed with status " + response.status;
@@ -148,15 +148,15 @@ Browser navigation, Fetch, the legacy `Send` helper, and module resolution share
 ```deal
 browser.tab.load("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
 
-Consider response is await fetch("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
-Consider html is await response.text();
+Consider response be await fetch("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
+Consider html be await response.text();
 ```
 
 Configure the base directory from the .NET host when needed:
 
 ```csharp
-engine.Router.RootDirectory = @"D:\Projects\MyScraper";
-engine.Router.RootAddress = "https://example.com/app/";
+engine.Resource.CurrentDirectory = @"D:\Projects\MyScraper";
+engine.RootAddress = "https://example.com/app/";
 ```
 
 The selected browser loads local files through `file://` and applies its normal security restrictions. Host Fetch supports local-file `GET` and `HEAD` requests. Local file reads do not use HTTP cookies or HTTP request headers.
@@ -166,11 +166,11 @@ The selected browser loads local files through `file://` and applies its normal 
 The browser's native file pickers are exposed through `browser.tab.open()` and `browser.tab.save()` when supported by the selected browser and security context. Their non-`Async` forms return file handles synchronously:
 
 ```deal
-Consider handles is browser.tab.open();
-Consider selectedFile is handles[0].getFile();
-Consider selectedText is selectedFile.text();
+Consider handles be browser.tab.open();
+Consider selectedFile be handles[0].getFile();
+Consider selectedText be selectedFile.text();
 
-Consider saveHandle is browser.tab.save("{\"suggestedName\":\"deal-output.txt\"}");
+Consider saveHandle be browser.tab.save("{\"suggestedName\":\"deal-output.txt\"}");
 saveHandle.writeText("Created through DEAL.JS.");
 ```
 
@@ -197,12 +197,12 @@ Then load the module and convert values at .NET call boundaries:
 ~~~deal
 Use deal/make/object;
 
-Consider names is ["Ada", "Grace"];
-Consider namesArray is Make.arrayObject(names, "System.String");
-Consider namesList is Make.listObject(names, "System.String");
-Consider namesEnumerable is Make.iteratorObject(names, "System.String");
-Consider metadata is Make.dictionaryObject({ project: "DEAL.JS", active: true });
-Consider payload is Make.bytesObject("DEAL.JS");
+Consider names be ["Ada", "Grace"];
+Consider namesArray be Make.arrayObject(names, "System.String");
+Consider namesList be Make.listObject(names, "System.String");
+Consider namesEnumerable be Make.iteratorObject(names, "System.String");
+Consider metadata be Make.dictionaryObject({ project: "DEAL.JS", active: true });
+Consider payload be Make.bytesObject("DEAL.JS");
 ~~~
 
 Available converters include Make.objectObject, Make.valueObject, Make.arrayObject, Make.listObject, Make.iteratorObject, Make.enumerableObject, Make.dictionaryObject, Make.hashSetObject, Make.queueObject, Make.stackObject, Make.stringArrayObject, and Make.bytesObject.
@@ -211,7 +211,7 @@ The default object conversion recursively maps JavaScript arrays to System.Objec
 
 The file helpers use the converters internally: File.lines(values) and File.fields(values) write CLR string[] values, while File.contents and Local.write pass CLR byte[] values.
 
-For complete runnable examples, see Tutorial 04 (Samples/tutorials/04-DotNet-Interop.djs), the file-export practical (Samples/practicals/Clr-Interop-File-Export.djs), and the CLR interop smoke test (Samples/tests/runtime/Clr-Interop-Smoke-Test.js).
+For complete runnable examples, see [practical samples](Samples/practicals).
 
 ## 10. Sample directory
 
@@ -221,7 +221,7 @@ The samples are grouped by purpose:
 - [tutorials/](Samples/tutorials/) — descriptive, progressive DEAL.JS learning examples.
 - [practicals/](Samples/practicals/) — larger, realistic DEAL.JS workflows that can be adapted to real projects.
 
-Start with [01 - Getting Started](Samples/tutorials/01-Getting-Started.djs), then try [02 - Browser and Fetch](Samples/tutorials/02-Browser-and-Fetch.djs). For a complete scraping workflow, see [Web Scraper](Samples/practicals/Web-Scraper.djs).
+Lets start with [01 - Getting Started](Samples/tutorials/01-Getting-Started.djs).
 
 ## 10. Convert JavaScript values to .NET collections
 
@@ -240,11 +240,11 @@ Then load `deal/make` and use its converters:
 Use deal/core;
 Use deal/make;
 
-Consider lines is Make.arrayObject(["first", "second"], "System.String");
+Consider lines be Make.arrayObject(["first", "second"], "System.String");
 application.Engine.Resource.SetFileLines(path, lines, null);
 
 // A List<string> also implements IEnumerable<string>.
-Consider list is Make.listObject(["third", "fourth"], "System.String");
+Consider list be Make.listObject(["third", "fourth"], "System.String");
 application.Engine.Resource.SetFileLines(path, list, null);
 ```
 

@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using MiMFa.Net;
+using MiMFa.Core.Resources;
 
 namespace MiMFa.Net.Transfers
 {
@@ -30,7 +31,7 @@ namespace MiMFa.Net.Transfers
             _requests = new ConcurrentDictionary<string, CancellationTokenSource>();
 
         public Encoding Encoding = Encoding.UTF8;
-        public Router Router { get; set; }
+        public ResourceProvider Resource { get; set; }
 
         public bool IsAlive { get; private set; } = false;
         //public bool IsFetched => if data is fetched successfully;
@@ -162,7 +163,7 @@ namespace MiMFa.Net.Transfers
             if ((method == "GET" || method == "HEAD") && (data != null || bodyBase64 != null))
                 throw new InvalidOperationException("GET and HEAD requests cannot contain a body.");
 
-            if (Router != null) url = Router.Resolve(url);
+            if (Resource != null) url = Resource.Normalize(url);
             if (!Uri.TryCreate(url, UriKind.Absolute, out var requestUri))
                 throw new ArgumentException("The request address could not be resolved to an absolute URL.");
             if (requestUri.IsFile)

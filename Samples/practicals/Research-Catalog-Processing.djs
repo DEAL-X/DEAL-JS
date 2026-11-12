@@ -36,10 +36,10 @@ function reject(record, reason) {
 }
 
 for each raw of sourceRecords,
-    Consider id is normalizeText(raw.id);
-    Consider title is normalizeText(raw.title);
-    Consider priceText is normalizeText(raw.price);
-    Consider discount is Number(raw.discount);
+    Consider id be normalizeText(raw.id);
+    Consider title be normalizeText(raw.title);
+    Consider priceText be normalizeText(raw.price);
+    Consider discount be Number(raw.discount);
 
     If !id,
         reject(raw, "missing_identifier");
@@ -79,8 +79,8 @@ if (rejected.filter(item => item.reason === "duplicate_identifier").length !== 1
     rejected.filter(item => item.reason === "out_of_range_discount").length !== 1)
     throw new Error("The fixture rejection categories do not match the data contract.");
 
-Consider acceptedFile is File(application.Engine.Resource.Resolve("catalog-accepted.jsonl"), null, false);
-Consider rejectedFile is File(application.Engine.Resource.Resolve("catalog-rejected.jsonl"), null, false);
+Consider acceptedFile be File(application.Engine.Resource.Resolve("catalog-accepted.jsonl"), null, false);
+Consider rejectedFile be File(application.Engine.Resource.Resolve("catalog-rejected.jsonl"), null, false);
 
 acceptedFile.write(accepted.map(record => JSON.stringify(record)).join("\n"));
 rejectedFile.write(rejected.map(record => JSON.stringify(record)).join("\n"));

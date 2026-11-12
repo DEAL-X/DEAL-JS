@@ -6,19 +6,19 @@
 Use deal/core;
 Use deal/web;
 
-Consider urls is [
+Consider urls be [
     "https://example.com/",
     "https://example.org/"
 ];
-Consider results is [];
+Consider results be [];
 
 // Open one tab, then reuse it for each address.
-Consider tab is browser.open("about:blank");
+Consider tab be browser.open("about:blank");
 For each url of urls,
     Try,
         browser.tab.navigate(url);
-        Consider title is browser.tab.window.document.title;
-        Consider headings is browser.tab.window.document.querySelectorAll("h1, h2, h3");
+        Consider title be browser.tab.window.document.title;
+        Consider headings be browser.tab.window.document.querySelectorAll("h1, h2, h3");
         Append results, { url: browser.tab.url, title: title, headings: headings };
     Catch problem,
         Log warning "Could not scrape " + url + ": " + problem;

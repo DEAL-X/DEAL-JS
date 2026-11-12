@@ -2,11 +2,11 @@ using MiMFa.Net;
 using MiMFa.Net.Transfers;
 using MiMFa.Net.Browsers;
 using MiMFa.Engine.Model;
-using MiMFa.Engine.Resource;
 using MiMFa.Engine.Stage;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using MiMFa.Core.Resources;
 
 namespace MiMFa.Engine.JavaScript
 {
@@ -14,7 +14,6 @@ namespace MiMFa.Engine.JavaScript
     {
         public Dictionary<string, Token> Keywords { get; } = new Dictionary<string, Token>();
 
-        public Router Router { get; set; }
         public Transfer Transfer { get; set; }
         public Browser Browser { get; set; }
         public XmlQuery XmlQuery { get; } = new XmlQuery();
@@ -26,11 +25,10 @@ namespace MiMFa.Engine.JavaScript
                     new Parser(),
                     new Assembler(),
                     new Generator()
-                }, executeStage, options ?? new Options(), resourceProvider ?? new ResourceProvider())
+                }, executeStage, options ?? new Options(), resourceProvider ?? new UniversalResourceProvider())
         {
-            Router = new Router();
-            Transfer = new Transfer { Router = Router };
-            Browser = new Browser { Router = Router };
+            Transfer = new Transfer { Resource = Resource };
+            Browser = new Browser { Resource = Resource };
         }
         public override void Dispose()
         {

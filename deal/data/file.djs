@@ -3,6 +3,7 @@ use deal/make/string;
 use deal/make/collection;
 use deal/make/object;
 use deal/data/temporary;
+use deal/select/accept;
 
 
 // All resource related commands
@@ -11,43 +12,9 @@ command File (path = null, encoding = null, sequential = true) {
 	function _parseLine(line) {
 		try {
 			const value = JSON.parse(line);
-			if(value !== null && typeof value === "object" && !Array.isArray(value)) return value;
+			if(value !== null && (typeof value === "object" || Array.isArray(value))) return value;
 		} catch(error) {}
 		return line;
-	}
-
-	function _text(value) {
-		if(typeof value === "string") return value;
-		try { return JSON.stringify(value); }
-		catch(error) { return Make.string(value); }
-	}
-
-	function _isXPath(query) {
-		return typeof query === "string" && /^(?:\/|\.\/|\.\.\/|@|(?:count|boolean|contains|starts-with|string|number|not|normalize-space|name|local-name)\s*\()/i.test(query.trim());
-	}
-
-	function _matches(value, query) {
-		if(query === null || query === undefined) return true;
-		if(query instanceof RegExp) {
-			query.lastIndex = 0;
-			return query.test(_text(value));
-		}
-		if(typeof query === "string") {
-			if(_isXPath(query)) return application.Engine.XmlQuery.Matches(value, query);
-			return _text(value).includes(query);
-		}
-		if(typeof query === "object" && !Array.isArray(query)) {
-			for(const key of Object.keys(query)) {
-				if(value === null || typeof value !== "object" || !Object.prototype.hasOwnProperty.call(value, key) || !_matches(value[key], query[key]))
-					return false;
-			}
-			return true;
-		}
-		return value === query;
-	}
-
-	function _isTextQuery(query) {
-		return (typeof query === "string" && !_isXPath(query)) || query instanceof RegExp;
 	}
 
 	return {
@@ -102,41 +69,42 @@ command File (path = null, encoding = null, sequential = true) {
 			}
 			else application.Engine.Resource.Delete(this.path);
 		},
-		get contents () {
-			return application.Engine.Resource.GetFileContents(this.path);
-		},
-		set contents (contents) {
-			return application.Engine.Resource.SetFileContents(this.path, Make.byteArrayObject(contents));
-		},
 		get text () {
 			return application.Engine.Resource.GetFileText(this.path, this.encoding);
 		},
 		set text (text) {
 			return application.Engine.Resource.SetFileText(this.path, text, this.encoding);
 		},
+		get contents () {
+			return (function * () { for(const b of application.Engine.Resource.GetFileContents(this.path)) yield b; })();
+		},
+		set contents (contents) {
+			return application.Engine.Resource.SetFileContents(this.path, Make.byteArrayObject(contents));
+		},
+		get lines() {
+			return (function * () {
+				for(const line of application.Engine.Resource.GetFileLines(this.path, this.encoding)) yield line;
+			})();
+		},
+		set lines (values) {
+			return application.Engine.Resource.SetFileLines(this.path, Make.stringArrayObject(values.map(o => Make.string(o))), this.encoding);
+		},
+		get fields () {
+			return (function * () {
+				if(lines == null) return;
+				for(const line of application.Engine.Resource.GetFileLines(this.path, this.encoding)) yield _parseLine(line);
+			})();
+		},
+		set fields (values) {
+			return application.Engine.Resource.SetFileLines(this.path, Make.stringArrayObject(values.map(Make.string)), this.encoding);
+		},
 		line: function(index, object = null) {
 			if(object === null) return application.Engine.Resource.GetFileLine(this.path, index, this.encoding);
 			else return application.Engine.Resource.SetFileLine(this.path, index, Make.string(object), this.encoding);
 		},
-		lines: function (...values) {
-			if(values.length === 0) {
-				const lines = application.Engine.Resource.GetFileLines(this.path, this.encoding);
-				return (function * () {
-					if(lines == null) return;
-					for(const line of lines) yield line;
-				})();
-			}
-			return application.Engine.Resource.SetFileLines(this.path, Make.stringArrayObject(values.map(o => Make.string(o))), this.encoding);
-		},
-		fields: function (...values) {
-			if(values.length === 0) {
-				const lines = application.Engine.Resource.GetFileLines(this.path, this.encoding);
-				return (function * () {
-					if(lines == null) return;
-					for(const line of lines) yield _parseLine(line);
-				})();
-			}
-			return application.Engine.Resource.SetFileLines(this.path, Make.stringArrayObject(values.map(_text)), this.encoding);
+		field: function(index, object = null) {
+			if(object === null) return _parseLine(this.line(index));
+			else return this.line(index, object);
 		},
 		create: function (object = "") {
 			if(!application.Engine.Resource.Exists(this.path)) application.Engine.Resource.SetFileText(this.path, Make.string(object));
@@ -161,7 +129,8 @@ command File (path = null, encoding = null, sequential = true) {
 		},
 		// String and RegExp queries search raw lines. XPath and object graphs search parsed JSON objects.
 		find: function (query) {
-			return this.first(query);
+			for(const result of this.search(query)) return result;
+			return null;
 		},
 		first: function (query = null) {
 			for(const result of this.search(query)) return result;
@@ -173,7 +142,7 @@ command File (path = null, encoding = null, sequential = true) {
 			return result;
 		},
 		search: function * (query = null, foreward = true) {
-			const textQuery = _isTextQuery(query);
+			const textQuery = ((typeof query === "string" && !Accept.isXPath(query)) || query instanceof RegExp);
 			const lines = foreward ? this.lines() : Make.array(this.lines()).reverse();
 			for(const line of lines) {
 				if(query === null || query === undefined) {
@@ -181,7 +150,7 @@ command File (path = null, encoding = null, sequential = true) {
 					continue;
 				}
 				const value = textQuery ? line : _parseLine(line);
-				if(_matches(value, query)) yield value;
+				if(Accept(value, query)) yield value;
 			}
 		},
 		move: function (destination = null, overwrite = false) {
@@ -201,6 +170,7 @@ command File (path = null, encoding = null, sequential = true) {
 		},
 		entity: function () {
 			return application.Engine.Resource.Entity(this.path);
-		}
+		},
+		toString: ()=>this.text
 	};
 }

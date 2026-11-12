@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using MiMFa.Core.Resources;
 
 namespace MiMFa.Net.Browsers
 {
@@ -20,7 +21,7 @@ namespace MiMFa.Net.Browsers
         public BrowserDownloads Downloads { get; }
         public BrowserPermissions Permissions { get; }
         public BrowserRuntime Runtime { get; }
-        public Router Router { get; set; }
+        public ResourceProvider Resource { get; set; }
         public Process Process { get => Driver.Process; set => Driver.Process = value; }
         public string DriverPath { get => Driver.DriverPath; set => Driver.DriverPath = value; }
         public string Host { get => Driver.Host; set => Driver.Host = value; }

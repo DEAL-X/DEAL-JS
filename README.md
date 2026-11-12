@@ -189,10 +189,10 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
 #### Definition
 * To define constant or variables:
     ```ts
-    Consider const constant is procedure;
-    Consider var variable is equal procedure;
-    Consider let letVariable be procedure;
-    Consider directVariable equals procedure;
+    Consider const constant be procedure;
+    Consider var variable be equal procedure;
+    Consider let letVariable to be procedure;
+    Consider directVariable be equals to procedure;
     ```
     They will compile to:
     ```js
@@ -756,11 +756,11 @@ The Window proxy exposes `Document`, `Location`, `History`, `Navigator`, `Screen
 Browser properties return native values synchronously. The non-`Async` convenience methods are synchronous as well; explicitly named `...Async()` counterparts remain awaitable. DEAL source uses familiar lower-case browser-object spelling because ClearScript resolves the public PascalCase .NET members without regard to casing:
 
 ```ts
-Consider tab is browser open https://example.com/;
-Consider title is browser tab window document title;
+Consider tab be browser open https://example.com/;
+Consider title be browser tab window document title;
 
 browser tab window storage local setItem("key", "value");
-Consider value is browser tab window storage local getItem("key");
+Consider value be browser tab window storage local getItem("key");
 
 go https://example.org/;
 browser tab back();
@@ -785,8 +785,8 @@ The shared `Router` normalizes incomplete web addresses and resolves local paths
 ```javascript
 browser.tab.load("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
 
-Consider response is await fetch("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
-Consider html is await response.text();
+Consider response be await fetch("./Samples/tests/fixtures/Local-Page-Smoke-Test.html");
+Consider html be await response.text();
 ```
 
 The selected browser loads local files through `file://` and applies its normal security restrictions. Host Fetch supports local-file `GET` and `HEAD` requests, returns status `200`, an absolute `file://` response URL, an inferred content type, and the file bytes. Missing files reject the Fetch promise. Local file reads do not use HTTP cookies or HTTP request headers.
@@ -847,7 +847,7 @@ For example, this passes a real `.NET string[]` to the existing `SetFileLines(st
 Use deal/core;
 Use deal/make;
 
-Consider lines is Make.arrayObject(["first", "second"], "System.String");
+Consider lines be Make.arrayObject(["first", "second"], "System.String");
 application.Engine.Resource.SetFileLines(path, lines, null);
 ```
 
@@ -872,32 +872,31 @@ JavaScript arrays and plain objects are not automatically interchangeable with s
 
 The host must expose ClearScript's ExtendedHostFunctions once, under the global name host:
 
-~~~csharp
+```csharp
 using Microsoft.ClearScript;
 
 engine.AddHostObject("host", new ExtendedHostFunctions());
-~~~
+```
 
 Only expose ExtendedHostFunctions to scripts you trust: it enables script-side access to imported .NET types.
 
 Load the conversion module:
 
-~~~deal
+```deal
 Use deal/make/object;
-~~~
+```
 
 Common conversions:
 
-~~~deal
-Consider names is ["Ada", "Grace"];
-Consider clrArray is Make.arrayObject(names, "System.String");          // string[]
-Consider clrList is Make.listObject([1, 2, 3], "System.Int32");         // List<int>
-Consider clrEnumerable is Make.iteratorObject(names, "System.String"); // IEnumerable<string>
-Consider clrMap is Make.dictionaryObject({ name: "DEAL.JS" });          // Dictionary<string, object>
-Consider clrBytes is Make.bytesObject("Hello");                         // byte[]
-~~~
+```deal
+Consider names be ["Ada", "Grace"];
+Consider clrArray be Make.arrayObject(names, "System.String");          // string[]
+Consider clrList to be Make.listObject([1, 2, 3], "System.Int32");         // List<int>
+Consider clrEnumerable be Make.iteratorObject(names, "System.String"); // IEnumerable<string>
+Consider clrMap as Make.dictionaryObject({ name: "DEAL.JS" });          // Dictionary<string, object>
+Consider clrBytes be Make.bytesObject("Hello");                         // byte[]
+```
 
 Make.iteratorObject returns a typed List<T>, which implements IEnumerable<T>; it is a materialized collection, not a lazy iterator. Make.objectObject(value, "Namespace.Type", memberTypes) can populate a .NET type with a parameterless constructor and writable properties; memberTypes optionally maps property names to CLR type names for nested typed members. Without a target type, nested JavaScript arrays and plain objects are recursively converted to CLR arrays and dictionaries.
 
-The File.lines(...), File.fields(...), File.contents, and Local.write(...) helpers use these conversions internally. See the .NET interop tutorial (Samples/tutorials/04-DotNet-Interop.djs), the file-export practical (Samples/practicals/Clr-Interop-File-Export.djs), and the runtime smoke test (Samples/tests/runtime/Clr-Interop-Smoke-Test.js).
-For the recommended learning path, begin with [01 - Getting Started](Samples/tutorials/01-Getting-Started.djs), continue with [02 - Browser and Fetch](Samples/tutorials/02-Browser-and-Fetch.djs), then study [04 - CLR Object Interop](Samples/tutorials/04-CLR-Object-Interop.djs). For a complete data workflow, see [Research Catalog Processing](Samples/practicals/Research-Catalog-Processing.djs).
+The File.lines(...), File.fields(...), File.contents, and Local.write(...) helpers use these conversions internally.

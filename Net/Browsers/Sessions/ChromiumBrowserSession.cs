@@ -325,7 +325,7 @@ namespace MiMFa.Net.Browsers.Sessions
         public override async Task<string> GoAsync(string address, int timeoutMilliseconds = 0)
         {
             if (string.IsNullOrWhiteSpace(address)) return await GoBackAsync().ConfigureAwait(false);
-            string url = _browser.Router == null ? address : _browser.Router.Resolve(address, CurrentPage?.Url);
+            string url = _browser.Resource == null ? address : _browser.Resource.Normalize(address, CurrentPage?.Url);
             if (CurrentPage == null)
             {
                 var page = await LoadAsync(url, timeoutMilliseconds > 0 ? timeoutMilliseconds : _driver.Timeout).ConfigureAwait(false);
@@ -347,7 +347,7 @@ namespace MiMFa.Net.Browsers.Sessions
         public override async Task<string> SetLocationAsync(string address, bool addHistoryEntry)
         {
             if (CurrentPage == null) throw new InvalidOperationException("There is no current browser tab.");
-            string url = _browser.Router == null ? address : _browser.Router.Resolve(address, CurrentPage.Url);
+            string url = _browser.Resource == null ? address : _browser.Resource.Normalize(address, CurrentPage.Url);
             string operation = addHistoryEntry ? "pushState" : "replaceState";
             return await CurrentPage.EvaluateAsync("history." + operation + "(null, null, " + Newtonsoft.Json.JsonConvert.ToString(url) + "); location.href").ConfigureAwait(false);
         }
@@ -362,7 +362,7 @@ namespace MiMFa.Net.Browsers.Sessions
         public override async Task<BrowserPage> LoadAsync(string url, int timeoutMilliseconds = 0)
         {
             if (string.IsNullOrWhiteSpace(url)) url = "about:blank";
-            else if (_browser.Router != null) url = _browser.Router.Resolve(url);
+            else if (_browser.Resource != null) url = _browser.Resource.Normalize(url);
             if (timeoutMilliseconds <= 0) timeoutMilliseconds = _driver.Timeout;
             await EnsureAvailableAsync(timeoutMilliseconds).ConfigureAwait(false);
             await EnsureBrowserConnectionAsync().ConfigureAwait(false);

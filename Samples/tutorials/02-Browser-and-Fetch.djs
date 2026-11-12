@@ -7,12 +7,12 @@ Use deal/core;
 Use deal/web;
 
 // Open returns a BrowserTab immediately.
-Consider tab is browser open https://example.com/;
+Consider tab be browser open https://example.com/;
 
 // Browser properties are ordinary synchronous values.
-Consider pageTitle is browser.tab.window.document.title;
-Consider pageUrl is browser.tab.window.location.href;
-Consider firstHeading is browser.tab.window.document.querySelector("h1");
+Consider pageTitle be browser.tab.window.document.title;
+Consider pageUrl be browser.tab.window.location.href;
+Consider firstHeading be browser.tab.window.document.querySelector("h1");
 
 // Normal browser actions also have synchronous convenience methods.
 browser.tab.navigate("https://example.org/");
@@ -22,7 +22,7 @@ browser.tab.back();
 Fetch https://example.com/,
 Then
     If argument.ok,
-        Consider html is argument.text();
+        Consider html be argument.text();
         Print html;
 Otherwise
     Log error "The request failed with status " + response.status;

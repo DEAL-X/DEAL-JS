@@ -26,7 +26,7 @@ Load http://google.com/search?q=${query};
 			For each item of normalFile fields, If:
 				* The item description is not empty
 				* And (item description length > 20 or !item description match /\b\d{4}—\s*$/)
-				* And !finalRecords find { title: item title },
+				* And !finalRecords find ({ title: item title }),
 				finalRecords append the item;
 			Log subject "The process is ended";
 		End;

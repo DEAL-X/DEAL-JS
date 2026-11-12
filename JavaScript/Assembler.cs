@@ -13,7 +13,6 @@ namespace MiMFa.Engine.JavaScript
     public class Assembler : MiMFa.Engine.Assembler.Assembler
     {
         public int Location { get; set; } = 0;
-        public Node LastNode { get; set; } = null;
         public NodeWalker Assembled { get; set; } = null;
 
         private Stack<int> ConditionExpr = new Stack<int>();
@@ -305,7 +304,10 @@ namespace MiMFa.Engine.JavaScript
                     if (n != null && !n.Is(NodeType.None))
                     {
                         n = noBreak ? n.Update(n.Type & ~NodeType.Region & ~NodeType.Line) : n;
-                        if (!(Engine as Engine).IsSeparators(n) && n.Is(NodeType.Append))
+                        if ((Engine as Engine).IsSeparators(n))
+                            if(node.ForceLast.Is(NodeType.BlockStructure)) node.Add(n);
+                            else node.ForceLast.Add(n);
+                        else if(n.Is(NodeType.Append))
                             node.ForceLast.Add(n);
                         else node.Add(n);
                     }
