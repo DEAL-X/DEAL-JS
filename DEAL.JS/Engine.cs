@@ -38,34 +38,47 @@ namespace MiMFa.Engine.DEAL.JS
 
         public virtual bool SetActionCommand(Node node)
         {
-            return ActionCommands.TryAdd(node.Token.Value.ToLower(), node.Update(node.Token.Clone(null, node.Token.Value + "()")));
+            string[] names = node.Token.Value.Split('.');
+            List<KeyValuePair<string, string>> list = new List<KeyValuePair<string, string>>();
+            for (int i = 0; i < names.Length; i++)
+                if (i == names.Length - 1) list.Add(new KeyValuePair<string, string>(names[i].ToLower(), names[i] + "()"));
+                else list.Add(new KeyValuePair<string, string>(names[i].ToLower(), names[i]));
+            return ActionCommands.Set(node.Token.Type, node.Location, list.ToArray());
         }
-        public virtual Keywords GetActionCommand(string name)
+        public virtual Keywords GetActionCommand(params string[] namesHierarchy)
         {
-            return ActionCommands.Find(name.ToLower());
+            return ActionCommands.Get(namesHierarchy.Select(n=>n.ToLower()).ToArray());
         }
 
         public virtual bool SetFunctionCommand(Node node)
         {
-            return FunctionCommands.TryAdd(node.Token.Value.ToLower(), node);
+            string[] names = node.Token.Value.Split('.');
+            List<KeyValuePair<string, string>> list = new List<KeyValuePair<string, string>>();
+            for (int i = 0; i < names.Length; i++)
+                list.Add(new KeyValuePair<string, string>(names[i].ToLower(), names[i]));
+            return FunctionCommands.Set(node.Token.Type, node.Location, list.ToArray());
         }
-        public virtual Keywords GetFunctionCommand(string name)
+        public virtual Keywords GetFunctionCommand(params string[] namesHierarchy)
         {
-            return FunctionCommands.Find(name.ToLower());
+            return FunctionCommands.Get(namesHierarchy.Select(n => n.ToLower()).ToArray());
         }
 
         public virtual bool SetDefinitionCommand(Node node)
         {
-            return DefinitionCommands.TryAdd(node.Token.Value.ToLower(), node);
+            string[] names = node.Token.Value.Split('.');
+            List<KeyValuePair<string, string>> list = new List<KeyValuePair<string, string>>();
+            for (int i = 0; i < names.Length; i++)
+                list.Add(new KeyValuePair<string, string>(names[i].ToLower(), names[i]));
+            return DefinitionCommands.Set(node.Token.Type, node.Location, list.ToArray());
         }
-        public virtual Keywords GetDefinitionCommand(string name)
+        public virtual Keywords GetDefinitionCommand(params string[] namesHierarchy)
         {
-            return DefinitionCommands.Find(name.ToLower());
+            return DefinitionCommands.Get(namesHierarchy.Select(n => n.ToLower()).ToArray());
         }
 
         public virtual Keywords GetFunction(string name)
         {
-            if (Keywords.ContainsKey(name) && (Keywords[name].Type & TokenType.FunctionKeyword) > 0)
+            if (Keywords.ContainsKey(name) && ((Keywords[name].Type & TokenType.FunctionKeyword) == TokenType.FunctionKeyword))
                 return Keywords[name];
             return null;
         }

@@ -313,7 +313,7 @@ namespace MiMFa.Engine.DEAL.JS
                         );
                     var fname = walker.WalkProcedure();
                     fname.Token.Type = TokenType.FunctionKeyword;
-                    Engine?.Keywords.TryAdd(fname);
+                    Engine?.Keywords.Set(fname);
                     return node.Update(NodeType.DefineStructure | NodeType.Region | NodeType.Line | NodeType.Prepend).AddRange(
                         fname.Add(AssembleNode(walker)),
                         fname.Last.Count > 1 && walker.PeekProcedure()?.Is("=>") != true ? null :
@@ -593,7 +593,7 @@ namespace MiMFa.Engine.DEAL.JS
             string nvalue = isNamespaced? "" : node.ToString("");
 
             var fKeyword = Engine?.GetFunction(nvalue);
-            var iKeyword = fKeyword != null ? null : Engine?.Keywords.Find(nvalue);
+            var iKeyword = fKeyword != null ? null : Engine?.Keywords.Get(nvalue);
             var fcKeyword = Engine?.GetFunctionCommand(nvalue);
             var dcKeyword = Engine?.GetDefinitionCommand(nvalue);
             var acKeyword = Engine?.GetActionCommand(nvalue);
@@ -686,13 +686,17 @@ namespace MiMFa.Engine.DEAL.JS
                             return AssembleKeywordNode(node, walker);
                         else return node;
                     }
-                    if (fcKeyword != null && (next == null || Engine.IsSeparators(next) || Engine.IsComplementors(next) || Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next))) 
+                    if (
+                        fcKeyword != null &&
+                        (next == null || Engine.IsSeparators(next) || Engine.IsComplementors(next) || Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next))
+                    ) 
                         return Engine.CreateCallFunctionNode(fcKeyword.Name);
-                    else if (
-                        !isDirect &&
-                        (before == null || before.Is(TokenType.TerminatorSymbol, TokenType.IdentifierKeyword, TokenType.NamespaceKeyword)) &&
-                        (next == null || next.Is(TokenType.TerminatorSymbol) || Engine.IsComplementors(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next))
-                    ) return node.Add(Engine.CreatePackNode());
+                    //else if (
+                    //    !isDirect && isCommand &&
+                    //    (before == null || before.Is(TokenType.TerminatorSymbol, TokenType.IdentifierKeyword, TokenType.NamespaceKeyword)) &&
+                    //    (next == null || next.Is(TokenType.TerminatorSymbol) || Engine.IsComplementors(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next))
+                    //) 
+                    //    return Engine.CreateCallFunctionNode(fcKeyword.Name);
                     else if (Engine.IsDelimiters(next))
                     {
                         if (

@@ -158,7 +158,7 @@ namespace MiMFa.Engine.JavaScript
                     if (fname != null && fname.Is(TokenType.Keyword))
                     {
                         fname.Token.Type = TokenType.FunctionKeyword;
-                        (Engine as Engine).Keywords.TryAdd(fname);
+                        (Engine as Engine).Keywords.Set(fname);
                         walker.Replace(fname);
                     }
                     return node.AddRange(CompactAssembleNode(walker));
@@ -222,7 +222,15 @@ namespace MiMFa.Engine.JavaScript
                 case "var":
                 case "let":
                 case "const":
-                    return node.Add(CompactAssembleNode(walker));
+                    var vn = CompactAssembleNode(walker);
+                    void addidentifier(Node n){
+                        if (n.Count > 0)
+                            foreach (var item in n.Children)
+                                addidentifier(item);
+                        else if (n.Is(TokenType.Keyword)) (Engine as Engine).Keywords.Set(n);
+                    }
+                    addidentifier(vn.ForceFirst);
+                    return node.Add(vn);
 
                 case "debugger":
                     return node.Add(SectionAssembleNode(walker));
@@ -273,7 +281,7 @@ namespace MiMFa.Engine.JavaScript
                     if (cname != null && cname.Is(TokenType.Keyword))
                     {
                         cname.Token.Type = TokenType.IdentifierKeyword;
-                        (Engine as Engine).Keywords.TryAdd(cname);
+                        (Engine as Engine).Keywords.Set(cname);
                         walker.Replace(cname);
                     }
                     return node.AddRange(AssembleNode(walker), AssembleNode(walker));
