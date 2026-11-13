@@ -273,17 +273,6 @@ namespace MiMFa.Engine.DEAL.JS
                     }
                     yield return new Node(token, NodeType.CallStructure | NodeType.Line);
                     yield break;
-                case "keys":
-                case "values":
-                    keywords = ExtractKeywordToken(token, walker);
-                    if (keywords.Count > 0)
-                    {
-                        foreach (var item in keywords)
-                            yield return item;
-                        yield break;
-                    }
-                    yield return new Node(token, NodeType.CallStructure | NodeType.Line);
-                    yield break;
 
                 default:
                     break;

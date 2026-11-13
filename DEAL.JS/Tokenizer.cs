@@ -203,8 +203,6 @@ namespace MiMFa.Engine.DEAL.JS
                         case "order":
                         case "distinct":
                         case "limit":
-                        case "keys":
-                        case "values":
                             ReservesScrubber(word);
                             walker.Move(word.Length);
                             return GetAcceptedToken(TokenType.Suffix, word, location);

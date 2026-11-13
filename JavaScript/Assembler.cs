@@ -157,7 +157,8 @@ namespace MiMFa.Engine.JavaScript
                     }
                     if (fname != null && fname.Is(TokenType.Keyword))
                     {
-                        (Engine as Engine).SetKeyword(fname.Token.Update(TokenType.FunctionKeyword));
+                        fname.Token.Type = TokenType.FunctionKeyword;
+                        (Engine as Engine).Keywords.TryAdd(fname);
                         walker.Replace(fname);
                     }
                     return node.AddRange(CompactAssembleNode(walker));
@@ -271,7 +272,8 @@ namespace MiMFa.Engine.JavaScript
                     var cname = walker.PeekProcedure();
                     if (cname != null && cname.Is(TokenType.Keyword))
                     {
-                        (Engine as Engine).SetKeyword(cname.Token.Update(TokenType.IdentifierKeyword));
+                        cname.Token.Type = TokenType.IdentifierKeyword;
+                        (Engine as Engine).Keywords.TryAdd(cname);
                         walker.Replace(cname);
                     }
                     return node.AddRange(AssembleNode(walker), AssembleNode(walker));

@@ -1,5 +1,6 @@
 ﻿using MiMFa.Core.Resources;
 using MiMFa.Engine.Core;
+using MiMFa.Engine.JavaScript;
 using MiMFa.Engine.Model;
 using MiMFa.Engine.Put;
 using MiMFa.Engine.Stage;
@@ -11,9 +12,9 @@ namespace MiMFa.Engine.DEAL.JS
 {
     public class Engine : JavaScript.Engine
     {
-        public Dictionary<string, string> ActionCommands { get; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        public Dictionary<string, string> FunctionCommands { get; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        public Dictionary<string, string> DefinitionCommands { get; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        public Keywords ActionCommands { get; } = new Keywords("", TokenType.Unknown, -1);
+        public Keywords FunctionCommands { get; } = new Keywords("", TokenType.Unknown, -1);
+        public Keywords DefinitionCommands { get; } = new Keywords("", TokenType.Unknown, -1);
 
         public Dictionary<string, string> Reserves { get; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -35,89 +36,44 @@ namespace MiMFa.Engine.DEAL.JS
             return base.Compile(input);
         }
 
-        public virtual Node SetActionCommand(string name, Node node)
+        public virtual bool SetActionCommand(Node node)
         {
-            ActionCommands[name.ToLower()] = name + "()";
-            return SetKeyword(name, node);
+            return ActionCommands.TryAdd(node.Token.Value.ToLower(), node.Update(node.Token.Clone(null, node.Token.Value + "()")));
         }
-        public virtual Token SetActionCommand(Token token)
+        public virtual Keywords GetActionCommand(string name)
         {
-            ActionCommands[token.Value.ToLower()] = token.Value + "()";
-            return SetKeyword(token);
-        }
-        public virtual Token GetActionCommand(string name)
-        {
-            ActionCommands.TryGetValue(name.ToLower(), out string v);
-            return GetKeyword(v);
-        }
-        public virtual string GetActionCommandName(string name)
-        {
-            ActionCommands.TryGetValue(name.ToLower(), out string label);
-            return label;
+            return ActionCommands.Find(name.ToLower());
         }
 
-        public virtual Node SetFunctionCommand(string name, Node node)
+        public virtual bool SetFunctionCommand(Node node)
         {
-            FunctionCommands[name.ToLower()] = name;
-            return SetKeyword(name, node);
+            return FunctionCommands.TryAdd(node.Token.Value.ToLower(), node);
         }
-        public virtual Token SetFunctionCommand(Token token)
+        public virtual Keywords GetFunctionCommand(string name)
         {
-            FunctionCommands[token.Value.ToLower()] = token.Value;
-            return SetKeyword(token);
-        }
-        public virtual Token GetFunctionCommand(string name)
-        {
-            FunctionCommands.TryGetValue(name.ToLower(), out string v);
-            return GetKeyword(v);
-        }
-        public virtual string GetFunctionCommandName(string name)
-        {
-            FunctionCommands.TryGetValue(name.ToLower(), out string v);
-            return v;
+            return FunctionCommands.Find(name.ToLower());
         }
 
-        public virtual Node SetDefinitionCommand(string name, Node node)
+        public virtual bool SetDefinitionCommand(Node node)
         {
-            DefinitionCommands[name.ToLower()] = name;
-            return SetKeyword(name, node);
+            return DefinitionCommands.TryAdd(node.Token.Value.ToLower(), node);
         }
-        public virtual Token SetDefinitionCommand(Token token)
+        public virtual Keywords GetDefinitionCommand(string name)
         {
-            DefinitionCommands[token.Value.ToLower()] = token.Value;
-            return SetKeyword(token);
-        }
-        public virtual Token GetDefinitionCommand(string name)
-        {
-            DefinitionCommands.TryGetValue(name.ToLower(), out string v);
-            return GetKeyword(v);
-        }
-        public virtual string GetDefinitionCommandName(string name)
-        {
-            DefinitionCommands.TryGetValue(name.ToLower(), out string v);
-            return v;
+            return DefinitionCommands.Find(name.ToLower());
         }
 
-        public virtual Token GetCommand(string name)
+        public virtual Keywords GetFunction(string name)
         {
-            return GetFunctionCommand(name) ?? GetDefinitionCommand(name) ?? GetActionCommand(name);
-        }
-        public virtual string GetCommandName(string name)
-        {
-            return GetFunctionCommandName(name) ?? GetDefinitionCommandName(name) ?? GetActionCommandName(name);
-        }
-
-        public virtual string GetFunctionName(string name)
-        {
-            if (Keywords.ContainsKey(name) && Keywords[name]?.Is(TokenType.FunctionKeyword) == true)
-                return name;
+            if (Keywords.ContainsKey(name) && (Keywords[name].Type & TokenType.FunctionKeyword) > 0)
+                return Keywords[name];
             return null;
         }
 
 
         public virtual bool IsGlobalNeeder(Node node) => node != null && node.Has(n => n.Token.Is("return", "yield", "{", "do", "begin", "end"));
         public virtual bool IsAcceptors(Node node) => IsAcceptors(node?.Token);
-        public virtual bool IsAcceptors(Token token) => token != null && (token.Is(TokenType.FunctionKeyword) || (GetFunctionName(token.Value) ?? GetFunctionCommandName(token.Value) ?? null) != null);
+        public virtual bool IsAcceptors(Token token) => token != null && (token.Is(TokenType.FunctionKeyword) || (GetFunction(token.Value) ?? GetFunctionCommand(token.Value) ?? null) != null);
 
 
         public virtual Node TrimSeparators(Node node)

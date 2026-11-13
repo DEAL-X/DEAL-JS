@@ -12,7 +12,7 @@ namespace MiMFa.Engine.JavaScript
 {
     public class Engine : MiMFa.Engine.Engine
     {
-        public Dictionary<string, Token> Keywords { get; } = new Dictionary<string, Token>();
+        public Keywords Keywords { get; } = new Keywords("", TokenType.Unknown, -1);
 
         public Transfer Transfer { get; set; }
         public Browser Browser { get; set; }
@@ -35,30 +35,6 @@ namespace MiMFa.Engine.JavaScript
             Browser?.Final();
             Transfer?.Final();
             base.Dispose();
-        }
-
-        public virtual Node SetKeyword(string name, Node node)
-        {
-            if (name == null) return null;
-            Keywords[name] = node.Token;
-            return node;
-        }
-        public virtual Token SetKeyword(Token token)
-        {
-            if (token == null) return null;
-            Keywords[token.Value] = token;
-            return token;
-        }
-        public virtual string GetKeywordName(string name)
-        {
-            if (Keywords.ContainsKey(name)) return name;
-            return null;
-        }
-        public virtual Token GetKeyword(Token token) => GetKeyword(token.Value);
-        public virtual Token GetKeyword(string name)
-        {
-            if(Keywords.ContainsKey(name)) return Keywords[name];
-            return null;
         }
 
         public virtual bool IsIndependent(Node node) => !node.Is(NodeType.BlockStructure, NodeType.CallStructure, NodeType.DefineStructure) && node.Is(NodeType.Program, NodeType.Structure, NodeType.Independ);

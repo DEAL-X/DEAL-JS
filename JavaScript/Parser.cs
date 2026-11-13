@@ -13,7 +13,7 @@ namespace MiMFa.Engine.JavaScript
             var before = walker.PeekProcedure(-2);
             var next = walker.PeekProcedure();
             if (
-                (Engine as Engine).GetKeyword(token) != null ||
+                (Engine as Engine).Keywords.Find(token.Value) != null ||
                 (
                     before != null &&
                     (
@@ -228,11 +228,7 @@ namespace MiMFa.Engine.JavaScript
             else if (token.Is(":")) yield return new Node(token, NodeType.Prepend | NodeType.Append);
             else if (token.Is("!")) yield return new Node(token, NodeType.Prepend);
             else if (token.Is("=>", "?", "??")) yield return new Node(token, NodeType.Depend);
-            else if (token.Is("="))
-            {
-                (Engine as Engine).SetKeyword(walker.PeekProcedure(-2));
-                yield return new Node(token, NodeType.Depend);
-            }
+            else if (token.Is("=")) yield return new Node(token, NodeType.Depend);
             else if (token.Is(TokenType.Start)) yield return new Node(token, NodeType.Prepend);
             else if (token.Is(TokenType.Prefix)) yield return new Node(token, NodeType.Prepend);
             else if (token.Is(TokenType.Middle)) yield return new Node(token, NodeType.Depend);
