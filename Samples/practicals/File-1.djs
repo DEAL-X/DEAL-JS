@@ -3,7 +3,7 @@
 
 Use deal/core;
 Use deal/data/file;
-Use environment;
+Use console;
 
 Consider myCart be file temporary path "file-1-sample.txt";
 myCart append {Item:"Snakes", Count:2, Price:2, Brand:"Guau"};

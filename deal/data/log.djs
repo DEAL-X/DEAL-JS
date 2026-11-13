@@ -1,6 +1,4 @@
-﻿use environment/console;
-
-command Log = {};
+﻿command Log = {};
 
 Log.path = application.Engine.Resource.TempDirectory+"logs.log";
 Log.separator = " ";
