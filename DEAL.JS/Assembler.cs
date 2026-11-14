@@ -651,8 +651,8 @@ namespace MiMFa.Engine.DEAL.JS
             int commandLength = System.Math.Max(functionCommandLength, System.Math.Max(definitionCommandLength, actionCommandLength));
             if (commandLength > 0)
             {
-                if (functionCommandLength == commandLength && fcKeyword != null) { dcKeyword = null; acKeyword = null; }
-                else if (actionCommandLength == commandLength && acKeyword != null) { fcKeyword = null; dcKeyword = null; }
+                if (actionCommandLength == commandLength && acKeyword != null) { fcKeyword = null; dcKeyword = null; }
+                else if (functionCommandLength == commandLength && fcKeyword != null) { dcKeyword = null; acKeyword = null; }
                 else if (definitionCommandLength == commandLength && dcKeyword != null) { fcKeyword = null; acKeyword = null; }
                 for (int index = 0; index < commandLength; index++) walker.MoveToProcedure();
                 next = walker.PeekProcedure();
