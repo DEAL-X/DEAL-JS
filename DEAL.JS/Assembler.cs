@@ -602,7 +602,7 @@ namespace MiMFa.Engine.DEAL.JS
                 if (next == null) return;
                 step++;
             }
-            if (!next.Is(TokenType.Keyword, TokenType.IdentifierKeyword, TokenType.FunctionKeyword)) return;
+            if (!next.Is(TokenType.Keyword, TokenType.IdentifierKeyword, TokenType.FunctionKeyword, TokenType.NamespaceKeyword)) return;
 
             var child = keyboard.Get(next.Value.ToLower());
             if (child == null) return;
