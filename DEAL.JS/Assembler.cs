@@ -582,25 +582,97 @@ namespace MiMFa.Engine.DEAL.JS
             //}
             return base.AssembleSymbolNode(node, walker);
         }
+        private void FindHierarchicalCommandItem(
+            MiMFa.Engine.JavaScript.Keywords keyboard,
+            NodeWalker walker,
+            int offset,
+            ref MiMFa.Engine.JavaScript.Keywords result,
+            ref int consumed
+        )
+        {
+            if (keyboard == null || keyboard.Count == 0) return;
+
+            var next = walker.PeekProcedure(offset);
+            if (next == null) return;
+
+            int step = 1;
+            if (next.Is(TokenType.ConcatenatorSymbol))
+            {
+                next = walker.PeekProcedure(offset + 1);
+                if (next == null) return;
+                step++;
+            }
+            if (!next.Is(TokenType.Keyword, TokenType.IdentifierKeyword, TokenType.FunctionKeyword, TokenType.NamespaceKeyword)) return;
+
+            var child = keyboard.Get(next.Value.ToLower());
+            if (child == null) return;
+
+            consumed = offset + step;
+            result = child;
+            FindHierarchicalCommandItem(child, walker, offset + step, ref result, ref consumed);
+        }
+
+        private MiMFa.Engine.JavaScript.Keywords FindHierarchicalCommand(
+            MiMFa.Engine.JavaScript.Keywords keyboard,
+            string name,
+            NodeWalker walker,
+            out int consumed
+        )
+        {
+            consumed = 0;
+            if (keyboard == null || string.IsNullOrWhiteSpace(name)) return null;
+
+            var names = name.Split(new[] { '.' }, System.StringSplitOptions.RemoveEmptyEntries)
+                .Select(value => value.ToLower())
+                .ToArray();
+            var current = keyboard.Get(names);
+            if (current == null) return null;
+
+            var result = current;
+            FindHierarchicalCommandItem(current, walker, 0, ref result, ref consumed);
+            return result;
+        }
+
         protected override Node AssembleKeywordNode(Node node, NodeWalker walker)
         {
             var before = walker.PeekProcedure(-2);
             var next = walker.PeekProcedure();
             var next2 = walker.PeekProcedure(1);
-
             bool isNamespaced = before?.Is(TokenType.IdentifierKeyword, TokenType.NamespaceKeyword, TokenType.ConcatenatorSymbol) == true;
-
-            string nvalue = isNamespaced? "" : node.ToString("");
+            string nvalue = isNamespaced ? "" : node.ToString("");
 
             var fKeyword = Engine?.GetFunction(nvalue);
             var iKeyword = fKeyword != null ? null : Engine?.Keywords.Get(nvalue);
-            var fcKeyword = Engine?.GetFunctionCommand(nvalue);
-            var dcKeyword = Engine?.GetDefinitionCommand(nvalue);
-            var acKeyword = Engine?.GetActionCommand(nvalue);
-            fKeyword = fKeyword ?? fcKeyword;
+            int functionCommandLength, definitionCommandLength, actionCommandLength;
+            var fcKeyword = FindHierarchicalCommand(Engine?.FunctionCommands, nvalue, walker, out functionCommandLength);
+            var dcKeyword = FindHierarchicalCommand(Engine?.DefinitionCommands, nvalue, walker, out definitionCommandLength);
+            var acKeyword = FindHierarchicalCommand(Engine?.ActionCommands, nvalue, walker, out actionCommandLength);
 
+            int commandLength = System.Math.Max(functionCommandLength, System.Math.Max(definitionCommandLength, actionCommandLength));
+            if (commandLength > 0)
+            {
+                if (actionCommandLength == commandLength && acKeyword != null) { fcKeyword = null; dcKeyword = null; }
+                else if (functionCommandLength == commandLength && fcKeyword != null) { dcKeyword = null; acKeyword = null; }
+                else if (definitionCommandLength == commandLength && dcKeyword != null) { fcKeyword = null; acKeyword = null; }
+                for (int index = 0; index < commandLength; index++) walker.MoveToProcedure();
+                next = walker.PeekProcedure();
+                next2 = walker.PeekProcedure(1);
+            }
+
+            fKeyword = fKeyword ?? fcKeyword;
             bool isDirect = node.Value.Contains(".");
-            bool isCommand = !isNamespaced && (fcKeyword??dcKeyword??acKeyword) != null;
+            bool isFunctionCommand = !isNamespaced && fcKeyword != null;
+            bool isDefinitionCommand = !isNamespaced && dcKeyword != null;
+            bool isActionCommand = !isNamespaced && acKeyword != null;
+            bool isCommand = isFunctionCommand || isDefinitionCommand || isActionCommand;
+            bool isCallable = fKeyword != null;
+            bool isCommandBoundary = next == null || Engine.IsSeparators(next) || Engine.IsComplementors(next) ||
+                Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next);
+            bool isArgumentStart = next?.Is(TokenType.Data, TokenType.Start | TokenType.Scope) == true ||
+                (isCallable && next?.Is(TokenType.Keyword) == true);
+            bool isDelimiterContinuation = next2?.Is(TokenType.Keyword) == true || Engine.IsConnectors(next2) ||
+                Engine.IsComplementors(next2) || Engine.IsMediators(next2) ||
+                Engine.IsFinalizers(next2) || Engine.IsOrganizers(next2);
 
             if (next?.Is(":") == true)
                 return new Node(node.Token.Update(TokenType.IdentifierKeyword), NodeType.DefineStructure);
@@ -645,14 +717,11 @@ namespace MiMFa.Engine.DEAL.JS
                 if (acKeyword != null) return Engine.CreateNode(acKeyword.Name, TokenType.Data, NodeType.Chunk);
                 else
                 {
-                    if(!isNamespaced) node.Token.Update(TokenType.IdentifierKeyword, (fKeyword ?? dcKeyword ?? iKeyword)?.Name);
+                    if (!isNamespaced) node.Token.Update(TokenType.IdentifierKeyword, (fKeyword ?? dcKeyword ?? iKeyword)?.Name);
 
                     if (
                         !node.Is("this") &&
-                        (
-                            next?.Is(TokenType.Data, TokenType.Start | TokenType.Scope) == true ||
-                            (fKeyword != null && next?.Is(TokenType.Keyword) == true)
-                        ) &&
+                        isArgumentStart &&
                         (iKeyword == null || before?.Is(TokenType.IdentifierKeyword, TokenType.NamespaceKeyword, TokenType.ConcatenatorSymbol) == true) &&
                         !Engine.IsSeparators(next) &&
                         !Engine.IsMediators(next) &&
@@ -686,35 +755,17 @@ namespace MiMFa.Engine.DEAL.JS
                             return AssembleKeywordNode(node, walker);
                         else return node;
                     }
-                    if (
-                        fcKeyword != null &&
-                        (next == null || Engine.IsSeparators(next) || Engine.IsComplementors(next) || Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next))
-                    ) 
+                    if (isFunctionCommand && isCommandBoundary)
                         return Engine.CreateCallFunctionNode(fcKeyword.Name);
-                    //else if (
-                    //    !isDirect && isCommand &&
-                    //    (before == null || before.Is(TokenType.TerminatorSymbol, TokenType.IdentifierKeyword, TokenType.NamespaceKeyword)) &&
-                    //    (next == null || next.Is(TokenType.TerminatorSymbol) || Engine.IsComplementors(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next))
-                    //) 
-                    //    return Engine.CreateCallFunctionNode(fcKeyword.Name);
-                    else if (Engine.IsDelimiters(next))
-                    {
-                        if (
-                            next2?.Is(TokenType.Keyword) == true ||
-                            Engine.IsConnectors(next2) ||
-                            Engine.IsComplementors(next2) ||
-                            Engine.IsMediators(next2) ||
-                            Engine.IsFinalizers(next2) ||
-                            Engine.IsOrganizers(next2)
-                        )
-                            return node.Update(NodeType.CallStructure);
-                    }
+                    else if (Engine.IsDelimiters(next) && isDelimiterContinuation)
+                        return node.Update(NodeType.CallStructure);
 
                     return new Node(node.Token.Update(TokenType.IdentifierKeyword), NodeType.CallStructure);
                 }
             }
             return node;
         }
+
         protected override Node AssembleCommentNode(Node node, NodeWalker walker)
         {
             var type = node.Token.Value.Contains("\n") ? NodeType.Region | NodeType.Line :
