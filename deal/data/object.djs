@@ -86,14 +86,14 @@
     });
     define("first", {
         get: function () {
-            const key = this.firstKey;
-            return key === undefined ? undefined : this[key];
+            const keys = Object.keys(this);
+            return keys.length ? this[keys[0]] : undefined;
         }
     });
     define("last", {
         get: function () {
-            const key = this.lastKey;
-            return key === undefined ? undefined : this[key];
+            const keys = Object.keys(this);
+            return keys.length ? this[keys[keys.length - 1]] : undefined;
         }
     });
 
