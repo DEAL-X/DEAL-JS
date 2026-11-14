@@ -319,7 +319,7 @@
     define("omit", {
         value: function (excluded) {
             const result = {};
-            const omitted = new Set(excluded || []);
+            const omitted = new Set(typeof excluded === "string" ? [excluded] : (excluded || []));
             for (const key of keysOf(this))
                 if (!omitted.has(key)) defineOwn(result, key, this[key]);
             return result;
