@@ -149,9 +149,44 @@
         },
         writable: true
     });
+    define("defaults", {
+        value: function () {
+            for (const source of arguments) {
+                if (source == null) continue;
+                for (const key of keysOf(source))
+                    if (!hasOwn(Object(this), key)) defineOwn(this, key, source[key]);
+            }
+            return this;
+        },
+        writable: true
+    });
+    define("clone", {
+        value: function () {
+            const result = {};
+            for (const key of keysOf(this)) defineOwn(result, key, this[key]);
+            return result;
+        },
+        writable: true
+    });
+    define("invert", {
+        value: function () {
+            const result = {};
+            for (const key of keysOf(this))
+                defineOwn(result, String(this[key]), key);
+            return result;
+        },
+        writable: true
+    });
+    define("hasValue", {
+        value: function (value) {
+            return keysOf(this).some(key => Object.is(this[key], value));
+        },
+        writable: true
+    });
     define("delete", {
         value: function (key) {
             const path = toKeyPath(key);
+            if (!path.length || path.some(part => !safeKey(String(part)))) return this;
             let current = this;
             for (let index = 0; index < path.length - 1; index++) {
                 if (current == null || !hasOwn(Object(current), path[index])) return this;
@@ -184,9 +219,9 @@
     });
     define("map", {
         value: function (callback, thisArg) {
+            if (typeof callback !== "function") throw new TypeError("map expects a callback function.");
             const result = {};
             each(this, (value, key, object) => defineOwn(result, key, callback.call(thisArg, value, key, object)));
-            if (typeof callback !== "function") throw new TypeError("map expects a callback function.");
             return result;
         },
         writable: true
@@ -272,7 +307,8 @@
     define("pick", {
         value: function (selected) {
             const result = {};
-            for (const key of selected || [])
+            const keys = typeof selected === "string" ? [selected] : (selected || []);
+            for (const key of keys)
                 if (hasOwn(Object(this), key)) defineOwn(result, key, this[key]);
             return result;
         },
