@@ -582,6 +582,36 @@ namespace MiMFa.Engine.DEAL.JS
             //}
             return base.AssembleSymbolNode(node, walker);
         }
+        private void FindHierarchicalCommandItem(
+            MiMFa.Engine.JavaScript.Keywords keyboard,
+            NodeWalker walker,
+            int offset,
+            ref MiMFa.Engine.JavaScript.Keywords result,
+            ref int consumed
+        )
+        {
+            if (keyboard == null || keyboard.Count == 0) return;
+
+            var next = walker.PeekProcedure(offset);
+            if (next == null) return;
+
+            int step = 1;
+            if (next.Is(TokenType.ConcatenatorSymbol))
+            {
+                next = walker.PeekProcedure(offset + 1);
+                if (next == null) return;
+                step++;
+            }
+            if (!next.Is(TokenType.Keyword, TokenType.IdentifierKeyword, TokenType.FunctionKeyword)) return;
+
+            var child = keyboard.Get(next.Value.ToLower());
+            if (child == null) return;
+
+            consumed = offset + step;
+            result = child;
+            FindHierarchicalCommandItem(child, walker, offset + step, ref result, ref consumed);
+        }
+
         private MiMFa.Engine.JavaScript.Keywords FindHierarchicalCommand(
             MiMFa.Engine.JavaScript.Keywords keyboard,
             string name,
@@ -599,32 +629,7 @@ namespace MiMFa.Engine.DEAL.JS
             if (current == null) return null;
 
             var result = current;
-            int resultConsumed = 0;
-            int offset = 0;
-            while (current.Count > 0)
-            {
-                var next = walker.PeekProcedure(offset);
-                if (next == null) break;
-
-                int step = 1;
-                if (next.Is(TokenType.ConcatenatorSymbol))
-                {
-                    next = walker.PeekProcedure(offset + 1);
-                    if (next == null) break;
-                    step++;
-                }
-                if (!next.Is(TokenType.Keyword, TokenType.IdentifierKeyword, TokenType.FunctionKeyword)) break;
-
-                var child = current.Get(next.Value.ToLower());
-                if (child == null) break;
-
-                current = child;
-                offset += step;
-                result = current;
-                resultConsumed = offset;
-            }
-
-            consumed = resultConsumed;
+            FindHierarchicalCommandItem(current, walker, 0, ref result, ref consumed);
             return result;
         }
 
