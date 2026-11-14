@@ -9,7 +9,9 @@
 // Access and mutation:
 //   object.has(key), object.get(key, fallback), object.set(key, value)
 //   object.assign(source1, source2), object.merge(source1, source2)
+//   object.defaults(source1, source2), object.clone(), object.invert()
 //   object.delete(key), object.remove(key), object.clear()
+//   object.hasValue(value)
 //
 // Iteration and transformation:
 //   object.forEach(callback), object.map(callback), object.mapValues(callback)
