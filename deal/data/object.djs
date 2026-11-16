@@ -41,12 +41,15 @@
     const safeKey = key => key !== "__proto__" && key !== "prototype" && key !== "constructor";
 
     const defineOwn = (target, key, value) => {
-        Object.defineProperty(target, key, {
-            value: value,
-            enumerable: true,
-            configurable: true,
-            writable: true
-        });
+        // Descriptor objects must not inherit Object.prototype. This module
+        // adds an Object.prototype.get() helper, and ToPropertyDescriptor
+        // checks inherited descriptor fields as well as own fields.
+        const descriptor = Object.create(null);
+        descriptor.value = value;
+        descriptor.enumerable = true;
+        descriptor.configurable = true;
+        descriptor.writable = true;
+        Object.defineProperty(target, key, descriptor);
         return target;
     };
 
@@ -92,10 +95,12 @@
         // Build the descriptor explicitly. Some embedded JavaScript engines
         // mishandle object spread when the source contains accessor fields,
         // producing a descriptor that mixes get/set with value/writable.
-        const propertyDescriptor = {
-            enumerable: false,
-            configurable: true
-        };
+        // A normal object inherits Object.prototype.get after this
+        // module is loaded. Object.defineProperty performs inherited
+        // property checks on descriptors, so use a null-prototype object.
+        const propertyDescriptor = Object.create(null);
+        propertyDescriptor.enumerable = false;
+        propertyDescriptor.configurable = true;
 
         const isAccessor =
             Object.prototype.hasOwnProperty.call(descriptor, "get") ||
