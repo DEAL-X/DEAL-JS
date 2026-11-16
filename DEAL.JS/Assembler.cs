@@ -760,7 +760,6 @@ namespace MiMFa.Engine.DEAL.JS
             // structural and literal tokens here.
             if (next.Token == null ||
                 next.Is(TokenType.Data) ||
-                next.Is(TokenType.Symbol) ||
                 next.Is(TokenType.Start | TokenType.Scope) ||
                 next.Is(TokenType.End | TokenType.Scope))
                 return;
