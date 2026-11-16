@@ -88,11 +88,34 @@
     const define = (name, descriptor) => {
         if (hasOwn(objectPrototype, name))
             return false;
-        Object.defineProperty(objectPrototype, name, {
+
+        // Build the descriptor explicitly. Some embedded JavaScript engines
+        // mishandle object spread when the source contains accessor fields,
+        // producing a descriptor that mixes get/set with value/writable.
+        const propertyDescriptor = {
             enumerable: false,
-            configurable: true,
-            ...descriptor
-        });
+            configurable: true
+        };
+
+        const isAccessor =
+            Object.prototype.hasOwnProperty.call(descriptor, "get") ||
+            Object.prototype.hasOwnProperty.call(descriptor, "set");
+
+        if (isAccessor) {
+            if (Object.prototype.hasOwnProperty.call(descriptor, "get"))
+                propertyDescriptor.get = descriptor.get;
+            if (Object.prototype.hasOwnProperty.call(descriptor, "set"))
+                propertyDescriptor.set = descriptor.set;
+        } else {
+            if (Object.prototype.hasOwnProperty.call(descriptor, "value"))
+                propertyDescriptor.value = descriptor.value;
+            propertyDescriptor.writable =
+                Object.prototype.hasOwnProperty.call(descriptor, "writable")
+                    ? descriptor.writable
+                    : false;
+        }
+
+        Object.defineProperty(objectPrototype, name, propertyDescriptor);
         return true;
     };
 
