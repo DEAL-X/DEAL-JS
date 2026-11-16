@@ -16,3 +16,5 @@
 ## Compiler stress tests
 
 For each stress test, compare the generated JavaScript from `inputs/` with the corresponding file in `expected/`. The `results/` copy records output captured from the implementation when it was saved. These files are kept separate so differences are easy to inspect.
+
+- `Hierarchical-Keyword-Spelling.djs` — regression fixture for the three equivalent spellings `make StRing`, `make .StRing`, and `make.StRing`. Each expression must compile to exactly `Make.string`; the three corresponding lines in `expected/Hierarchical-Keyword-Spelling.expected.js` are the individual expected-output assertions.
