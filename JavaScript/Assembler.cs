@@ -314,11 +314,15 @@ namespace MiMFa.Engine.JavaScript
                     if (n != null && !n.Is(NodeType.None))
                     {
                         n = noBreak ? n.Update(n.Type & ~NodeType.Region & ~NodeType.Line) : n;
-                        if ((Engine as Engine).IsSeparators(n))
-                            if(node.ForceLast.Is(NodeType.BlockStructure)) node.Add(n);
-                            else node.ForceLast.Add(n);
-                        else if(n.Is(NodeType.Append))
-                            node.ForceLast.Add(n);
+                        if (node.Last != null)
+                        {
+                            if ((Engine as Engine).IsSeparators(n))
+                                if (node.Last.Is(NodeType.BlockStructure)) node.Add(n);
+                                else node.Last.Add(n);
+                            else if (n.Is(NodeType.Append))
+                                node.Last.Add(n);
+                            else node.Add(n);
+                        }
                         else node.Add(n);
                     }
                     else if (n.IsEmpty()) node.Add(walker.Walk());

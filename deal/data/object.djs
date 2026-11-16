@@ -32,14 +32,12 @@
 // This is an opt-in global prototype extension. Load it only when wanted.
 
 (function () {
-    "use strict";
-
     const objectPrototype = Object.prototype;
-    const hasOwn = (object, key) => objectPrototype.hasOwnProperty.call(object, key);
+    const hasOwn = (obj, key) => objectPrototype.hasOwnProperty.call(obj, key);
     const isObject = value => value !== null && (typeof value === "object" || typeof value === "function");
-    const keysOf = object => Object.keys(Object(object));
-    const valuesOf = object => keysOf(object).map(key => object[key]);
-    const entriesOf = object => keysOf(object).map(key => [key, object[key]]);
+    const keysOf = obj => Object.keys(Object(obj));
+    const valuesOf = obj => keysOf(obj).map(key => obj[key]);
+    const entriesOf = obj => keysOf(obj).map(key => [key, obj[key]]);
     const safeKey = key => key !== "__proto__" && key !== "prototype" && key !== "constructor";
 
     const defineOwn = (target, key, value) => {
@@ -80,11 +78,11 @@
         return target;
     };
 
-    const each = (object, callback, thisArg) => {
+    const _every = (obj, callback, thisArg) => {
         if (typeof callback !== "function")
             throw new TypeError("Expected a callback function.");
-        for (const key of keysOf(object))
-            callback.call(thisArg, object[key], key, object);
+        for (const key of keysOf(obj))
+            callback.call(thisArg, obj[key], key, obj);
     };
 
     const define = (name, descriptor) => {
@@ -214,7 +212,7 @@
     // Iteration and transformation.
     define("forEach", {
         value: function (callback, thisArg) {
-            each(this, callback, thisArg);
+            _every(this, callback, thisArg);
             return this;
         },
         writable: true
@@ -223,7 +221,7 @@
         value: function (callback, thisArg) {
             if (typeof callback !== "function") throw new TypeError("map expects a callback function.");
             const result = {};
-            each(this, (value, key, object) => defineOwn(result, key, callback.call(thisArg, value, key, object)));
+            _every(this, (value, key, obj) => defineOwn(result, key, callback.call(thisArg, value, key, obj)));
             return result;
         },
         writable: true
@@ -232,7 +230,7 @@
         value: function (callback, thisArg) {
             if (typeof callback !== "function") throw new TypeError("mapValues expects a callback function.");
             const result = {};
-            each(this, (value, key, object) => defineOwn(result, key, callback.call(thisArg, value, key, object)));
+            _every(this, (value, key, obj) => defineOwn(result, key, callback.call(thisArg, value, key, obj)));
             return result;
         },
         writable: true
@@ -241,7 +239,7 @@
         value: function (callback, thisArg) {
             if (typeof callback !== "function") throw new TypeError("filter expects a callback function.");
             const result = {};
-            each(this, (value, key, object) => { if (callback.call(thisArg, value, key, object)) defineOwn(result, key, value); });
+            _every(this, (value, key, obj) => { if (callback.call(thisArg, value, key, obj)) defineOwn(result, key, value); });
             return result;
         },
         writable: true

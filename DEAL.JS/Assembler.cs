@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using MiMFa.Engine.JavaScript;
 using MiMFa.Engine.Model;
 using MiMFa.Engine.Walker;
 
@@ -549,23 +550,21 @@ namespace MiMFa.Engine.DEAL.JS
                     node.Token.Update(TokenType.TerminatorSymbol, ";");
                     return node.Update(NodeType.Append);
                 }
-                else if (Engine.IsSeparators(next))
-                    if (node.Is(TokenType.DelimiterSymbol))
-                    {
-                        BreakSequenceSwitch++;
-                        return new Node();
-                    }
-                    else if (node.Is(TokenType.TerminatorSymbol))
-                    {
-                        BreakSectionSwitch++;
-                        return new Node();
-                    }
-                    else return node.Update(NodeType.Append);
+                else if (node.Is(TokenType.DelimiterSymbol) && next?.Is(TokenType.DelimiterSymbol) == true)
+                {
+                    BreakSequenceSwitch++;
+                    return new Node();
+                }
+                else if (node.Is(TokenType.TerminatorSymbol) && next?.Is(TokenType.DelimiterSymbol) == true)
+                {
+                    BreakSectionSwitch++;
+                    return new Node();
+                }
                 else if (Engine.IsComplementors(next) || Engine.IsMediators(next))
                     return new Node();
             }
             else if (
-                (Engine.IsAcceptors(before) || Engine.IsDelimiters(before) || Engine.IsInitializers(before) || Engine.IsOrganizers(before)) &&
+                (Engine.IsAcceptors(before) || Engine.IsDelimiters(before)) &&
                 (Engine.IsSeparators(next) || Engine.IsComplementors(next) || Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next))
             )
             {
@@ -582,57 +581,6 @@ namespace MiMFa.Engine.DEAL.JS
             //}
             return base.AssembleSymbolNode(node, walker);
         }
-        private void FindHierarchicalCommandItem(
-            MiMFa.Engine.JavaScript.Keywords keyboard,
-            NodeWalker walker,
-            int offset,
-            ref MiMFa.Engine.JavaScript.Keywords result,
-            ref int consumed
-        )
-        {
-            if (keyboard == null || keyboard.Count == 0) return;
-
-            var next = walker.PeekProcedure(offset);
-            if (next == null) return;
-
-            int step = 1;
-            if (next.Is(TokenType.ConcatenatorSymbol))
-            {
-                next = walker.PeekProcedure(offset + 1);
-                if (next == null) return;
-                step++;
-            }
-            if (!next.Is(TokenType.Keyword, TokenType.IdentifierKeyword, TokenType.FunctionKeyword, TokenType.NamespaceKeyword)) return;
-
-            var child = keyboard.Get(next.Value.ToLower());
-            if (child == null) return;
-
-            consumed = offset + step;
-            result = child;
-            FindHierarchicalCommandItem(child, walker, offset + step, ref result, ref consumed);
-        }
-
-        private MiMFa.Engine.JavaScript.Keywords FindHierarchicalCommand(
-            MiMFa.Engine.JavaScript.Keywords keyboard,
-            string name,
-            NodeWalker walker,
-            out int consumed
-        )
-        {
-            consumed = 0;
-            if (keyboard == null || string.IsNullOrWhiteSpace(name)) return null;
-
-            var names = name.Split(new[] { '.' }, System.StringSplitOptions.RemoveEmptyEntries)
-                .Select(value => value.ToLower())
-                .ToArray();
-            var current = keyboard.Get(names);
-            if (current == null) return null;
-
-            var result = current;
-            FindHierarchicalCommandItem(current, walker, 0, ref result, ref consumed);
-            return result;
-        }
-
         protected override Node AssembleKeywordNode(Node node, NodeWalker walker)
         {
             var before = walker.PeekProcedure(-2);
@@ -765,7 +713,44 @@ namespace MiMFa.Engine.DEAL.JS
             }
             return node;
         }
+        private void FindHierarchicalCommandItem(Keywords keyboard, NodeWalker walker, int offset, ref Keywords result, ref int consumed)
+        {
+            if (keyboard == null || keyboard.Count == 0) return;
 
+            var next = walker.PeekProcedure(offset);
+            if (next == null) return;
+
+            int step = 1;
+            if (next.Is(TokenType.ConcatenatorSymbol))
+            {
+                next = walker.PeekProcedure(offset + 1);
+                if (next == null) return;
+                step++;
+            }
+            if (!next.Is(TokenType.Keyword, TokenType.IdentifierKeyword, TokenType.FunctionKeyword, TokenType.NamespaceKeyword)) return;
+
+            var child = keyboard.Get(next.Value.ToLower());
+            if (child == null) return;
+
+            consumed = offset + step;
+            result = child;
+            FindHierarchicalCommandItem(child, walker, offset + step, ref result, ref consumed);
+        }
+        private Keywords FindHierarchicalCommand(Keywords keyboard, string name, NodeWalker walker, out int consumed)
+        {
+            consumed = 0;
+            if (keyboard == null || string.IsNullOrWhiteSpace(name)) return null;
+
+            var names = name.Split(new[] { '.' }, System.StringSplitOptions.RemoveEmptyEntries)
+                .Select(value => value.ToLower())
+                .ToArray();
+            var current = keyboard.Get(names);
+            if (current == null) return null;
+
+            var result = current;
+            FindHierarchicalCommandItem(current, walker, 0, ref result, ref consumed);
+            return result;
+        }
         protected override Node AssembleCommentNode(Node node, NodeWalker walker)
         {
             var type = node.Token.Value.Contains("\n") ? NodeType.Region | NodeType.Line :

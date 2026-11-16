@@ -143,7 +143,7 @@ namespace MiMFa.Engine.JavaScript
 
             }
 
-            keywords = ExtractKeywordToken(token, walker);
+            keywords = ExtractKeywordToken(token, walker, true);
             if (keywords.Count > 0)
             {
                 foreach (var item in keywords)
