@@ -354,6 +354,9 @@
     <None Update="Samples\tests\expected\JavaScript-Stress-Test.expected.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Samples\tests\expected\Hierarchical-Keyword-Spelling.expected.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Samples\tests\expected\Real-Stress-Test.expected.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -367,6 +370,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Samples\tests\inputs\JavaScript-Stress-Test.djs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Samples\tests\inputs\Hierarchical-Keyword-Spelling.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Samples\tests\inputs\Real-Stress-Test.djs">
