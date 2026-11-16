@@ -17,6 +17,25 @@ namespace MiMFa.Engine.DEAL.JS
             return true;
         }
 
+        public override List<Node> ExtractKeywordToken(Token token, TokenWalker walker, bool strict = true)
+        {
+            // Command roots are registered separately from ordinary JavaScript
+            // keywords. Recognize them even when the next word is separated by
+            // whitespace (for example: "make StRing").
+            var keywords = base.ExtractKeywordToken(token, walker, strict);
+            if (keywords.Count > 0) return keywords;
+
+            if (Engine != null &&
+                (
+                    Engine.GetFunctionCommand(token.Value) != null ||
+                    Engine.GetDefinitionCommand(token.Value) != null ||
+                    Engine.GetActionCommand(token.Value) != null
+                ))
+                return ParseKeywordToken(token.Update(TokenType.Keyword), walker).ToList();
+
+            return keywords;
+        }
+
         protected override IEnumerable<Node> ParseStatementToken(Token token, TokenWalker walker)
         {
             List<Node> keywords;
