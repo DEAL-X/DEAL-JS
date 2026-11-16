@@ -1,3 +1,6 @@
+// HOW TO USE:
+// var name be "JavaScript-Stress-Test"; save(path be `./Samples/tests/results/${name}.js`, compile `./Samples/tests/inputs/${name}.djs`) then start "notepad" by path;
+
 Use deal;
 /*
  * ============================================================

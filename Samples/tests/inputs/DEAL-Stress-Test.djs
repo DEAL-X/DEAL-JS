@@ -1,3 +1,6 @@
+// HOW TO USE:
+// var name be "DEAL-Stress-Test"; save(path be `./Samples/tests/results/${name}.js`, compile `./Samples/tests/inputs/${name}.djs`) then start "notepad" by path;
+
 /*
  * ============================================================
  * MiMFa DEAL.JS compiler stress test
@@ -13,7 +16,6 @@ Use deal/data/local.djs;
 Use deal/data/resource;
 Use deal/data/notExist;
 Use deal;
-Use scraper;
 
 // ------------------------------------------------------------
 // Reserve and noise words

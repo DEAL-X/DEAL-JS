@@ -372,7 +372,7 @@
     <None Update="Samples\tests\inputs\JavaScript-Stress-Test.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Samples\tests\inputs\Hierarchical-Keyword-Spelling.djs">
+    <None Update="Samples\tests\inputs\Namespaces.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Samples\tests\inputs\Real-Stress-Test.djs">

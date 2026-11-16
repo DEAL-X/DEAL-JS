@@ -1,3 +1,6 @@
+// HOW TO USE:
+// var name be "Real-Stress-Test"; save(path be `./Samples/tests/results/${name}.js`, compile `./Samples/tests/inputs/${name}.djs`) then start "notepad" by path;
+
 // Detect selector arguments.
 // Supported overloads:
 //     all(query)
