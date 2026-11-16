@@ -602,6 +602,13 @@ namespace MiMFa.Engine.DEAL.JS
                 if (actionCommandLength == commandLength && acKeyword != null) { fcKeyword = null; dcKeyword = null; }
                 else if (functionCommandLength == commandLength && fcKeyword != null) { dcKeyword = null; acKeyword = null; }
                 else if (definitionCommandLength == commandLength && dcKeyword != null) { fcKeyword = null; acKeyword = null; }
+                // Normalize every matched segment to its registered spelling.
+                // The detector is case-insensitive, but the source token may not
+                // use the canonical casing (for example, "StRing" -> "string").
+                var matchedCommands = acKeyword != null ? Engine.ActionCommands :
+                    fcKeyword != null ? Engine.FunctionCommands : Engine.DefinitionCommands;
+                NormalizeHierarchicalCommandTokens(matchedCommands, walker, commandLength);
+
                 for (int index = 0; index < commandLength; index++) walker.MoveToProcedure();
                 next = walker.PeekProcedure();
                 next2 = walker.PeekProcedure(1);
@@ -713,6 +720,25 @@ namespace MiMFa.Engine.DEAL.JS
             }
             return node;
         }
+        private void NormalizeHierarchicalCommandTokens(Keywords keyboard, NodeWalker walker, int length)
+        {
+            if (keyboard == null || length <= 0) return;
+
+            var current = keyboard;
+            for (int offset = 0; offset < length; offset++)
+            {
+                var token = walker.PeekProcedure(offset);
+                if (token == null) break;
+                if (token.Is(TokenType.ConcatenatorSymbol)) continue;
+
+                var child = current.Get(token.Value.ToLower());
+                if (child == null) break;
+
+                token.Token.Value = child.Name;
+                current = child;
+            }
+        }
+
         private void FindHierarchicalCommandItem(Keywords keyboard, NodeWalker walker, int offset, ref Keywords result, ref int consumed)
         {
             if (keyboard == null || keyboard.Count == 0) return;
