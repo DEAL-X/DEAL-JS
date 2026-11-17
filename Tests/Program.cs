@@ -19,6 +19,7 @@ if (expected.Length != variants.Length)
     throw new InvalidOperationException($"Expected {variants.Length} output assertions, found {expected.Length}.");
 
 const string canonicalOutput = "Make.string;";
+var failures = new List<string>();
 for (var index = 0; index < variants.Length; index++)
 {
     if (!string.Equals(expected[index], canonicalOutput, StringComparison.Ordinal))
@@ -38,12 +39,17 @@ for (var index = 0; index < variants.Length; index++)
         .ToArray();
 
     if (statements.Length != 1)
-        throw new InvalidOperationException($"Expected one generated statement for '{variants[index]}', found {statements.Length}: {output.Content}");
+    {
+        failures.Add($"'{variants[index]}' produced {statements.Length} statements: {output.Content}");
+        continue;
+    }
 
+    Console.WriteLine($"ACTUAL: {variants[index]} => {statements[0]}");
     if (!string.Equals(statements[0], expected[index], StringComparison.Ordinal))
-        throw new InvalidOperationException($"'{variants[index]}' compiled to '{statements[0]}'; expected '{expected[index]}'.");
-
-    Console.WriteLine($"PASS: {variants[index]} => {statements[0]}");
+        failures.Add($"'{variants[index]}' compiled to '{statements[0]}'; expected '{expected[index]}'.");
 }
+
+if (failures.Count > 0)
+    throw new InvalidOperationException(string.Join(Environment.NewLine, failures));
 
 Console.WriteLine("All hierarchical keyword spelling regression tests passed.");
