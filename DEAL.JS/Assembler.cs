@@ -597,6 +597,7 @@ namespace MiMFa.Engine.DEAL.JS
             var acKeyword = FindHierarchicalCommand(Engine?.ActionCommands, nvalue, walker, out actionCommandLength);
 
             int commandLength = System.Math.Max(functionCommandLength, System.Math.Max(definitionCommandLength, actionCommandLength));
+            string hierarchicalDefinitionName = null;
             if (commandLength > 0)
             {
                 if (actionCommandLength == commandLength && acKeyword != null) { fcKeyword = null; dcKeyword = null; }
@@ -608,6 +609,8 @@ namespace MiMFa.Engine.DEAL.JS
                 var matchedCommands = acKeyword != null ? Engine.ActionCommands :
                     fcKeyword != null ? Engine.FunctionCommands : Engine.DefinitionCommands;
                 NormalizeHierarchicalCommandTokens(matchedCommands, walker, commandLength);
+                if (dcKeyword != null)
+                    hierarchicalDefinitionName = GetHierarchicalCommandName(Engine.DefinitionCommands, nvalue, walker, commandLength);
 
                 for (int index = 0; index < commandLength; index++) walker.MoveToProcedure();
                 next = walker.PeekProcedure();
@@ -652,7 +655,7 @@ namespace MiMFa.Engine.DEAL.JS
                 }
                 else
                 {
-                    if (!isNamespaced) node.Token.Value = acKeyword?.Name ?? fKeyword?.Name ?? node.Token.Value;
+                    if (!isNamespaced) node.Token.Value = hierarchicalDefinitionName ?? acKeyword?.Name ?? fKeyword?.Name ?? node.Token.Value;
                     if (acKeyword != null && next?.Is(TokenType.Keyword) == true)
                     {
                         node.Token.Update(TokenType.NamespaceKeyword);
@@ -671,7 +674,7 @@ namespace MiMFa.Engine.DEAL.JS
                 if (acKeyword != null) return Engine.CreateNode(acKeyword.Name, TokenType.Data, NodeType.Chunk);
                 else
                 {
-                    if (!isNamespaced) node.Token.Update(TokenType.IdentifierKeyword, (fKeyword ?? dcKeyword ?? iKeyword)?.Name);
+                    if (!isNamespaced) node.Token.Update(TokenType.IdentifierKeyword, hierarchicalDefinitionName ?? (fKeyword ?? dcKeyword ?? iKeyword)?.Name);
 
                     if (
                         !node.Is("this") &&
@@ -718,6 +721,31 @@ namespace MiMFa.Engine.DEAL.JS
                 }
             }
             return node;
+        }
+        private string GetHierarchicalCommandName(Keywords keyboard, string name, NodeWalker walker, int length)
+        {
+            if (keyboard == null || string.IsNullOrWhiteSpace(name)) return null;
+
+            var current = keyboard;
+            var parts = new List<string>();
+            foreach (var segment in name.Split(new[] { '.' }, System.StringSplitOptions.RemoveEmptyEntries))
+            {
+                current = current.Get(segment.ToLower());
+                if (current == null) return null;
+                parts.Add(current.Name);
+            }
+
+            for (int offset = 0; offset < length; offset++)
+            {
+                var token = walker.PeekProcedure(offset);
+                if (token == null || token.Is(TokenType.ConcatenatorSymbol)) continue;
+
+                current = current.Get(token.Value.ToLower());
+                if (current == null) return null;
+                parts.Add(current.Name);
+            }
+
+            return parts.Count > 0 ? string.Join(".", parts) : null;
         }
         private void NormalizeHierarchicalCommandTokens(Keywords keyboard, NodeWalker walker, int length)
         {
