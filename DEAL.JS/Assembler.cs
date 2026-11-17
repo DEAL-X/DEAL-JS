@@ -607,7 +607,7 @@ namespace MiMFa.Engine.DEAL.JS
                 // use the canonical casing (for example, "StRing" -> "string").
                 var matchedCommands = acKeyword != null ? Engine.ActionCommands :
                     fcKeyword != null ? Engine.FunctionCommands : Engine.DefinitionCommands;
-                NormalizeHierarchicalCommandTokens(matchedCommands, walker, commandLength);
+                NormalizeHierarchicalCommandTokens(matchedCommands, nvalue, walker, commandLength);
 
                 for (int index = 0; index < commandLength; index++) walker.MoveToProcedure();
                 next = walker.PeekProcedure();
@@ -631,6 +631,17 @@ namespace MiMFa.Engine.DEAL.JS
 
             if (next?.Is(":") == true)
                 return new Node(node.Token.Update(TokenType.IdentifierKeyword), NodeType.DefineStructure);
+
+            // A matched child turns the complete expression into the registered
+            // command. This must happen before the namespace branch, otherwise
+            // "make .StRing" is emitted as an ordinary namespace expression.
+            if (isFunctionCommand && (commandLength > 0 || isDirect))
+                node.Token.Update(TokenType.FunctionKeyword, fcKeyword.Name);
+            else if (isDefinitionCommand && (commandLength > 0 || isDirect))
+                node.Token.Update(TokenType.IdentifierKeyword, dcKeyword.Name);
+            else if (isActionCommand && (commandLength > 0 || isDirect))
+                return Engine.CreateNode(acKeyword.Name, TokenType.Data, NodeType.Chunk);
+
             if (node.Is(TokenType.NamespaceKeyword))
                 if (next?.Is(TokenType.ConcatenatorSymbol) == true || !next?.Is(TokenType.Keyword) == true)
                     return node.Add(CompactAssembleNode(walker));
@@ -720,11 +731,18 @@ namespace MiMFa.Engine.DEAL.JS
             }
             return node;
         }
-        private void NormalizeHierarchicalCommandTokens(Keywords keyboard, NodeWalker walker, int length)
+        private void NormalizeHierarchicalCommandTokens(Keywords keyboard, string name, NodeWalker walker, int length)
         {
-            if (keyboard == null || length <= 0) return;
+            if (keyboard == null || length <= 0 || string.IsNullOrWhiteSpace(name)) return;
 
-            var current = keyboard;
+            // Start at the already matched command prefix (for example, Make),
+            // not at the root of the entire command tree.
+            var names = name.Split(new[] { '.' }, System.StringSplitOptions.RemoveEmptyEntries)
+                .Select(value => value.ToLower())
+                .ToArray();
+            var current = keyboard.Get(names);
+            if (current == null) return;
+
             for (int offset = 0; offset < length; offset++)
             {
                 var token = walker.PeekProcedure(offset);
@@ -739,7 +757,7 @@ namespace MiMFa.Engine.DEAL.JS
             }
         }
 
-        private void FindHierarchicalCommandItem(Keywords keyboard, NodeWalker walker, int offset, ref Keywords result, ref int consumed)
+        private void FindHierarchicalCommandItem(Keywords keyboard, NodeWalker walker, int offset, ref Keywords result, ref int consumed, ref string canonicalName)
         {
             if (keyboard == null || keyboard.Count == 0) return;
 
@@ -754,10 +772,8 @@ namespace MiMFa.Engine.DEAL.JS
                 step++;
             }
             // A hierarchical command may be written with whitespace rather than
-            // a namespace separator. In that form the parser can classify the
-            // following word as a Statement/ordinary identifier, not as Keyword.
-            // The child lookup itself is the decisive test, so only reject
-            // structural and literal tokens here.
+            // a namespace separator. The child lookup is decisive; only reject
+            // literal and structural tokens before looking up the child.
             if (next.Token == null ||
                 next.Is(TokenType.Data) ||
                 next.Is(TokenType.Start | TokenType.Scope) ||
@@ -769,7 +785,8 @@ namespace MiMFa.Engine.DEAL.JS
 
             consumed = offset + step;
             result = child;
-            FindHierarchicalCommandItem(child, walker, offset + step, ref result, ref consumed);
+            canonicalName += "." + child.Name;
+            FindHierarchicalCommandItem(child, walker, offset + step, ref result, ref consumed, ref canonicalName);
         }
         private Keywords FindHierarchicalCommand(Keywords keyboard, string name, NodeWalker walker, out int consumed)
         {
@@ -779,12 +796,22 @@ namespace MiMFa.Engine.DEAL.JS
             var names = name.Split(new[] { '.' }, System.StringSplitOptions.RemoveEmptyEntries)
                 .Select(value => value.ToLower())
                 .ToArray();
-            var current = keyboard.Get(names);
-            if (current == null) return null;
+            var current = keyboard;
+            var canonicalNames = new List<string>();
+            foreach (var item in names)
+            {
+                current = current.Get(item);
+                if (current == null) return null;
+                canonicalNames.Add(current.Name);
+            }
 
             var result = current;
-            FindHierarchicalCommandItem(current, walker, 0, ref result, ref consumed);
-            return result;
+            var canonicalName = string.Join(".", canonicalNames);
+            FindHierarchicalCommandItem(current, walker, 0, ref result, ref consumed, ref canonicalName);
+
+            // The returned leaf keeps the full canonical path, not just the
+            // final child segment, so every spelling emits Make.string.
+            return new Keywords(canonicalName, result.Type, result.Locality);
         }
         protected override Node AssembleCommentNode(Node node, NodeWalker walker)
         {

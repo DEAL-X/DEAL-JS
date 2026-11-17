@@ -87,6 +87,13 @@ namespace MiMFa.Engine.DEAL.JS
                         TokenType? acceptor = ws.Length > 2 ? TokenTypeFromName(ws[2].Trim()) : null;
                         TokenType? dataAcceptor = ws.Length > 3 ? TokenTypeFromName(ws[3].Trim()) : null;
                         SetAcceptedType(cmd, acceptor ?? TokenType.Unknown, dataAcceptor);
+                        // Hash-prefixed function declarations (for example
+                        // #Make.string:function) are accepted by the tokenizer
+                        // as full dotted names. Also register their hierarchy so
+                        // the assembler can resolve whitespace and spaced-dot
+                        // spellings through the same command tree.
+                        if (acceptor.HasValue && (acceptor.Value & TokenType.FunctionKeyword) == TokenType.FunctionKeyword)
+                            Engine?.SetFunctionCommand(new Node(new Token(acceptor.Value, cmd)));
                         walker.Remove(location.Index, w.Length);
                         return new Token(TokenType.Keyword, cmd, walker.Position);
                     }

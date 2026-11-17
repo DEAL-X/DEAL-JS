@@ -17,4 +17,12 @@
 
 For each stress test, compare the generated JavaScript from `inputs/` with the corresponding file in `expected/`. The `results/` copy records output captured from the implementation when it was saved. These files are kept separate so differences are easy to inspect.
 
-- `Hierarchical-Keyword-Spelling.djs` — regression fixture for the three equivalent spellings `make StRing`, `make .StRing`, and `make.StRing`. Each expression must compile to exactly `Make.string`; the three corresponding lines in `expected/Hierarchical-Keyword-Spelling.expected.js` are the individual expected-output assertions.
+- `inputs/Hierarchical-Keyword-Spelling.djs` — focused regression fixture for `make StRing`, `make .StRing`, and `make.StRing`. Each spelling is compiled independently by the automated regression runner and must produce exactly `Make.string;`. The three corresponding lines in `expected/Hierarchical-Keyword-Spelling.expected.js` are the individual output assertions.
+
+Run the compiler regression tests from the repository root:
+
+```powershell
+dotnet run --project Samples/tests/CompilerRegressionTests.csproj --configuration Release
+```
+
+The runner loads `deal/make/string`, compiles each spelling in a fresh engine, verifies that the dependency was loaded, and compares the generated statement with its corresponding expected line.

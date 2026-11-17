@@ -45,3 +45,6 @@ jobs:
 
       - name: Build DEAL.JS Engine
         run: dotnet build "DEAL-JS/MiMFa DEAL.JS - Engine.csproj" --configuration Release --no-restore
+
+      - name: Run compiler regression tests
+        run: dotnet run --project "DEAL-JS/Samples/tests/CompilerRegressionTests.csproj" --configuration Release
