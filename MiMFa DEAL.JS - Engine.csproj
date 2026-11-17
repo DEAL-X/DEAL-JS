@@ -14,6 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Tests/**/*.cs" />
     <None Remove="DEAL\.djs" />
     <None Remove="DEAL\data\file.djs" />
     <None Remove="DEAL\data\log.djs" />
