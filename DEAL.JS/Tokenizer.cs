@@ -455,6 +455,7 @@ namespace MiMFa.Engine.DEAL.JS
             if (acceptor.HasValue) Acceptors[lname] = acceptor.Value;
             if (dataAcceptor.HasValue) DataAcceptors[lname] = dataAcceptor.Value;
             CaseAcceptors[lname] = name;
+            Engine.SetDefinitionCommand(name, acceptor??TokenType.Keyword, 0);
         }
         protected virtual Token GetAcceptedToken(TokenType type, string name, Position location = null)
         {

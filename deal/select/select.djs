@@ -11,7 +11,7 @@
 // DEAL's "FROM" separator is compiled as an argument separator. The source
 // is therefore always the final argument; a trailing empty separator value
 // is tolerated for compatibility with generated calls.
-command #select:start|function() {
+command #select:start = function() {
     if (arguments.length < 1) return null;
     if (arguments.length === 1) return arguments[0];
 
@@ -114,4 +114,8 @@ command #select:start|function() {
         return [read(source, fields[0].source)];
 
     return project(source);
-}
+};
+
+#select.all:start|function = all;
+#select.one:start|function = one;
+#select.any:start|function = any;

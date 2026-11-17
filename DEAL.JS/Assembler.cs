@@ -535,7 +535,7 @@ namespace MiMFa.Engine.DEAL.JS
                 else
                 {
                     node.Token.Value = "==";
-                    return base.AssembleSymbolNode(node, walker);
+                    return AssembleSymbolNode(node, walker);
                 }
             }
             else if (Engine.IsSeparators(node))
@@ -571,8 +571,8 @@ namespace MiMFa.Engine.DEAL.JS
                 node.Token.Update(TokenType.StringData, Newtonsoft.Json.JsonConvert.ToString(node.Token.Value));
                 return node.Update(NodeType.Chunk);
             }
-            else if (Engine.IsMediators(node) && Engine.IsSeparators(next))
-                return base.AssembleSymbolNode(node, walker.MoveToProcedure());
+            else if (Engine.IsMediators(node) && (Engine.IsSeparators(next) || next?.Is(AssignSigns) == true))
+                return AssembleSymbolNode(node, walker.MoveToProcedure());
 
             //if (next?.Is(TokenType.Symbol) == true && !Engine.IsSeparators(next)  && !Engine.IsInitializers(next))
             //{
@@ -620,11 +620,10 @@ namespace MiMFa.Engine.DEAL.JS
             bool isDefinitionCommand = !isNamespaced && dcKeyword != null;
             bool isActionCommand = !isNamespaced && acKeyword != null;
             bool isCommand = isFunctionCommand || isDefinitionCommand || isActionCommand;
-            bool isCallable = fKeyword != null;
-            bool isCommandBoundary = next == null || Engine.IsSeparators(next) || Engine.IsComplementors(next) ||
-                Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next);
+            bool isCommandBoundary = next == null || !(before?.Is("(") == true && next.Is(")")) && (Engine.IsSeparators(next) || Engine.IsComplementors(next) ||
+                Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next));
             bool isArgumentStart = next?.Is(TokenType.Data, TokenType.Start | TokenType.Scope) == true ||
-                (isCallable && next?.Is(TokenType.Keyword) == true);
+                (fKeyword != null && next?.Is(TokenType.Keyword) == true);
             bool isDelimiterContinuation = next2?.Is(TokenType.Keyword) == true || Engine.IsConnectors(next2) ||
                 Engine.IsComplementors(next2) || Engine.IsMediators(next2) ||
                 Engine.IsFinalizers(next2) || Engine.IsOrganizers(next2);
@@ -664,7 +663,7 @@ namespace MiMFa.Engine.DEAL.JS
                                 NormalCompactAssembleNode(walker)
                             );
                     }
-                    else if (next?.Is(TokenType.Symbol) != true && !isDirect) node.Add(Engine.CreatePackNode(TrimmedSequenceAssembleNode(walker)));
+                    else if (isCommandBoundary && next?.Is(TokenType.Symbol) != true && !isDirect) node.Add(Engine.CreatePackNode(TrimmedSequenceAssembleNode(walker)));
                 }
             }
             else if (before?.Is("class", "interface", "enum", "implements", "extends") != true)
@@ -738,7 +737,6 @@ namespace MiMFa.Engine.DEAL.JS
                 current = child;
             }
         }
-
         private void FindHierarchicalCommandItem(Keywords keyboard, NodeWalker walker, int offset, ref Keywords result, ref int consumed)
         {
             if (keyboard == null || keyboard.Count == 0) return;

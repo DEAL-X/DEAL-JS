@@ -67,11 +67,15 @@ command Local = {};
 	if(!path) return false;
 	return application.Engine.Resource.Delete(path);
 };
-#Local.entity:function = function (path = null) {
-	if(!path) return null;
-	return application.Engine.Resource.Entity(path);
-};
 #Local.exists:function = function (path = null) {
 	if(!path) return false;
 	return application.Engine.Resource.Exists(path);
+};
+#Local.path:function = function (path = null) {
+	if(!path) return null;
+	return application.Engine.Resource.Normalize(path);
+};
+#Local.entity:function = function (path = null) {
+	if(!path) return null;
+	return application.Engine.Resource.Entity(path);
 };

@@ -65,11 +65,15 @@ namespace MiMFa.Engine.DEAL.JS
 
         public virtual bool SetDefinitionCommand(Node node)
         {
-            string[] names = node.Token.Value.Split('.');
+            return SetDefinitionCommand(node.Token.Value, node.Token.Type, node.Location);
+        }
+        public virtual bool SetDefinitionCommand(string name, TokenType type, int location)
+        {
+            string[] names = name.Split('.');
             List<KeyValuePair<string, string>> list = new List<KeyValuePair<string, string>>();
             for (int i = 0; i < names.Length; i++)
                 list.Add(new KeyValuePair<string, string>(names[i].ToLower(), names[i]));
-            return DefinitionCommands.Set(node.Token.Type, node.Location, list.ToArray());
+            return DefinitionCommands.Set(type, location, list.ToArray());
         }
         public virtual Keywords GetDefinitionCommand(params string[] namesHierarchy)
         {
