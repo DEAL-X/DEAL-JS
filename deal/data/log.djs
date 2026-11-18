@@ -1,4 +1,4 @@
-﻿command Log = {};
+﻿command #Log:identifier = {};
 
 command Log.path = application.Engine.Resource.TempDirectory+"logs.log";
 command Log.separator = " ";
