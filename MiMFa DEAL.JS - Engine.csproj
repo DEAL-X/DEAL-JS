@@ -96,7 +96,7 @@
     <Content Include="DEAL\core\statements.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="DEAL\data\.djs">
+    <Content Include="DEAL\core\.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DEAL\data\array.js">

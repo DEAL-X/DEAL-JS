@@ -18,31 +18,31 @@ command Struct = function (content = null, tagName = "div", attributes = {}) {
     else return ["<", tagName, attrs, ">", Array.isArray(content) ? content.join("") : isArray(content) ? each(content).join("") : content, "</", tagName, ">"].join("");
 }
 
-Struct.stylePath = "";
-Struct.stylePresetPath = "";
-Struct.styleResetPath = "";
-Struct.scriptPath = "";
-Struct.maxFloatDecimals = 2;
-Struct.maxValueLength = 10;
-Struct.usedHeadItems = [];
-Struct.charset = "UTF-8";
-Struct.newLine = "<br/>";
+command Struct.stylePath = "";
+command Struct.stylePresetPath = "";
+command Struct.styleResetPath = "";
+command Struct.scriptPath = "";
+command Struct.maxFloatDecimals = 2;
+command Struct.maxValueLength = 10;
+command Struct.usedHeadItems = [];
+command Struct.charset = "UTF-8";
+command Struct.newLine = "<br/>";
 
-Struct.toText = (obj) => textConvertor.Done(obj);
-Struct.tryToText = (obj) => textConvertor.TryDone(obj);
-Struct.subject = (content, attributes = {}) => Struct(content, "Title", attributes);
-Struct.source = (source, attributes = {}) => {
+command Struct.toText = (obj) => textConvertor.Done(obj);
+command Struct.tryToText = (obj) => textConvertor.TryDone(obj);
+command Struct.subject = (content, attributes = {}) => Struct(content, "Title", attributes);
+command Struct.source = (source, attributes = {}) => {
     const srci = Struct("", "script", { ...{ SRC: source }, ...attributes });
     Struct.usedHeadItems.push(srci);
     return srci;
 }
 
-Struct.script = (content, source = null, attributes = {}) => {
+command Struct.script = (content, source = null, attributes = {}) => {
     const srci = Struct(content, "script", source === null ? attributes : { ...{ SRC: source }, ...attributes });
     Struct.usedHeadItems.push(srci);
     return srci;
 }
-Struct.script.async = (content, source = null, attributes = {}, callback = null) => {
+command Struct.script.async = (content, source = null, attributes = {}, callback = null) => {
     var script = document.createElement('script');
     script.src = source;
     script.innerHTML = content;
@@ -54,34 +54,34 @@ Struct.script.async = (content, source = null, attributes = {}, callback = null)
     }
     document.head.appendChild(script);
 }
-Struct.script.load = (content, source = null, attributes = {}) => {
+command Struct.script.load = (content, source = null, attributes = {}) => {
     var script = document.createElement('script');
     script.src = source;
     script.innerHTML = content;
     for (const item in attributes) script.setAttribute(item, attributes[item]);
     document.head.appendChild(script);
 }
-Struct.script.code = (value = null, attributes = {}) => {
+command Struct.script.code = (value = null, attributes = {}) => {
     Struct.script(value == null ? "" : value + ";", null, attributes);
 }
-Struct.script.var = (name, value = null, attributes = {}) => {
+command Struct.script.var = (name, value = null, attributes = {}) => {
     Struct.script.code((name == null ? "" : "var " + name + (value == null ? "" : " = ")) + value, attributes);
 }
-Struct.script.let = (name, value = null, attributes = {}) => {
+command Struct.script.let = (name, value = null, attributes = {}) => {
     Struct.script.code((name == null ? "" : "let " + name + (value == null ? "" : " = ")) + value, attributes);
 }
-Struct.script.const = (name, value = null, attributes = {}) => {
+command Struct.script.const = (name, value = null, attributes = {}) => {
     Struct.script.code((name == null ? "" : "const " + name + (value == null ? "" : " = ")) + value, attributes);
 }
 
-Struct.style = (content, source = null, attributes = {}) => {
+command Struct.style = (content, source = null, attributes = {}) => {
     if (source === null)
         return Struct(content, "style", attributes);
     const srci = Struct("Link", { ...{ REL: "stylesheet", HREF: source ?? content }, ...attributes });
     Struct.usedHeadItems.push(srci);
     return srci;
 }
-Struct.style.load = (content, source = null, attributes = {}) => {
+command Struct.style.load = (content, source = null, attributes = {}) => {
     if (source) {
         var style = document.createElement('link');
         style.rel = 'stylesheet';
@@ -96,14 +96,14 @@ Struct.style.load = (content, source = null, attributes = {}) => {
         document.head.appendChild(style);
     }
 }
-Struct.style.code = (value = null, attributes = {}) => {
+command Struct.style.code = (value = null, attributes = {}) => {
     Struct.style(value == null ? "" : value + "", null, attributes);
 }
-Struct.style.on = (selector, value = null, attributes = {}) => {
+command Struct.style.on = (selector, value = null, attributes = {}) => {
     Struct.style.code((selector == null ? "*" : selector) + "{" + (value == null ? "" : value) + "}", attributes);
 }
 
-Struct.pages = (title, content = null, description = null, attributes = {}, head = "", styles = [], sources = []) => {
+command Struct.pages = (title, content = null, description = null, attributes = {}, head = "", styles = [], sources = []) => {
     if (content === null) {
         content = title;
         title = null;
@@ -124,7 +124,7 @@ Struct.pages = (title, content = null, description = null, attributes = {}, head
     }
     return Struct.page(title, ls.join("\r\n\r\n"), description, attributes, head, styles, sources);
 }
-Struct.page = (title, content = null, description = null, attributes = {}, head = "", styles = [], sources = []) => {
+command Struct.page = (title, content = null, description = null, attributes = {}, head = "", styles = [], sources = []) => {
     if (content === null) {
         content = title;
         title = null;
@@ -177,7 +177,7 @@ Struct.page = (title, content = null, description = null, attributes = {}, head 
             "html"
         );
 }
-Struct.part = (title, content = null, description = null, attributes = {}) => {
+command Struct.part = (title, content = null, description = null, attributes = {}) => {
     if (content === null) {
         content = title;
         title = null;
@@ -193,7 +193,7 @@ Struct.part = (title, content = null, description = null, attributes = {}) => {
         { ...{ CLASS: "part" }, ...attributes }
     );
 }
-Struct.panel = (title, content = null, description = null, attributes = {}) => {
+command Struct.panel = (title, content = null, description = null, attributes = {}) => {
     if (content === null) {
         content = title;
         title = null;
@@ -209,7 +209,7 @@ Struct.panel = (title, content = null, description = null, attributes = {}) => {
         { ...{ CLASS: "panel" }, ...attributes }
     );
 }
-Struct.box = (title, content = null, description = null, attributes = {}) => {
+command Struct.box = (title, content = null, description = null, attributes = {}) => {
     if (content === null) {
         content = title;
         title = null;
@@ -225,35 +225,35 @@ Struct.box = (title, content = null, description = null, attributes = {}) => {
         { ...{ CLASS: "box" }, ...attributes }
     );
 }
-Struct.element = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "element" }, ...attributes });
+command Struct.element = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "element" }, ...attributes });
 
-Struct.superTitle = (content, attributes = {}) => Struct(content, "h1", { ...{ CLASS: "supertitle" }, ...attributes });
-Struct.title = (content, attributes = {}) => Struct(content, "h2", { ...{ CLASS: "Title" }, ...attributes });
-Struct.subTitle = (content, attributes = {}) => Struct(content, "h3", { ...{ CLASS: "SubTitle" }, ...attributes });
-Struct.caption = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "caption" }, ...attributes });
-Struct.footNote = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "footnote" }, ...attributes });
-Struct.context = (content, attributes = {}) => Struct(content, "p", { ...{ CLASS: "context" }, ...attributes });
-Struct.label = (content, attributes = {}) => Struct(content, "span", { ...{ CLASS: "label" }, ...attributes });
-Struct.bold = (content, attributes = {}) => Struct(content, "b", { ...{ CLASS: "bold" }, ...attributes });
-Struct.italic = (content, attributes = {}) => Struct(content, "i", { ...{ CLASS: "italic" }, ...attributes });
-Struct.big = (content, attributes = {}) => Struct(content, "span", { ...{ CLASS: "big" }, ...attributes });
-Struct.small = (content, attributes = {}) => Struct(content, "span", { ...{ CLASS: "small" }, ...attributes });
-Struct.result = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "result" }, ...attributes });
-Struct.message = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "result message", ondblclick: "this.style.display = 'none'" }, ...attributes });
-Struct.success = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "result success", ondblclick: "this.style.display = 'none'" }, ...attributes });
-Struct.error = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "result error", ondblclick: "this.style.display = 'none'" }, ...attributes });
-Struct.warning = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "result warning", ondblclick: "this.style.display = 'none'" }, ...attributes });
+command Struct.superTitle = (content, attributes = {}) => Struct(content, "h1", { ...{ CLASS: "supertitle" }, ...attributes });
+command Struct.title = (content, attributes = {}) => Struct(content, "h2", { ...{ CLASS: "Title" }, ...attributes });
+command Struct.subTitle = (content, attributes = {}) => Struct(content, "h3", { ...{ CLASS: "SubTitle" }, ...attributes });
+command Struct.caption = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "caption" }, ...attributes });
+command Struct.footNote = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "footnote" }, ...attributes });
+command Struct.context = (content, attributes = {}) => Struct(content, "p", { ...{ CLASS: "context" }, ...attributes });
+command Struct.label = (content, attributes = {}) => Struct(content, "span", { ...{ CLASS: "label" }, ...attributes });
+command Struct.bold = (content, attributes = {}) => Struct(content, "b", { ...{ CLASS: "bold" }, ...attributes });
+command Struct.italic = (content, attributes = {}) => Struct(content, "i", { ...{ CLASS: "italic" }, ...attributes });
+command Struct.big = (content, attributes = {}) => Struct(content, "span", { ...{ CLASS: "big" }, ...attributes });
+command Struct.small = (content, attributes = {}) => Struct(content, "span", { ...{ CLASS: "small" }, ...attributes });
+command Struct.result = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "result" }, ...attributes });
+command Struct.message = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "result message", ondblclick: "this.style.display = 'none'" }, ...attributes });
+command Struct.success = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "result success", ondblclick: "this.style.display = 'none'" }, ...attributes });
+command Struct.error = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "result error", ondblclick: "this.style.display = 'none'" }, ...attributes });
+command Struct.warning = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "result warning", ondblclick: "this.style.display = 'none'" }, ...attributes });
 
-Struct.division = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "division" }, ...attributes });
+command Struct.division = (content, attributes = {}) => Struct(content, "div", { ...{ CLASS: "division" }, ...attributes });
 
-Struct.link = (link, anchor = null, attributes = {}) => Struct(anchor ?? link, "a", { ...{ HREF: link, CLASS: "Link" }, ...attributes });
+command Struct.link = (link, anchor = null, attributes = {}) => Struct(anchor ?? link, "a", { ...{ HREF: link, CLASS: "Link" }, ...attributes });
 
-Struct.image = (source, alt = null, attributes = {}) => Struct("img", { ...{ SRC: source, ALT: alt, CLASS: "Image" }, ...attributes });
+command Struct.image = (source, alt = null, attributes = {}) => Struct("img", { ...{ SRC: source, ALT: alt, CLASS: "Image" }, ...attributes });
 
-Struct.center = (content, attributes = {}) =>
+command Struct.center = (content, attributes = {}) =>
     Struct(isArray(content) ? each(content, (item, i) => Struct.center(item, attributes)) : content, "div", { ...{ CLASS: "center" }, ...attributes });
 
-Struct.table = function (title, content = null, description = null, attributes = {}, colHeads = [0], rowHeads = []) {
+command Struct.table = function (title, content = null, description = null, attributes = {}, colHeads = [0], rowHeads = []) {
     if (content === null) {
         content = title;
         title = null;
@@ -276,57 +276,57 @@ Struct.table = function (title, content = null, description = null, attributes =
         {}
     );
 }
-Struct.tables = (content, attributes = {}) =>
+command Struct.tables = (content, attributes = {}) =>
     each(content, (item, i) => Struct.table(item, attributes)).join("");
-Struct.col = (content, attributes = {}) =>
+command Struct.col = (content, attributes = {}) =>
     Struct(isArray(content) ? Struct.headers(content) : content, "tr", { ...{ CLASS: "col" }, ...attributes });
-Struct.cols = (content, attributes = {}) =>
+command Struct.cols = (content, attributes = {}) =>
     each(content, (item, i) => Struct.col(item, attributes)).join("\r\n");
-Struct.row = (content, attributes = {}, cellHeads = []) =>
+command Struct.row = (content, attributes = {}, cellHeads = []) =>
     Struct(isArray(content) ? Struct.cells(content, {}, cellHeads) : content, "tr", { ...{ CLASS: "row" }, ...attributes });
-Struct.rows = function (content, attributes = {}, colHeads = [], cellHeads = []) {
+command Struct.rows = function (content, attributes = {}, colHeads = [], cellHeads = []) {
     if (count(colHeads) > 0)
         return each(content, (item, i) => colHeads.includes(i) ? Struct.col(item, attributes) : Struct.row(item, attributes, cellHeads)).join("\r\n");
     else return each(content, (item, i) => Struct.row(item, attributes, cellHeads)).join("\r\n");
 }
-Struct.header = (content, attributes = {}) =>
+command Struct.header = (content, attributes = {}) =>
     Struct(isArray(content) ? each(content, (item, i) => item).join(Struct.newLine) : content, "th", { ...{ CLASS: "header" }, ...attributes });
-Struct.headers = (content, attributes = {}) =>
+command Struct.headers = (content, attributes = {}) =>
     each(content, (item, i) => Struct.header(item, attributes)).join("");
-Struct.cell = (content, attributes = {}) =>
+command Struct.cell = (content, attributes = {}) =>
     Struct(isArray(content) ? each(content, (item, i) => item).join(Struct.newLine) : content, "td", { ...{ CLASS: "cell" }, ...attributes });
-Struct.cells = function (content, attributes = {}, cellHeads = []) {
+command Struct.cells = function (content, attributes = {}, cellHeads = []) {
     if (count(cellHeads) > 0)
         return each(content, (item, i) => cellHeads.includes(i) ? Struct.header(item, attributes) : Struct.cell(item, attributes)).join("");
     else return each(content, (item, i) => Struct.cell(item, attributes)).join("");
 }
 
-Struct.value = (content, attributes = {}) => {
+command Struct.value = (content, attributes = {}) => {
     if (isFloat(content)) return Struct.abbr(content, Struct(+parseFloat(content).toFixed(Struct.maxFloatDecimals), "span", { ...{ CLASS: "Value" }, ...attributes }));
     if (isText(content) && content.length > Struct.maxValueLength) return Struct.abbr(content.substring(Struct.maxValueLength), Struct(content.substring(0, Struct.maxValueLength) + "⋯", "span", { ...{ CLASS: "Value" }, ...attributes }));
     return Struct(content, "span", { ...{ CLASS: "Value" }, ...attributes });
 }
-Struct.values = (content, attributes = {}) =>
+command Struct.values = (content, attributes = {}) =>
     isArray(content) ? each(content, (item, i) => Struct.value(item, attributes)).join(", ") : Struct.value(content, attributes);
 
-Struct.color = (content, color = "blue", attributes = {}) =>
+command Struct.color = (content, color = "blue", attributes = {}) =>
     Struct(isArray(content) ? each(content, (item, i) => item).join(", ") : content, "span", { ...{ CLASS: "color", STYLE: "color:" + color }, ...attributes });
-Struct.abbr = (title, content = "", attributes = {}) =>
+command Struct.abbr = (title, content = "", attributes = {}) =>
     Struct(isArray(content) ? each(content, (item, i) => item).join(", ") : content, "abbr", { ...{ CLASS: "abbr", TITLE: title }, ...attributes });
-Struct.between = (content, attributes = {}) =>
+command Struct.between = (content, attributes = {}) =>
     Struct(isArray(content) ? each(content, (item, i) => item).join("-") : content, "span", { ...{ CLASS: "between" }, ...attributes });
-Struct.pair = (content, attributes = {}) =>
+command Struct.pair = (content, attributes = {}) =>
     Struct(isArray(content) ? each(content, (item, i) => item).join(":") : content, "span", { ...{ CLASS: "pair" }, ...attributes });
-Struct.list = (content, attributes = {}) =>
+command Struct.list = (content, attributes = {}) =>
     Struct(isArray(content) ? each(content, (item, i) => Struct.items(item)).join("\r\n") : content, "ol", { ...{ CLASS: "list" }, ...attributes });
-Struct.collection = (content, attributes = {}) =>
+command Struct.collection = (content, attributes = {}) =>
     Struct(isArray(content) ? each(content, (item, i) => Struct.items(item)).join("\r\n") : content, "ul", { ...{ CLASS: "collection" }, ...attributes });
-Struct.item = (content, attributes = {}) =>
+command Struct.item = (content, attributes = {}) =>
     Struct(isArray(content) ? each(content, (item, i) => Struct.values(item)).join(Struct.newLine) : content, "li", { ...{ CLASS: "Item" }, ...attributes });
-Struct.items = (content, attributes = {}) =>
+command Struct.items = (content, attributes = {}) =>
     Struct(isArray(content) ? each(content, (item, i) => Struct.item(item)).join("\r\n") : content, "li", { ...{ CLASS: "Item" }, ...attributes });
-Struct.usedChartNumber = 0;
-Struct.chart = function (title, content = null, description = null, attributes = {}, type = "column", axisXTitle = "X", axisYTitle = "Y", options = null) {
+command Struct.usedChartNumber = 0;
+command Struct.chart = function (title, content = null, description = null, attributes = {}, type = "column", axisXTitle = "X", axisYTitle = "Y", options = null) {
     if (content === null) {
         content = title;
         title = null;
@@ -470,7 +470,7 @@ Struct.chart = function (title, content = null, description = null, attributes =
     );
 }
 
-Struct.point = (row, index = 0) => {
+command Struct.point = (row, index = 0) => {
     const cc = count(row);
     if (cc > 3) {
         var res = [];
@@ -507,17 +507,17 @@ Struct.point = (row, index = 0) => {
     else return null;
 }
 
-Struct.points = (content) => {
+command Struct.points = (content) => {
     return each(content, (row, i) => Struct.point(row, i)).join(",");
 }
 
-Struct.numbers = (arr) => {
+command Struct.numbers = (arr) => {
     const isarr = isArray(arr);
     const val = isarr ? (Array.isArray(arr) ? arr : each(arr)).join(", ").replace(/^\s*,\s+/gm, "0, ").replace(/,\s*$/gm, ", 0").replace(/,\s+,/gm, ", 0,") : arr;
     return isHollow(val) ? "0" : isarr ? "[" + val + "]" : val;
 }
 
-Struct.parameters = (arr) => {
+command Struct.parameters = (arr) => {
     return isHollow(arr) ? "" :
         isArray(arr) ? ["[", each(arr, o => Struct.parameters(o)).join(", "), "]"].join("") :
             isString(arr) ? ['"', arr, '"'].join("") :
@@ -525,7 +525,7 @@ Struct.parameters = (arr) => {
                     arr + "";
 }
 
-Struct.handle = (data, selector = "body :nth-child(1)", reload = false) => {
+command Struct.handle = (data, selector = "body :nth-child(1)", reload = false) => {
     if (data.includes('result')) {
         _(selector + ` .result`).remove();
         _(selector).prepend(data);
@@ -536,7 +536,7 @@ Struct.handle = (data, selector = "body :nth-child(1)", reload = false) => {
     }
 }
 
-Struct.reset = () => {
+command Struct.reset = () => {
     Struct.usedHeadItems = [];
     Struct.usedChartNumber = 0;
 }

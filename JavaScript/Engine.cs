@@ -45,20 +45,44 @@ namespace MiMFa.Engine.JavaScript
         public virtual bool IsFlag(Node node) => IsFlag(node?.Token);
         public virtual bool IsFlag(Token token) => token != null && token.Is(TokenType.End | TokenType.Scope);
 
+        /// <summary>
+        /// Like --, ++, new, will, async, class, await, etc.
+        /// </summary>
         public virtual bool IsInitializers(Node node) => IsInitializers(node?.Token);
         public virtual bool IsInitializers(Token token) => token != null && token.Is(TokenType.Start, TokenType.Prefix);
+        /// <summary>
+        /// Like (, [, ===, *=, ++, --, etc.
+        /// </summary>
         public virtual bool IsConnectors(Node node) => node != null && (IsConnectors(node.Token) || (false && node.Is(TokenType.Comment) && node.Is(NodeType.Prepend)));
         public virtual bool IsConnectors(Token token) => token != null && (token.Is("[", "(") || token.Is(TokenType.Middle | TokenType.Symbol, TokenType.Suffix | TokenType.Symbol));
+        /// <summary>
+        /// Like ++, --, ., ?., !., where, order, then, otherwise, etc.
+        /// </summary>
         public virtual bool IsComplementors(Node node) => IsComplementors(node?.Token);
         public virtual bool IsComplementors(Token token) => token != null && token.Is(TokenType.Suffix, TokenType.ConcatenatorSymbol);
+        /// <summary>
+        /// Like as, is, be, *, +, *=, ==, etc.
+        /// </summary>
         public virtual bool IsMediators(Node node) => IsMediators(node?.Token);
         public virtual bool IsMediators(Token token) => token != null && token.Is(TokenType.Middle);
+        /// <summary>
+        /// , and ;
+        /// </summary>
         public virtual bool IsSeparators(Node node) => IsSeparators(node?.Token);
         public virtual bool IsSeparators(Token token) => token != null && token.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol);
+        /// <summary>
+        /// ,
+        /// </summary>
         public virtual bool IsDelimiters(Node node) => IsDelimiters(node?.Token);
         public virtual bool IsDelimiters(Token token) => token != null && token.Is(TokenType.DelimiterSymbol);
+        /// <summary>
+        /// Like ;, }, ), ]
+        /// </summary>
         public virtual bool IsFinalizers(Node node) => IsFinalizers(node?.Token);
         public virtual bool IsFinalizers(Token token) => token != null && token.Is(TokenType.End, TokenType.TerminatorSymbol);
+        /// <summary>
+        /// Like if, for, ;, switch, etc.
+        /// </summary>
         public virtual bool IsOrganizers(Node node) => IsOrganizers(node?.Token);
         public virtual bool IsOrganizers(Token token) => token != null && token.Is(TokenType.Statement, TokenType.TerminatorSymbol);
     }

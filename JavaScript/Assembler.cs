@@ -34,6 +34,7 @@ namespace MiMFa.Engine.JavaScript
             Location++;
             var nodes = SectionAssembleNodes(walker).ToList();
             Location--;
+            (Engine as Engine).Keywords.RemoveAll(Location + 1);
             if (nodes.Count > 1) return new Node(null, NodeType.Chunk, Location + 1, nodes.ToArray());
             if (nodes.Count == 1) return nodes[0].Update(location: Location + 1);
             return new Node(location: Location + 1);
@@ -65,6 +66,7 @@ namespace MiMFa.Engine.JavaScript
             Location++;
             var nodes = SequenceAssembleNodes(walker).ToList();
             Location--;
+            (Engine as Engine).Keywords.RemoveAll(Location + 1);
             if (nodes.Count > 1) return new Node(null, NodeType.Chunk, Location + 1, nodes.ToArray());
             if (nodes.Count == 1) return nodes[0].Update(location: Location + 1);
             return new Node(location: Location + 1);
@@ -349,11 +351,15 @@ namespace MiMFa.Engine.JavaScript
             if (node.Token.Value.EndsWith("="))
                 return node.Add(CompactAssembleNode(walker));
             if (node.Is("?"))
+            {
                 ConditionExpr.Push(Location);
-            if (node.Is(":") && ConditionExpr.Count > 0 && ConditionExpr.Last() == Location)
+                return node.Add(CompactAssembleNode(walker));
+            }
+            if (node.Is(":") && ConditionExpr.Count > 0 && ConditionExpr.First() == Location)
             {
                 node.Update(NodeType.Depend);
                 ConditionExpr.Pop();
+                return node.Add(CompactAssembleNode(walker));
             }
             if (node.Is(TokenType.ConcatenatorSymbol))
                 return node.Add(AssembleNode(walker));

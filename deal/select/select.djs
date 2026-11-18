@@ -1,3 +1,7 @@
+use ./all;
+use ./any;
+use ./one;
+
 // Project fields from an object, array, iterable, or scalar source.
 //
 // Supported projections:
@@ -11,7 +15,7 @@
 // DEAL's "FROM" separator is compiled as an argument separator. The source
 // is therefore always the final argument; a trailing empty separator value
 // is tolerated for compatibility with generated calls.
-command #select:start = function() {
+command #Select:start = function() {
     if (arguments.length < 1) return null;
     if (arguments.length === 1) return arguments[0];
 
@@ -116,6 +120,6 @@ command #select:start = function() {
     return project(source);
 };
 
-#select.all:start|function = all;
-#select.one:start|function = one;
-#select.any:start|function = any;
+command #Select.all:start|function = (all);
+command #Select.one:start|function = (one);
+command #Select.any:start|function = (any);

@@ -50,9 +50,9 @@ command #Accept:function = function (value, query) {
 	return value === query;
 }
 
-#Accept.isXPath:function = function (object) {
+command #Accept.isXPath:function = function (object) {
 	return typeof object === "string" && /^(?:\/|\.\/|\.\.\/|@|(?:count|boolean|contains|starts-with|string|number|not|normalize-space|name|local-name)\s*\()/i.test(object.trim());
 }
-#Accept.isArray:function = function (object) {
+command #Accept.isArray:function = function (object) {
 	return Array.isArray(object);
 }

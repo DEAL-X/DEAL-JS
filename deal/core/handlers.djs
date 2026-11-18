@@ -10,8 +10,7 @@ let #data = null;
 command handle(inputtedData = null, status = null) {
     // Reset all handlers when no input data is provided.
     if (inputtedData == null) {
-        if(status == null)
-            response = null;
+        if(status == null) response = null;
         data = null;
         return handle;
     }

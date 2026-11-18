@@ -360,12 +360,14 @@ namespace MiMFa.Engine.DEAL.JS
                 if (!force && (compiler as Engine).HasDependency(file)) return 1;
                 if (rp != null && rp.Exists(file))
                 {
-                    int c = (compiler as Engine).Dependencies.Count + (Regex.IsMatch(file, @"[\\/]\.(deal|djs|js)$", RegexOptions.IgnoreCase)?0:UseFile(rp.ParentDirectory(file).TrimEnd('/','\\')+Path.DirectorySeparatorChar));
+                    if(!Regex.IsMatch(file, @"[\\/]\.(deal|djs|js)$", RegexOptions.IgnoreCase))
+                        num += UseFile(rp.ParentDirectory(file).TrimEnd('/','\\')+Path.DirectorySeparatorChar);
+                    int c = (compiler as Engine).Dependencies.Count;
                     (compiler as Engine).UseDependency(
                         new Input(rp.GetFileText(file, System.Text.Encoding.UTF8), file), 
                         force
                     );
-                    return (compiler as Engine).Dependencies.Count - c;
+                    return num + (compiler as Engine).Dependencies.Count - c;
                 }
             }
             catch { }
@@ -455,7 +457,7 @@ namespace MiMFa.Engine.DEAL.JS
             if (acceptor.HasValue) Acceptors[lname] = acceptor.Value;
             if (dataAcceptor.HasValue) DataAcceptors[lname] = dataAcceptor.Value;
             CaseAcceptors[lname] = name;
-            Engine.SetDefinitionCommand(name, acceptor??TokenType.Keyword, 0);
+            //Engine.SetDefinitionCommand(name, acceptor??TokenType.Keyword, 0);
         }
         protected virtual Token GetAcceptedToken(TokenType type, string name, Position location = null)
         {

@@ -13,7 +13,7 @@ namespace MiMFa.Engine.JavaScript
             var before = walker.PeekProcedure(-2);
             var next = walker.PeekProcedure();
             if (
-                (Engine as Engine).Keywords.Get(token.Value) != null ||
+                (Engine as Engine).Keywords.Has(token.Value) ||
                 (
                     before != null &&
                     (

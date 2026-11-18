@@ -292,7 +292,7 @@ namespace MiMFa.Engine.DEAL.JS
                         var child = NormalSectionAssembleNode(walker);
                         cname.Token.Type = child.Is(TokenType.FunctionKeyword) ? TokenType.FunctionKeyword : TokenType.IdentifierKeyword;
                         Engine?.SetDefinitionCommand(cname);
-                        return Engine.CreateDefineIdentifierNode(cname.Token.Value, child);
+                        return Engine.CreateDefineIdentifierNode(cname.Token.Value, child, cname.Value.Contains(".")?"":"var");
                     }
 
                 case "function":
@@ -584,55 +584,103 @@ namespace MiMFa.Engine.DEAL.JS
         protected override Node AssembleKeywordNode(Node node, NodeWalker walker)
         {
             var before = walker.PeekProcedure(-2);
+
+            bool isNamespacedPart = before?.Is(TokenType.IdentifierKeyword, TokenType.NamespaceKeyword, TokenType.ConcatenatorSymbol) == true;
+            bool isDirect = node.Value.Contains(".");
+
+            int commandLength = -1;
+
+            var pfKeyword = isNamespacedPart ? null : Engine?.GetFunction(node.Token.Value)?.FirstOrDefault().Value;
+            bool isPureFunction = pfKeyword != null;
+            if (isPureFunction) node.Token.Update(node.Token.Type | pfKeyword.Type, pfKeyword.Namespace(0, "."));
+            var piKeyword = isPureFunction ? null : isNamespacedPart ? null : FindHierarchicalKeyword(Engine?.Keywords, node.Token.Value, walker, ref commandLength);
+            bool isPureIdentifier = piKeyword != null;
+            if (isPureIdentifier)
+            {
+                pfKeyword = null;
+                node.Token.Update(piKeyword.Type, piKeyword.Namespace(0, "."));
+            }
+            else piKeyword = null;
+
+            var acKeyword = isNamespacedPart ? null : FindHierarchicalKeyword(Engine?.ActionCommands, node.Token.Value, walker, ref commandLength);
+            bool isActionCommand = acKeyword != null;
+            if (isActionCommand)
+            {
+                piKeyword = null;
+                node.Token.Update(acKeyword.Type, acKeyword.Namespace(0, "."));
+            }
+            else acKeyword = null;
+            var dcKeyword = isNamespacedPart ? null : FindHierarchicalKeyword(Engine?.DefinitionCommands, node.Token.Value, walker, ref commandLength);
+            bool isDefinitionCommand = dcKeyword != null;
+            if (isDefinitionCommand)
+            {
+                acKeyword = null;
+                node.Token.Update(dcKeyword.Type, dcKeyword.Namespace(0, "."));
+            }
+            else dcKeyword = null;
+            var fcKeyword = isNamespacedPart ? null : FindHierarchicalKeyword(Engine?.FunctionCommands, node.Token.Value, walker, ref commandLength);
+            bool isFunctionCommand = fcKeyword != null;
+            if (isFunctionCommand)
+            {
+                dcKeyword = null;
+                node.Token.Update(fcKeyword.Type, fcKeyword.Namespace(0, "."));
+            }
+            else fcKeyword = null;
+
             var next = walker.PeekProcedure();
             var next2 = walker.PeekProcedure(1);
-            bool isNamespaced = before?.Is(TokenType.IdentifierKeyword, TokenType.NamespaceKeyword, TokenType.ConcatenatorSymbol) == true;
-            string nvalue = isNamespaced ? "" : node.ToString("");
 
-            var fKeyword = Engine?.GetFunction(nvalue);
-            var iKeyword = fKeyword != null ? null : Engine?.Keywords.Get(nvalue);
-            int functionCommandLength, definitionCommandLength, actionCommandLength;
-            var fcKeyword = FindHierarchicalCommand(Engine?.FunctionCommands, nvalue, walker, out functionCommandLength);
-            var dcKeyword = FindHierarchicalCommand(Engine?.DefinitionCommands, nvalue, walker, out definitionCommandLength);
-            var acKeyword = FindHierarchicalCommand(Engine?.ActionCommands, nvalue, walker, out actionCommandLength);
+            if (
+                before?.Is("class", "interface", "enum", "implements", "extends", "static") == true ||
+                next?.Is(":", "?", "??") == true
+            ) return node;
 
-            int commandLength = System.Math.Max(functionCommandLength, System.Math.Max(definitionCommandLength, actionCommandLength));
-            string hierarchicalDefinitionName = null;
-            if (commandLength > 0)
-            {
-                if (actionCommandLength == commandLength && acKeyword != null) { fcKeyword = null; dcKeyword = null; }
-                else if (functionCommandLength == commandLength && fcKeyword != null) { dcKeyword = null; acKeyword = null; }
-                else if (definitionCommandLength == commandLength && dcKeyword != null) { fcKeyword = null; acKeyword = null; }
-                // Normalize every matched segment to its registered spelling.
-                // The detector is case-insensitive, but the source token may not
-                // use the canonical casing (for example, "StRing" -> "string").
-                var matchedCommands = acKeyword != null ? Engine.ActionCommands :
-                    fcKeyword != null ? Engine.FunctionCommands : Engine.DefinitionCommands;
-                NormalizeHierarchicalCommandTokens(matchedCommands, walker, commandLength);
-                if (dcKeyword != null)
-                    hierarchicalDefinitionName = GetHierarchicalCommandName(Engine.DefinitionCommands, nvalue, walker, commandLength);
+            pfKeyword = pfKeyword ?? fcKeyword;
 
-                for (int index = 0; index < commandLength; index++) walker.MoveToProcedure();
-                next = walker.PeekProcedure();
-                next2 = walker.PeekProcedure(1);
-            }
+            isPureFunction = isPureFunction && node.Token.Is(TokenType.FunctionKeyword);
+            isPureIdentifier = isPureIdentifier && node.Token.Is(TokenType.Keyword);
+            isActionCommand = isActionCommand && node.Token.Is(TokenType.Keyword);
+            isDefinitionCommand = isDefinitionCommand && node.Token.Is(TokenType.Keyword);
+            isFunctionCommand = isFunctionCommand && node.Token.Is(TokenType.FunctionKeyword);
 
-            fKeyword = fKeyword ?? fcKeyword;
-            bool isDirect = node.Value.Contains(".");
-            bool isFunctionCommand = !isNamespaced && fcKeyword != null;
-            bool isDefinitionCommand = !isNamespaced && dcKeyword != null;
-            bool isActionCommand = !isNamespaced && acKeyword != null;
-            bool isCommand = isFunctionCommand || isDefinitionCommand || isActionCommand;
-            bool isCommandBoundary = next == null || !(before?.Is("(") == true && next.Is(")")) && (Engine.IsSeparators(next) || Engine.IsComplementors(next) ||
-                Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next));
-            bool isArgumentStart = next?.Is(TokenType.Data, TokenType.Start | TokenType.Scope) == true ||
-                (fKeyword != null && next?.Is(TokenType.Keyword) == true);
-            bool isDelimiterContinuation = next2?.Is(TokenType.Keyword) == true || Engine.IsConnectors(next2) ||
+            bool isIdentifier = isPureIdentifier || isDefinitionCommand;
+            bool isFunction = isPureFunction || isFunctionCommand;
+            bool isDetected = isActionCommand || isIdentifier || isFunction;
+            bool isEnclosed = before?.Is("(") == true && next?.Is(")") == true;
+            bool isArgumentStart = next?.Is(TokenType.Data) == true || next?.Is("{", "(", "...") == true || ((isFunction || isDefinitionCommand) && next?.Is(TokenType.Keyword) == true);
+            bool isBounded = next == null || Engine.IsSeparators(next) || Engine.IsComplementors(next) || Engine.IsMediators(next) || Engine.IsFinalizers(next) || Engine.IsOrganizers(next);
+            bool isDelimiterContinuation =
+                next2?.Is(TokenType.Keyword) == true || Engine.IsConnectors(next2) ||
                 Engine.IsComplementors(next2) || Engine.IsMediators(next2) ||
                 Engine.IsFinalizers(next2) || Engine.IsOrganizers(next2);
 
-            if (next?.Is(":") == true)
-                return new Node(node.Token.Update(TokenType.IdentifierKeyword), NodeType.DefineStructure);
+            if (isDetected)
+            {
+                if (isEnclosed)
+                    return node;
+                else if (isActionCommand)
+                    if(next?.Is(TokenType.Keyword) == true)
+                    {
+                        node.Token.Update(TokenType.NamespaceKeyword);
+                        return node
+                            .Update(NodeType.CallStructure)
+                            .AddRange(
+                                Engine.IsComplementors(next) ? null : Engine.CreateDotNode(),
+                                NormalCompactAssembleNode(walker)
+                            );
+                    }
+                    else return Engine.CreateNode(node.Token.Value, TokenType.Data, NodeType.Chunk);
+                else if (isArgumentStart)
+                    return node.Update(NodeType.CallStructure).Add(
+                        next.Is("(") ?
+                        AssembleNode(walker) :
+                        Engine.CreatePackNode(NormalSequenceAssembleNode(walker))
+                    );
+                else if (isBounded && isFunctionCommand)
+                    return node.Add(Engine.CreatePackNode());
+                //else return node;
+            }
+
             if (node.Is(TokenType.NamespaceKeyword))
                 if (next?.Is(TokenType.ConcatenatorSymbol) == true || !next?.Is(TokenType.Keyword) == true)
                     return node.Add(CompactAssembleNode(walker));
@@ -644,7 +692,6 @@ namespace MiMFa.Engine.DEAL.JS
                     node.Add(AssembleNode(walker));
                     if (walker.PeekProcedure()?.Is("{") == true)
                         return node.Update(NodeType.DefineStructure).Add(AssembleNode(walker));
-                    else if (isCommand) node.Token.Value = acKeyword?.Name ?? fKeyword?.Name ?? node.Token.Value;
                     return node;
                 }
                 else if (before?.Is(TokenType.ConcatenatorSymbol) == true) return node;
@@ -653,164 +700,77 @@ namespace MiMFa.Engine.DEAL.JS
                     node.Token.Type = TokenType.NamespaceKeyword;
                     return node;
                 }
-                else
+                else if (isBounded && next?.Is(TokenType.Symbol) != true && !isDirect)
+                    return node.Add(Engine.CreatePackNode(TrimmedSequenceAssembleNode(walker)));
+            }
+            else if (
+                    !node.Is("this") &&
+                    isArgumentStart &&
+                    !isBounded 
+                    //&&(
+                    //    Engine.IsSeparators(next2) ||
+                    //    Engine.IsMediators(next2) ||
+                    //    Engine.IsComplementors(next2) ||
+                    //    Engine.IsFinalizers(next2) ||
+                    //    Engine.IsOrganizers(next2)
+                    //)
+                )
+            {
+                node.Token.Update(TokenType.FunctionKeyword);
+                return node.Update(NodeType.CallStructure)
+                    .Add(next.Is("(") ? AssembleNode(walker) : Engine.CreatePackNode(NormalSequenceAssembleNode(walker)));
+            }
+            else if (next?.Is(TokenType.Keyword) == true)
+            {
+                node.Update(NodeType.CallStructure).AddRange(
+                    Engine.IsComplementors(next) ? null : Engine.CreateDotNode(),
+                    NormalCompactAssembleNode(walker)
+                );
+                node.Token.Update(TokenType.NamespaceKeyword);
+                if (before?.Is(TokenType.NamespaceKeyword) == true && before?.Count < 1)
+                    return AssembleKeywordNode(node, walker);
+                else return node;
+            }
+            else if (Engine.IsDelimiters(next) && isDelimiterContinuation)
+                return node.Update(NodeType.CallStructure);
+            else return new Node(node.Token.Update(TokenType.IdentifierKeyword), NodeType.CallStructure);
+            return base.AssembleKeywordNode(node, walker);
+        }
+        private Keywords FindHierarchicalKeyword(Keywords keyword, string name, NodeWalker walker, ref int consumed)
+        {
+            if (keyword == null || string.IsNullOrWhiteSpace(name)) return null;
+
+            var names = name.ToLower().Split(new[] { '.',' ' }, System.StringSplitOptions.RemoveEmptyEntries).ToList();
+            int c = walker.Index;
+            Keywords current = keyword.Get(names.ToArray());
+            if (consumed < 0) consumed = names.Count - 1;
+            if (current != null && names.Count <= 1) // Continue if it is commands
+                while (walker.PeekProcedure()?.Is(TokenType.Keyword, TokenType.ConcatenatorSymbol) == true)
                 {
-                    if (!isNamespaced) node.Token.Value = hierarchicalDefinitionName ?? acKeyword?.Name ?? fKeyword?.Name ?? node.Token.Value;
-                    if (acKeyword != null && next?.Is(TokenType.Keyword) == true)
+                    names.AddRange(walker.WalkProcedure().Token.Value.ToLower().Split(new[] { '.' }, System.StringSplitOptions.RemoveEmptyEntries));
+                    var m = keyword.Get(names.ToArray());
+                    if (m == null)
                     {
-                        node.Token.Update(TokenType.NamespaceKeyword);
-                        return node
-                            .Update(NodeType.CallStructure)
-                            .AddRange(
-                                Engine.IsComplementors(next) ? null : Engine.CreateDotNode(),
-                                NormalCompactAssembleNode(walker)
-                            );
+                        walker.MoveToProcedure(-1);
+                        break;
                     }
-                    else if (isCommandBoundary && next?.Is(TokenType.Symbol) != true && !isDirect) node.Add(Engine.CreatePackNode(TrimmedSequenceAssembleNode(walker)));
+                    else current = m;
+                }
+            if (current != null)
+            {
+                int d = current.Depth();
+                var k = current.FirstLeaf();
+                if (d > consumed && k != null)
+                {
+                    consumed = d;
+                    var l = k.LastLeaf();
+                    k.Type = l.Type;
+                    k.Locality = l.Locality;
+                    return k;
                 }
             }
-            else if (before?.Is("class", "interface", "enum", "implements", "extends") != true)
-            {
-                if (acKeyword != null) return Engine.CreateNode(acKeyword.Name, TokenType.Data, NodeType.Chunk);
-                else
-                {
-                    if (!isNamespaced) node.Token.Update(TokenType.IdentifierKeyword, hierarchicalDefinitionName ?? (fKeyword ?? dcKeyword ?? iKeyword)?.Name);
-
-                    if (
-                        !node.Is("this") &&
-                        isArgumentStart &&
-                        (iKeyword == null || before?.Is(TokenType.IdentifierKeyword, TokenType.NamespaceKeyword, TokenType.ConcatenatorSymbol) == true) &&
-                        !Engine.IsSeparators(next) &&
-                        !Engine.IsMediators(next) &&
-                        !Engine.IsComplementors(next) &&
-                        !Engine.IsFinalizers(next) &&
-                        !Engine.IsOrganizers(next) &&
-                        (
-                            (!isNamespaced && fKeyword != null) ||
-                            next.Is(TokenType.Data) ||
-                            next.Is("(", "...") ||
-                            Engine.IsSeparators(next2) ||
-                            Engine.IsMediators(next2) ||
-                            Engine.IsComplementors(next2) ||
-                            Engine.IsFinalizers(next2) ||
-                            Engine.IsOrganizers(next2)
-                        )
-                    )
-                    {
-                        node.Token.Update(TokenType.FunctionKeyword);
-                        return node.Update(NodeType.CallStructure)
-                            .Add(next.Is("(") ? AssembleNode(walker) : Engine.CreatePackNode(NormalSequenceAssembleNode(walker)));
-                    }
-                    else if (next?.Is(TokenType.Keyword) == true)
-                    {
-                        node.Update(NodeType.CallStructure).AddRange(
-                            Engine.IsComplementors(next) ? null : Engine.CreateDotNode(),
-                            NormalCompactAssembleNode(walker)
-                        );
-                        node.Token.Update(TokenType.NamespaceKeyword);
-                        if (before?.Is(TokenType.NamespaceKeyword) == true && before?.Count < 1)
-                            return AssembleKeywordNode(node, walker);
-                        else return node;
-                    }
-                    if (isFunctionCommand && isCommandBoundary)
-                        return Engine.CreateCallFunctionNode(fcKeyword.Name);
-                    else if (Engine.IsDelimiters(next) && isDelimiterContinuation)
-                        return node.Update(NodeType.CallStructure);
-
-                    return new Node(node.Token.Update(TokenType.IdentifierKeyword), NodeType.CallStructure);
-                }
-            }
-            return node;
-        }
-        private string GetHierarchicalCommandName(Keywords keyboard, string name, NodeWalker walker, int length)
-        {
-            if (keyboard == null || string.IsNullOrWhiteSpace(name)) return null;
-
-            var current = keyboard;
-            var parts = new List<string>();
-            foreach (var segment in name.Split(new[] { '.' }, System.StringSplitOptions.RemoveEmptyEntries))
-            {
-                current = current.Get(segment.ToLower());
-                if (current == null) return null;
-                parts.Add(current.Name);
-            }
-
-            for (int offset = 0; offset < length; offset++)
-            {
-                var token = walker.PeekProcedure(offset);
-                if (token == null || token.Is(TokenType.ConcatenatorSymbol)) continue;
-
-                current = current.Get(token.Value.ToLower());
-                if (current == null) return null;
-                parts.Add(current.Name);
-            }
-
-            return parts.Count > 0 ? string.Join(".", parts) : null;
-        }
-        private void NormalizeHierarchicalCommandTokens(Keywords keyboard, NodeWalker walker, int length)
-        {
-            if (keyboard == null || length <= 0) return;
-
-            var current = keyboard;
-            for (int offset = 0; offset < length; offset++)
-            {
-                var token = walker.PeekProcedure(offset);
-                if (token == null) break;
-                if (token.Is(TokenType.ConcatenatorSymbol)) continue;
-
-                var child = current.Get(token.Value.ToLower());
-                if (child == null) break;
-
-                token.Token.Value = child.Name;
-                current = child;
-            }
-        }
-        private void FindHierarchicalCommandItem(Keywords keyboard, NodeWalker walker, int offset, ref Keywords result, ref int consumed)
-        {
-            if (keyboard == null || keyboard.Count == 0) return;
-
-            var next = walker.PeekProcedure(offset);
-            if (next == null) return;
-
-            int step = 1;
-            if (next.Is(TokenType.ConcatenatorSymbol))
-            {
-                next = walker.PeekProcedure(offset + 1);
-                if (next == null) return;
-                step++;
-            }
-            // A hierarchical command may be written with whitespace rather than
-            // a namespace separator. In that form the parser can classify the
-            // following word as a Statement/ordinary identifier, not as Keyword.
-            // The child lookup itself is the decisive test, so only reject
-            // structural and literal tokens here.
-            if (next.Token == null ||
-                next.Is(TokenType.Data) ||
-                next.Is(TokenType.Start | TokenType.Scope) ||
-                next.Is(TokenType.End | TokenType.Scope))
-                return;
-
-            var child = keyboard.Get(next.Value.ToLower());
-            if (child == null) return;
-
-            consumed = offset + step;
-            result = child;
-            FindHierarchicalCommandItem(child, walker, offset + step, ref result, ref consumed);
-        }
-        private Keywords FindHierarchicalCommand(Keywords keyboard, string name, NodeWalker walker, out int consumed)
-        {
-            consumed = 0;
-            if (keyboard == null || string.IsNullOrWhiteSpace(name)) return null;
-
-            var names = name.Split(new[] { '.' }, System.StringSplitOptions.RemoveEmptyEntries)
-                .Select(value => value.ToLower())
-                .ToArray();
-            var current = keyboard.Get(names);
-            if (current == null) return null;
-
-            var result = current;
-            FindHierarchicalCommandItem(current, walker, 0, ref result, ref consumed);
-            return result;
+            walker.Index = c;
+            return null;
         }
         protected override Node AssembleCommentNode(Node node, NodeWalker walker)
         {
@@ -994,7 +954,7 @@ namespace MiMFa.Engine.DEAL.JS
                         string KeyAccess(Node key, string prefix)
                         {
                             if (key == null) return prefix;
-                            if (key.Token != null && !string.IsNullOrEmpty(key.Token.Value) && key.Children.Count == 0)
+                            if (key.Token != null && !string.IsNullOrEmpty(key.Token.Value) && key.Count == 0)
                                 return prefix + "." + key.Token.Value;
                             // fallback: join child token values by dot
                             var parts = new List<string>();

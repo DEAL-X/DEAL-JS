@@ -91,7 +91,6 @@ command File (path = null, encoding = null, sequential = true) {
 		},
 		get fields () {
 			return (function * () {
-				if(lines == null) return;
 				for(const line of application.Engine.Resource.GetFileLines(this.path, this.encoding)) yield _parseLine(line);
 			})();
 		},
@@ -120,11 +119,11 @@ command File (path = null, encoding = null, sequential = true) {
 			return application.Engine.Resource.SetFileText(this.path, Make.string(object), this.encoding);
 		},
 		prepend: function (object = null) {
-			if(sequential) return application.Engine.Resource.PrependFileLine(this.path, Make.string(object), this.encoding);
+			if(this.sequential) return application.Engine.Resource.PrependFileLine(this.path, Make.string(object), this.encoding);
 			else return application.Engine.Resource.PrependFileText(this.path, Make.string(object), this.encoding);
 		},
 		append: function (object = null) {
-			if(sequential) return application.Engine.Resource.AppendFileLine(this.path, Make.string(object), this.encoding);
+			if(this.sequential) return application.Engine.Resource.AppendFileLine(this.path, Make.string(object), this.encoding);
 			else return application.Engine.Resource.AppendFileText(this.path, Make.string(object), this.encoding);
 		},
 		// String and RegExp queries search raw lines. XPath and object graphs search parsed JSON objects.
@@ -143,7 +142,9 @@ command File (path = null, encoding = null, sequential = true) {
 		},
 		search: function * (query = null, foreward = true) {
 			const textQuery = ((typeof query === "string" && !Accept.isXPath(query)) || query instanceof RegExp);
-			const lines = foreward ? this.lines() : Make.array(this.lines()).reverse();
+			const lines = foreward ? 
+				application.Engine.Resource.GetFileLines(this.path, this.encoding) :
+				Make.array(application.Engine.Resource.GetFileLines(this.path, this.encoding)).reverse();
 			for(const line of lines) {
 				if(query === null || query === undefined) {
 					yield line;
