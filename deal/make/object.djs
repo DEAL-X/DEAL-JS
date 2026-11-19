@@ -1,4 +1,8 @@
 // JavaScript-to-.NET object and collection converters.
+use deal/make;
+use deal/make/collection;
+use deal/make/logical;
+
 
 // Initialize the namespace here as well: importing a leaf module must not depend
 // on the host having separately imported the package entry point.
@@ -20,9 +24,6 @@ command #Make:identifier = globalThis.Make;
 //   Make.dictionaryObject({ name: "DEAL" })       -> Dictionary<String, Object>
 //   Make.objectObject({ X: 1, Y: 2 })             -> ExpandoObject
 
-use deal/make;
-use deal/make/collection;
-use deal/make/logical;
 
 command Make.hostObject () {
     if (typeof host === "undefined" || host == null ||
