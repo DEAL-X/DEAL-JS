@@ -195,7 +195,7 @@ engine.AddHostObject("host", new ExtendedHostFunctions());
 Then load the module and convert values at .NET call boundaries:
 
 ~~~deal
-Use deal/make/object;
+Use deal/make;
 
 Consider names be ["Ada", "Grace"];
 Consider namesArray be Make.arrayObject(names, "System.String");
