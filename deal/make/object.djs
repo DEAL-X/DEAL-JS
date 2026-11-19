@@ -34,6 +34,43 @@ function _clrGenericType (definition, ...types) {
     return clr.type(definition, ...types.map(_clrType));
 }
 
+const _clrTypeNames = new WeakMap();
+
+function _clrTypeName (type) {
+    if (typeof type === "string") return type;
+    if (type != null && (typeof type === "object" || typeof type === "function"))
+        return _clrTypeNames.get(type) || null;
+    return null;
+}
+
+function _clrConvert (value, typeName) {
+    const convert = _clrHost().type("System.Convert");
+    switch (typeName) {
+        case "System.Byte": return convert.ToByte(value);
+        case "System.SByte": return convert.ToSByte(value);
+        case "System.Int16": return convert.ToInt16(value);
+        case "System.UInt16": return convert.ToUInt16(value);
+        case "System.Int32": return convert.ToInt32(value);
+        case "System.UInt32": return convert.ToUInt32(value);
+        case "System.Int64": return convert.ToInt64(value);
+        case "System.UInt64": return convert.ToUInt64(value);
+        case "System.Single": return convert.ToSingle(value);
+        case "System.Double": return convert.ToDouble(value);
+        case "System.Decimal": return convert.ToDecimal(value);
+        case "System.Boolean": return convert.ToBoolean(value);
+        case "System.DateTime": return convert.ToDateTime(value);
+        case "System.String": return convert.ToString(value);
+        case "System.Char": {
+            const character = String(value);
+            if (character.length !== 1)
+                throw new TypeError("A System.Char conversion requires exactly one character.");
+            return character;
+        }
+        case "System.Guid": return _clrHost().type("System.Guid").Parse(String(value));
+        default: throw new TypeError("Unsupported scalar CLR conversion target: " + typeName);
+    }
+}
+
 function _clrValues (values, mapper = null, elementType = "System.Object") {
     return Make.array(values).map(value =>
         typeof mapper === "function" ? mapper(value) : Make.objectObject(value, elementType)
@@ -49,7 +86,14 @@ function _clrCreateCollection (definition, values, elementType, method, mapper =
 }
 
 command Make.typeObject (type = "System.Object") {
-    return _clrType(type);
+    const name = _clrTypeName(type);
+    const result = _clrType(type);
+    if (name && result != null && (typeof result === "object" || typeof result === "function"))
+        _clrTypeNames.set(result, name);
+    else if (typeof type === "string" && result != null &&
+        (typeof result === "object" || typeof result === "function"))
+        _clrTypeNames.set(result, type);
+    return result;
 };
 
 command Make.isPlainObject (value) {
@@ -82,16 +126,11 @@ command Make.objectObject (value = null, type = null, memberTypes = null) {
         return Make.arrayObject(value, type.slice(0, -2));
 
     const clr = _clrHost();
-    const typeName = typeof type === "string" ? type : null;
+    const typeName = _clrTypeName(type);
 
     if (typeName === "System.String") return String(value);
-    if (typeName === "System.Boolean") return clr.type("System.Convert").ToBoolean(value);
-    if (typeName === "System.Char") {
-        const character = String(value);
-        if (character.length !== 1)
-            throw new TypeError("A System.Char conversion requires exactly one character.");
-        return character;
-    }
+    if (typeName === "System.Boolean") return _clrConvert(value, typeName);
+    if (typeName === "System.Char") return _clrConvert(value, typeName);
 
     const scalarTypes = [
         "System.Byte", "System.SByte", "System.Int16", "System.UInt16",
@@ -99,10 +138,10 @@ command Make.objectObject (value = null, type = null, memberTypes = null) {
         "System.Single", "System.Double", "System.Decimal", "System.DateTime"
     ];
     if (typeName && scalarTypes.includes(typeName))
-        return clr.type("System.Convert").ChangeType(value, _clrType(type));
+        return _clrConvert(value, typeName);
 
     if (typeName === "System.Guid")
-        return clr.type("System.Guid").Parse(String(value));
+        return _clrConvert(value, typeName);
 
     if (Make.isPlainObject(value)) {
         const instance = clr.newObj(_clrType(type));
@@ -232,7 +271,9 @@ command Make.objectDictionary (value = {}) {
 };
 
 command Make.convertObject (value, targetType) {
-    return _clrHost().type("System.Convert").ChangeType(value, _clrType(targetType));
+    const typeName = _clrTypeName(targetType);
+    if (typeName) return _clrConvert(value, typeName);
+    throw new TypeError("Make.convertObject expects a type name or a type returned by Make.typeObject.");
 };
 
 command Make.bytesObject (value = null, encoding = null) {
