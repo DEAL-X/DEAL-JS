@@ -1,3 +1,4 @@
+use deal/make/.djs;
 command Make.string (object = null) {
     if (object === null || object === undefined)
         return null;
