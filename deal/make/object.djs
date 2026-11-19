@@ -116,18 +116,18 @@ command Make.stringArrayObject (values = []) {
 
 command Make.objectObject (value = null, type = null, memberTypes = null) {
     if (value === null || value === undefined) return null;
+    const typeName = _clrTypeName(type);
 
-    if (type == null || type === "System.Object") {
+    if (type == null || typeName === "System.Object") {
         if (Array.isArray(value)) return Make.arrayObject(value);
         if (Make.isPlainObject(value)) return Make.expandoObject(value);
         return value;
     }
 
-    if (typeof type === "string" && type.endsWith("[]"))
-        return Make.arrayObject(value, type.slice(0, -2));
+    if (typeof typeName === "string" && typeName.endsWith("[]"))
+        return Make.arrayObject(value, typeName.slice(0, -2));
 
     const clr = _clrHost();
-    const typeName = _clrTypeName(type);
 
     if (typeName === "System.String") return String(value);
     if (typeName === "System.Boolean") return _clrConvert(value, typeName);
