@@ -842,7 +842,7 @@ engine.AddHostObject("host", new ExtendedHostFunctions());
 
 A type argument may be a CLR type name or a ClearScript host-type reference returned by `Make.typeObject`. Collection converters accept JavaScript arrays and iterables; an optional mapper can transform each element before insertion. Values still need to be convertible to the requested CLR element type.
 
-The shared Engine resource provider exposes script-friendly overloads for `Combine`, `SetFolderContents`, `SetFileContents`, `SetFileLines`, `PrependFileLines`, and `AppendFileLines`. These overloads accept ClearScript's `object[]` representation and perform the final string/byte conversion inside .NET. The browser permissions API and Firefox driver argument setter provide equivalent overloads for JavaScript arrays.
+The shared Engine resource provider exposes script-friendly overloads for `Combine`, `SetFolderContents`, `SetFileContents`, `SetFileLines`, `PrependFileLines`, and `AppendFileLines`. These overloads accept ClearScript's `object[]` representation and perform the final string/byte conversion inside .NET. Encoding-aware resource methods also accept an existing `Encoding`, an encoding name such as `utf-8`, or a code page; an undefined script argument is treated as the default encoding. The browser permissions API and Firefox driver argument setter provide equivalent overloads for JavaScript arrays and enumerable values.
 
 For example, no manual conversion to `string[]` is needed:
 
