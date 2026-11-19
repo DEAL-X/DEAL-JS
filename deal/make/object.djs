@@ -254,7 +254,10 @@ command Make.hashTableObject (value = {}) {
 
 command Make.expandoObject (value = {}) {
     const clr = _clrHost();
-    const result = clr.newObj(_clrType("System.Dynamic.ExpandoObject"));
+    const expandoType = typeof Core !== "undefined"
+        ? Core.System.Dynamic.ExpandoObject
+        : _clrType("System.Dynamic.ExpandoObject");
+    const result = clr.newObj(expandoType);
     const dictionaryType = _clrGenericType(
         "System.Collections.Generic.IDictionary", "System.String", "System.Object"
     );
