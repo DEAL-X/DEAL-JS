@@ -1,3 +1,4 @@
+use deal/make/.djs;
 // JavaScript/.NET interop helpers for ClearScript.
 // The host must expose Microsoft.ClearScript.ExtendedHostFunctions as global "host".
 //
@@ -9,7 +10,6 @@
 use deal/make/collection;
 use deal/make/logical;
 
-command #Make:identifier = {};
 
 command Make.hostObject () {
     if (typeof host === "undefined" || host == null ||
