@@ -3,6 +3,7 @@ using MiMFa.Net.Browsers.Sessions;
 using MiMFa.Net.Browsers;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -30,11 +31,24 @@ namespace MiMFa.Net.Browsers.Drivers
         public string[] Arguments { get; set; } = Array.Empty<string>();
 
         /// <summary>Sets Firefox arguments from a JavaScript array (ClearScript marshals it as object[]).</summary>
-        public void SetArguments(object[] arguments)
+        public void SetArguments(object arguments)
         {
-            Arguments = arguments == null
-                ? Array.Empty<string>()
-                : arguments.Select(value => Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty).ToArray();
+            if (arguments == null)
+            {
+                Arguments = Array.Empty<string>();
+                return;
+            }
+            if (arguments is string)
+            {
+                Arguments = new[] { (string)arguments };
+                return;
+            }
+            if (!(arguments is IEnumerable values))
+                throw new ArgumentException("Firefox arguments must be an enumerable collection.", nameof(arguments));
+
+            Arguments = values.Cast<object>()
+                .Select(value => Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty)
+                .ToArray();
         }
         internal BiDiConnection Connection => _connection;
         internal string SessionId => _sessionId;
