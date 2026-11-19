@@ -31,7 +31,12 @@ function _clrType (type = "System.Object") {
 
 function _clrGenericType (definition, ...types) {
     const clr = _clrHost();
-    const genericDefinition = definition.includes("`") ? definition : definition + "`" + types.length;
+    let genericDefinition = definition;
+    if (definition.startsWith("System.Collections.Generic.") && typeof Core !== "undefined") {
+        const name = definition.substring(definition.lastIndexOf(".") + 1);
+        const candidate = Core.System.Collections.Generic[name];
+        if (candidate != null) genericDefinition = candidate;
+    }
     return clr.type(genericDefinition, ...types.map(_clrType));
 }
 
