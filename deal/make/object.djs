@@ -32,18 +32,18 @@ function _clrType (type = "System.Object") {
 function _clrGenericType (definition, ...types) {
     const clr = _clrHost();
     const args = types.map(_clrType);
-    if (definition.startsWith("System.Collections.Generic.")) {
+    let genericDefinition = null;
+
+    if (typeof Core !== "undefined") {
         try {
-            return clr.type(definition, "System.Collections", ...args);
-        } catch (collectionsError) {
-            try {
-                return clr.type(definition, "System.Core", ...args);
-            } catch (coreError) {
-                return clr.type(definition, ...args);
-            }
+            genericDefinition = definition.split(".").reduce((value, name) => value[name], Core);
+        } catch (error) {
+            genericDefinition = null;
         }
     }
-    return clr.type(definition, ...args);
+
+    if (genericDefinition == null) genericDefinition = clr.type(definition);
+    return genericDefinition(...args);
 }
 
 const _clrTypeNames = new WeakMap();
