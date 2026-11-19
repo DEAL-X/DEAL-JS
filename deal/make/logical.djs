@@ -1,3 +1,4 @@
+use deal/make/.djs;
 command Make.encoder = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
 command Make.decoder = typeof TextDecoder !== "undefined" ? new TextDecoder() : null;
 command Make.base64Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
