@@ -16,7 +16,7 @@ namespace MiMFa.Net.Browsers.Services
         public JObject Grant(string origin, object permissions) =>
             GrantAsync(origin, ConvertPermissions(permissions)).GetAwaiter().GetResult();
         /// <summary>Accepts JavaScript arrays marshalled as object[] by ClearScript.</summary>
-        public Task<JObject> GrantAsync(string origin, object[] permissions) =>
+        public Task<JObject> GrantAsync(string origin, object permissions) =>
             GrantAsync(origin, ConvertPermissions(permissions));
 
         public Task<JObject> GrantAsync(string origin, IEnumerable<string> permissions)
@@ -30,11 +30,16 @@ namespace MiMFa.Net.Browsers.Services
             });
         }
         public JObject Reset(string origin = null) => ResetAsync(origin).GetAwaiter().GetResult();
-        private static IEnumerable<string> ConvertPermissions(object[] permissions)
+        private static IEnumerable<string> ConvertPermissions(object permissions)
         {
             if (permissions == null) throw new ArgumentNullException(nameof(permissions));
-            var result = new List<string>(permissions.Length);
-            foreach (var permission in permissions)
+            if (permissions is string)
+                return new[] { (string)permissions };
+            if (!(permissions is IEnumerable values))
+                throw new ArgumentException("Permissions must be an enumerable collection.", nameof(permissions));
+
+            var result = new List<string>();
+            foreach (var permission in values)
                 result.Add(Convert.ToString(permission, CultureInfo.InvariantCulture) ?? string.Empty);
             return result;
         }
