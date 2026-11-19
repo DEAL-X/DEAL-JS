@@ -3,6 +3,9 @@ using MiMFa.Net.Browsers.Sessions;
 using MiMFa.Net.Browsers;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -25,6 +28,14 @@ namespace MiMFa.Net.Browsers.Drivers
         public override string Name => "Mozilla Firefox";
         public string FirefoxPath { get; set; }
         public string[] Arguments { get; set; } = Array.Empty<string>();
+
+        /// <summary>Sets Firefox arguments from a JavaScript array (ClearScript marshals it as object[]).</summary>
+        public void SetArguments(object[] arguments)
+        {
+            Arguments = arguments == null
+                ? Array.Empty<string>()
+                : arguments.Select(value => Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty).ToArray();
+        }
         internal BiDiConnection Connection => _connection;
         internal string SessionId => _sessionId;
 
