@@ -1,5 +1,10 @@
 use deal/core;
 
+// Import the public selectors along with the shared selector helpers.
+use deal/select/all;
+use deal/select/any;
+use deal/select/one;
+
 function detect_Selector_Arguments() {
     if (arguments.length <= 0) return [null, typeof document !== "undefined" ? document : null];
 
@@ -8,8 +13,8 @@ function detect_Selector_Arguments() {
 
     switch (arguments.length) {
         case 1:
-            t = typeof arguments[0];
-            if(t === "array" || t === "object") {
+            const argumentType = typeof arguments[0];
+            if(argumentType === "array" || argumentType === "object") {
                 query = null;
                 source = arguments[0];
             }
@@ -50,9 +55,6 @@ command select_XPath(query, source) {
     let doc = root.nodeType == 9 ? root : root.ownerDocument;
     if (typeof doc.evaluate !== "function") return result;
 
-    // XPathResult is normally exposed by the browser global. Resolve it
-    // from the document's window when available, with the standard snapshot
-    // constant as a fallback for compatible DOM implementations.
     let snapshotType = 7;
     if (typeof XPathResult !== "undefined")
         snapshotType = XPathResult.ORDERED_NODE_SNAPSHOT_TYPE;
@@ -60,10 +62,8 @@ command select_XPath(query, source) {
         snapshotType = doc.defaultView.XPathResult.ORDERED_NODE_SNAPSHOT_TYPE;
 
     let evaluated = doc.evaluate(query, root, null, snapshotType, null);
-
-    for (let i = 0; i < evaluated.snapshotLength; i++) {
+    for (let i = 0; i < evaluated.snapshotLength; i++)
         result.push(evaluated.snapshotItem(i));
-    }
 
     return result;
 }
@@ -71,70 +71,47 @@ command select_XPath(query, source) {
 // Select using a CSS selector from a DOM document or element.
 command select_CSS(query, source) {
     if (!source) return [];
-
-    if (typeof source.querySelectorAll == "function") {
+    if (typeof source.querySelectorAll == "function")
         return Array.from(source.querySelectorAll(query));
-    }
-
     return [];
 }
 
 // Resolve a property or index path through objects and arrays.
 command select_Path(path, source) {
     let current = [source];
-
     for (let part of path) {
         let next = [];
-
         for (let value of current) {
             if (value == null) continue;
-
-            if (typeof value == "string"
-                && /^\d+$/.test(String(part))) {
+            if (typeof value == "string" && /^\d+$/.test(String(part))) {
                 let index = Number(part);
-                if (index >= 0 && index < value.length) {
-                    next.push(value[index]);
-                }
+                if (index >= 0 && index < value.length) next.push(value[index]);
             } else if (Array.isArray(value)
-                || typeof value != "string"
-                    && value != null
-                    && typeof value[Symbol.iterator] == "function") {
+                || typeof value != "string" && typeof value[Symbol.iterator] == "function") {
                 let items = Array.from(value);
-
                 if (/^\d+$/.test(String(part))) {
                     let index = Number(part);
-                    if (index >= 0 && index < items.length) {
-                        next.push(items[index]);
-                    }
+                    if (index >= 0 && index < items.length) next.push(items[index]);
                 } else {
-                    for (let item of items) {
-                        if (item != null
-                            && Object.prototype.hasOwnProperty.call(item, part)) {
+                    for (let item of items)
+                        if (item != null && Object.prototype.hasOwnProperty.call(item, part))
                             next.push(item[part]);
-                        }
-                    }
                 }
             } else if (typeof value == "object"
                 && Object.prototype.hasOwnProperty.call(value, part)) {
                 next.push(value[part]);
             }
         }
-
         current = next;
     }
-
     return current;
 }
 
-// Match a regular expression against strings, object keys,
-// or values contained in arrays and iterable objects.
+// Match a regular expression against strings, object keys, or iterable values.
 command select_Regex(pattern, source) {
     let result = [];
-    let values = source != null
-        && typeof source != "string"
-        && typeof source[Symbol.iterator] == "function"
-        ? Array.from(source)
-        : source;
+    let values = source != null && typeof source != "string"
+        && typeof source[Symbol.iterator] == "function" ? Array.from(source) : source;
 
     if (Array.isArray(values)) {
         for (let value of values) {
@@ -157,6 +134,5 @@ command select_Regex(pattern, source) {
             if (pattern.test(key)) result.push(values[key]);
         }
     }
-
     return result;
 }
