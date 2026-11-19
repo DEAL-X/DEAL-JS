@@ -813,45 +813,51 @@ Both instructions resolve resources through the compiler's shared path and resou
 
 ## CLR object interoperability
 
-DEAL.JS can call .NET APIs through its ClearScript host. JavaScript arrays and objects are not automatically interchangeable with every CLR collection parameter, so use the explicit converters in `deal/make/object.djs`. The module is included by `Use deal/make;` and expects the host to expose ClearScript's `ExtendedHostFunctions` instance as the global `host`:
+DEAL.JS can call .NET APIs through its ClearScript host. The Console keeps `V8ScriptEngineFlags.EnableArrayConversion` enabled. This flag intentionally exposes CLR arrays to JavaScript as JavaScript arrays and marshals JavaScript arrays back to .NET as `object[]`. Consequently, a JavaScript array cannot be used as a strongly typed CLR array argument directly.
+
+The interop module in `deal/make/object.djs` keeps JavaScript-facing values natural and provides converters for actual .NET collection objects. Expose ClearScript's `ExtendedHostFunctions` once as the global `host`:
 
 ```csharp
 using Microsoft.ClearScript;
 engine.AddHostObject("host", new ExtendedHostFunctions());
 ```
 
-The converters create actual CLR objects; they do not merely wrap JavaScript values:
+**Array behavior with `EnableArrayConversion`:**
 
-| Converter | CLR result |
+| Converter | Script-facing result |
 |---|---|
-| `Make.arrayObject(values, "System.String")` / `Make.stringArrayObject(values)` | `System.String[]` |
-| `Make.listObject(values, "System.String")` | `List<string>` |
-| `Make.iteratorObject(values, "System.String")` | `List<string>`, assignable to `IEnumerable<string>` |
-| `Make.dictionaryObject(object, "System.String", "System.Int32")` | `Dictionary<string, int>` |
-| `Make.objectObject(object)` / `Make.expandoObject(object)` | `System.Dynamic.ExpandoObject` with populated properties |
-| `Make.hashSetObject(values, "System.String")` | `HashSet<string>` |
-| `Make.queueObject(values, "System.String")` | `Queue<string>` |
-| `Make.stackObject(values, "System.String")` | `Stack<string>` |
-| `Make.linkedListObject(values, "System.String")` | `LinkedList<string>` |
-| `Make.sortedSetObject(values, "System.String")` | `SortedSet<string>` |
-| `Make.arrayListObject(values)` | `ArrayList` |
-| `Make.byteArrayObject(value)` | `System.Byte[]` from text, byte arrays, or byte iterables |
-| `Make.hashTableObject(object)` | `Hashtable` |
-| `Make.convertObject(value, "System.Int32")` | `Convert.ChangeType` result |
+| `Make.arrayObject(values, "System.String")` / `Make.stringArrayObject(values)` | JavaScript `Array` with string-converted elements |
+| `Make.byteArrayObject(value)` / `Make.bytesObject(value)` | JavaScript `Array` of byte values |
+| `Make.listObject(values, "System.String")` | Actual CLR `List<string>` |
+| `Make.iteratorObject(values, "System.String")` | Actual CLR `List<string>`, assignable to `IEnumerable<string>` |
+| `Make.dictionaryObject(object, "System.String", "System.Int32")` | Actual CLR `Dictionary<string, int>` |
+| `Make.objectObject(object)` / `Make.expandoObject(object)` | Actual `System.Dynamic.ExpandoObject` |
+| `Make.hashSetObject(values, "System.String")` | Actual CLR `HashSet<string>` |
+| `Make.queueObject(values, "System.String")` | Actual CLR `Queue<string>` |
+| `Make.stackObject(values, "System.String")` | Actual CLR `Stack<string>` |
+| `Make.linkedListObject(values, "System.String")` | Actual CLR `LinkedList<string>` |
+| `Make.sortedSetObject(values, "System.String")` | Actual CLR `SortedSet<string>` |
+| `Make.arrayListObject(values)` | Actual CLR `ArrayList` |
+| `Make.hashTableObject(object)` | Actual CLR `Hashtable` |
 
 A type argument may be a CLR type name or a ClearScript host-type reference returned by `Make.typeObject`. Collection converters accept JavaScript arrays and iterables; an optional mapper can transform each element before insertion. Values still need to be convertible to the requested CLR element type.
 
-For example, this passes a real `.NET string[]` to the existing `SetFileLines(string, string[], Encoding)` overload:
+The shared Engine resource provider exposes script-friendly overloads for `Combine`, `SetFolderContents`, `SetFileContents`, `SetFileLines`, `PrependFileLines`, and `AppendFileLines`. These overloads accept ClearScript's `object[]` representation and perform the final string/byte conversion inside .NET. The browser permissions API and Firefox driver argument setter provide equivalent overloads for JavaScript arrays.
+
+For example, no manual conversion to `string[]` is needed:
 
 ```deal
 Use deal/core;
-Use deal/make;
+Use deal/make/object;
 
-Consider lines be Make.arrayObject(["first", "second"], "System.String");
+Consider lines be Make.stringArrayObject(["first", "second"]);
 application.Engine.Resource.SetFileLines(path, lines, null);
+
+Consider bytes be Make.byteArrayObject([65, 66, 67]);
+application.Engine.Resource.SetFileContents(binaryPath, bytes);
 ```
 
-`Make.iteratorObject` returns a concrete `List<T>`, because an interface such as `IEnumerable<T>` cannot be instantiated. That list is assignable to `IEnumerable<T>` and can be passed to APIs expecting the interface. The `File` and `Local` modules also use these converters internally when calling `SetFileLines` and `SetFileContents`, so their JavaScript-facing APIs do not leak CLR array requirements. See [the CLR interop tutorial](Samples/tutorials/04-CLR-Object-Interop.djs) and [the runtime smoke test](Samples/tests/runtime/CLR-Object-Interop-Smoke-Test.js).
+Use `Make.listObject` or `Make.iteratorObject` when an API genuinely requires a generic CLR collection such as `IEnumerable<T>`. These return real CLR collection objects and remain compatible with their typed .NET interfaces. The `File` and `Local` modules can keep ordinary JavaScript arrays because the resource API adapts them at the host boundary. See [the CLR interop tutorial](Samples/tutorials/04-CLR-Object-Interop.djs) and [the runtime smoke tests](Samples/tests/runtime/).
 
 ## DEAL.JS samples
 
@@ -864,39 +870,3 @@ The sample collection is divided by intent rather than keeping unrelated files t
 The [Research Catalog Processing](Samples/practicals/Research-Catalog-Processing.djs) fixture validates five synthetic records, expecting two accepted records and three rejections (duplicate identifier, missing price, and out-of-range discount), with explicit checks for derived values and provenance metadata.
 
 For the recommended learning path, begin with [01 - Getting Started](Samples/tutorials/01-Getting-Started.djs), continue with [02 - Browser and Fetch](Samples/tutorials/02-Browser-and-Fetch.djs), and then study [Web Scraping 1](Samples/practicals/Web-Scraping-1.djs).
-
-
-## JavaScript-to-.NET collection interop
-
-JavaScript arrays and plain objects are not automatically interchangeable with strongly typed .NET arrays and generic collections in ClearScript. Use the converters in deal/make/object.djs when calling .NET APIs that require string[], List<T>, IEnumerable<T>, dictionaries, or byte arrays.
-
-The host must expose ClearScript's ExtendedHostFunctions once, under the global name host:
-
-```csharp
-using Microsoft.ClearScript;
-
-engine.AddHostObject("host", new ExtendedHostFunctions());
-```
-
-Only expose ExtendedHostFunctions to scripts you trust: it enables script-side access to imported .NET types.
-
-Load the conversion module:
-
-```deal
-Use deal/make/object;
-```
-
-Common conversions:
-
-```deal
-Consider names be ["Ada", "Grace"];
-Consider clrArray be Make.arrayObject(names, "System.String");          // string[]
-Consider clrList to be Make.listObject([1, 2, 3], "System.Int32");         // List<int>
-Consider clrEnumerable be Make.iteratorObject(names, "System.String"); // IEnumerable<string>
-Consider clrMap as Make.dictionaryObject({ name: "DEAL.JS" });          // Dictionary<string, object>
-Consider clrBytes be Make.bytesObject("Hello");                         // byte[]
-```
-
-Make.iteratorObject returns a typed List<T>, which implements IEnumerable<T>; it is a materialized collection, not a lazy iterator. Make.objectObject(value, "Namespace.Type", memberTypes) can populate a .NET type with a parameterless constructor and writable properties; memberTypes optionally maps property names to CLR type names for nested typed members. Without a target type, nested JavaScript arrays and plain objects are recursively converted to CLR arrays and dictionaries.
-
-The File.lines(...), File.fields(...), File.contents, and Local.write(...) helpers use these conversions internally.
