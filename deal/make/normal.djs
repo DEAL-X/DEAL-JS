@@ -1,3 +1,4 @@
+use deal/make/.djs;
 use deal/make/string;
 
 // The normalization method could contain:
