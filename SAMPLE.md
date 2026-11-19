@@ -184,7 +184,7 @@ After `browser.tab.close()` closes the current tab, the provider waits for the b
 
 ## 9. JavaScript-to-.NET collection interop
 
-ClearScript does not automatically convert a V8 JavaScript array literal into every strongly typed .NET collection parameter. Load the shared converters and expose ExtendedHostFunctions to V8 once:
+DEAL keeps V8ScriptEngineFlags.EnableArrayConversion enabled. With this setting, JavaScript arrays cross into .NET as object[]; they do not become string[] or byte[] automatically. The shared resource provider overloads accept object[] and perform the final conversion inside .NET. Load the shared converters and expose ExtendedHostFunctions to V8 once:
 
 ~~~csharp
 using Microsoft.ClearScript;
@@ -207,9 +207,9 @@ Consider payload be Make.bytesObject("DEAL.JS");
 
 Available converters include Make.objectObject, Make.valueObject, Make.arrayObject, Make.listObject, Make.iteratorObject, Make.enumerableObject, Make.dictionaryObject, Make.hashSetObject, Make.queueObject, Make.stackObject, Make.stringArrayObject, and Make.bytesObject.
 
-The default object conversion recursively maps JavaScript arrays to System.Object[] and plain objects to Dictionary<string, object>. Typed object population requires a .NET type with a parameterless constructor and writable properties; its optional third memberTypes argument maps property names to CLR type names for nested typed members. Make.iteratorObject materializes a List<T>, which implements IEnumerable<T>.
+The default object conversion recursively maps nested JavaScript arrays to script-friendly arrays and plain objects to ExpandoObjects. Typed object population requires a .NET type with a parameterless constructor and writable properties; its optional third memberTypes argument maps property names to CLR type names for nested typed members. Make.iteratorObject materializes a List<T>, which implements IEnumerable<T>.
 
-The file helpers use the converters internally: File.lines(values) and File.fields(values) write CLR string[] values, while File.contents and Local.write pass CLR byte[] values.
+The file helpers and resource provider use script-friendly overloads: File.lines(values), File.fields(values), File.contents, and Local.write can pass JavaScript arrays without scripts constructing typed CLR arrays.
 
 For complete runnable examples, see [practical samples](Samples/practicals).
 
@@ -222,31 +222,3 @@ The samples are grouped by purpose:
 - [practicals/](Samples/practicals/) — larger, realistic DEAL.JS workflows that can be adapted to real projects.
 
 Lets start with [01 - Getting Started](Samples/tutorials/01-Getting-Started.djs).
-
-## 10. Convert JavaScript values to .NET collections
-
-When a JavaScript array is passed to a .NET method that expects `string[]` or `IEnumerable<string>`, convert it explicitly. ClearScript does not treat every JavaScript array as an already-constructed CLR collection during overload resolution.
-
-Expose ClearScript's `ExtendedHostFunctions` instance as `host` before executing DEAL modules:
-
-```csharp
-using Microsoft.ClearScript;
-engine.AddHostObject("host", new ExtendedHostFunctions());
-```
-
-Then load `deal/make` and use its converters:
-
-```deal
-Use deal/core;
-Use deal/make;
-
-Consider lines be Make.arrayObject(["first", "second"], "System.String");
-application.Engine.Resource.SetFileLines(path, lines, null);
-
-// A List<string> also implements IEnumerable<string>.
-Consider list be Make.listObject(["third", "fourth"], "System.String");
-application.Engine.Resource.SetFileLines(path, list, null);
-```
-
-The object-conversion module also provides `stringArrayObject`, `byteArrayObject`, `objectObject` / `expandoObject`, `dictionaryObject`, `hashSetObject`, `queueObject`, `stackObject`, `linkedListObject`, `sortedSetObject`, `arrayListObject`, `hashTableObject`, `typeObject`, and `convertObject`. The `File` and `Local` modules use these conversions internally when writing file lines and byte contents. See [Tutorial 04](Samples/tutorials/04-CLR-Object-Interop.djs) for a complete example and [the runtime smoke test](Samples/tests/runtime/CLR-Object-Interop-Smoke-Test.js) for the actual .NET type and file-provider checks.
-
