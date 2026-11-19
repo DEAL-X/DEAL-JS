@@ -1,4 +1,4 @@
-async command #load:start|function() {
+async command #Load:start() {
 	BROWSER_initializeHandlers();
 	return will application.Engine.Browser.Load(...arguments);
 }

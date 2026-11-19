@@ -41,8 +41,7 @@ namespace MiMFa.Engine.DEAL.JS
             string[] names = node.Token.Value.Split('.');
             List<KeyValuePair<string, string>> list = new List<KeyValuePair<string, string>>();
             for (int i = 0; i < names.Length; i++)
-                if (i == names.Length - 1) list.Add(new KeyValuePair<string, string>(names[i].ToLower(), names[i] + "()"));
-                else list.Add(new KeyValuePair<string, string>(names[i].ToLower(), names[i]));
+                list.Add(new KeyValuePair<string, string>(names[i].ToLower(), names[i]));
             return ActionCommands.Set(node.Token.Type, node.Location, list.ToArray());
         }
         public virtual Keywords GetActionCommand(params string[] namesHierarchy)
@@ -80,17 +79,9 @@ namespace MiMFa.Engine.DEAL.JS
             return DefinitionCommands.Get(namesHierarchy.Select(n => n.ToLower()).ToArray());
         }
 
-        public virtual Keywords GetFunction(string name)
-        {
-            if (Keywords.ContainsKey(name) && ((Keywords[name].Type & TokenType.FunctionKeyword) == TokenType.FunctionKeyword))
-                return Keywords[name];
-            return null;
-        }
-
-
         public virtual bool IsGlobalNeeder(Node node) => node != null && node.Has(n => n.Token.Is("return", "yield", "{", "do", "begin", "end"));
         public virtual bool IsAcceptors(Node node) => IsAcceptors(node?.Token);
-        public virtual bool IsAcceptors(Token token) => token != null && (token.Is(TokenType.FunctionKeyword) || (GetFunction(token.Value) ?? GetFunctionCommand(token.Value) ?? null) != null);
+        public virtual bool IsAcceptors(Token token) => token != null && (token.Is(TokenType.FunctionKeyword) || (Keywords.Get(token.Value, TokenType.FunctionKeyword) ?? GetFunctionCommand(token.Value) ?? null) != null);
 
 
         public virtual Node TrimSeparators(Node node)

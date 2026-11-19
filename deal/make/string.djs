@@ -1,4 +1,4 @@
-command #Make.string:function = function (object = null) {
+command Make.string (object = null) {
     if (object === null || object === undefined)
         return null;
 

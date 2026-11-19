@@ -1,6 +1,6 @@
 use deal/core;
 
-command #Accept:function = function (value, query) {
+command Accept (value, query) {
 	if(query === undefined) return value !== undefined;
 	if(query === null) return value === query;
 	if(query instanceof RegExp) {
@@ -50,9 +50,9 @@ command #Accept:function = function (value, query) {
 	return value === query;
 }
 
-command #Accept.isXPath:function = function (object) {
+command Accept.isXPath (object) {
 	return typeof object === "string" && /^(?:\/|\.\/|\.\.\/|@|(?:count|boolean|contains|starts-with|string|number|not|normalize-space|name|local-name)\s*\()/i.test(object.trim());
 }
-command #Accept.isArray:function = function (object) {
+command Accept.isArray (object) {
 	return Array.isArray(object);
 }

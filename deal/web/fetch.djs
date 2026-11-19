@@ -14,7 +14,7 @@ function getTransport() {
     if (!transport.IsAlive) transport.Initial();
     return transport;
 }
-command #fetch:start|function(input, init = {}) {
+command #Fetch:start(input, init = {}) {
     let request;
     try {
         request = input instanceof Request && init === undefined ? input.clone() : new Request(input, init);
@@ -87,4 +87,4 @@ command #fetch:start|function(input, init = {}) {
     });
 }
 
-#fetch.isDealFetch = true;
+command Fetch.isDealFetch = true;

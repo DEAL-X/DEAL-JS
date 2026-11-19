@@ -15,7 +15,8 @@ namespace MiMFa.Engine.JavaScript
         public int Location { get; set; } = 0;
         public NodeWalker Assembled { get; set; } = null;
 
-        private Stack<int> ConditionExpr = new Stack<int>();
+        public Stack<Node> NodesStack = new Stack<Node>();
+        protected Stack<int> TernariesStack = new Stack<int>();
 
         public override IEnumerable<Node> Assemble(NodeWalker walker, MiMFa.Engine.Engine compiler = null)
         {
@@ -36,7 +37,7 @@ namespace MiMFa.Engine.JavaScript
             Location--;
             (Engine as Engine).Keywords.RemoveAll(Location + 1);
             if (nodes.Count > 1) return new Node(null, NodeType.Chunk, Location + 1, nodes.ToArray());
-            if (nodes.Count == 1) return nodes[0].Update(location: Location + 1);
+            if (nodes.Count == 1) return nodes[0].Update(Location + 1);
             return new Node(location: Location + 1);
         }
         protected virtual IEnumerable<Node> SectionAssembleNodes(NodeWalker walker)
@@ -68,7 +69,7 @@ namespace MiMFa.Engine.JavaScript
             Location--;
             (Engine as Engine).Keywords.RemoveAll(Location + 1);
             if (nodes.Count > 1) return new Node(null, NodeType.Chunk, Location + 1, nodes.ToArray());
-            if (nodes.Count == 1) return nodes[0].Update(location: Location + 1);
+            if (nodes.Count == 1) return nodes[0].Update(Location + 1);
             return new Node(location: Location + 1);
         }
         protected virtual IEnumerable<Node> SequenceAssembleNodes(NodeWalker walker)
@@ -97,7 +98,7 @@ namespace MiMFa.Engine.JavaScript
         {
             var nodes = CompactAssembleNodes(walker).ToList();
             if (nodes.Count > 1) return new Node(null, NodeType.Chunk, Location, nodes.ToArray());
-            if (nodes.Count == 1) return nodes[0].Update(location: Location);
+            if (nodes.Count == 1) return nodes[0].Update(Location);
             return new Node(location: Location);
         }
         protected virtual IEnumerable<Node> CompactAssembleNodes(NodeWalker walker)
@@ -136,11 +137,11 @@ namespace MiMFa.Engine.JavaScript
 
         protected override Node AssembleNode(NodeWalker walker)
         {
-            //if ((Engine as Engine).IsFlag(walker.Current)) return new Node();
-            var node = base.AssembleNode(walker.Walk(), walker).Update(location: Location);
-            //if (walker.PeekProcedure()?.Is(NodeType.Append) == true)
-            //    node.Add(AssembleNode(walker));
-            return node;
+            var n = walker.Walk();
+            NodesStack.Push(n);
+            var m = base.AssembleNode(n, walker).Update(Location);
+            NodesStack.Pop();
+            return m;
         }
 
         protected override Node AssembleStatementNode(Node node, NodeWalker walker)
@@ -352,15 +353,17 @@ namespace MiMFa.Engine.JavaScript
                 return node.Add(CompactAssembleNode(walker));
             if (node.Is("?"))
             {
-                ConditionExpr.Push(Location);
+                TernariesStack.Push(Location);
                 return node.Add(CompactAssembleNode(walker));
             }
-            if (node.Is(":") && ConditionExpr.Count > 0 && ConditionExpr.First() == Location)
+            if (node.Is(":") && TernariesStack.Count > 0 && TernariesStack.First() == Location)
             {
                 node.Update(NodeType.Depend);
-                ConditionExpr.Pop();
+                TernariesStack.Pop();
                 return node.Add(CompactAssembleNode(walker));
             }
+            if (node.Is("=>"))
+                return node.Add(CompactAssembleNode(walker));
             if (node.Is(TokenType.ConcatenatorSymbol))
                 return node.Add(AssembleNode(walker));
             if (node.Is(TokenType.DelimiterSymbol))

@@ -40,7 +40,8 @@ namespace MiMFa.Engine.DEAL.JS
         {
             List<Node> keywords;
             var next = walker.PeekProcedure();
-            switch (token.Value.ToLower())
+            var lv = token.Value.ToLower();
+            switch (lv)
             {
                 case "#":
                 case "##":
@@ -68,7 +69,19 @@ namespace MiMFa.Engine.DEAL.JS
                     }
                     yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend | NodeType.Line);
                     yield break;
-               
+
+                case "async":
+                    keywords = ExtractKeywordToken(token, walker, false);
+                    if (keywords.Count > 0)
+                    {
+                        foreach (var item in keywords)
+                            yield return item;
+                        yield break;
+                    }
+                    if(next.Is("function", "command")) yield return new Node(walker.WalkProcedure(), NodeType.DefineStructure | NodeType.Prepend | NodeType.Line);
+                    yield return new Node(token, NodeType.DefineStructure | NodeType.Prepend);
+                    yield break;
+
                 case "consider":
                     keywords = ExtractKeywordToken(token, walker);
                     if (keywords.Count > 0)
@@ -103,6 +116,19 @@ namespace MiMFa.Engine.DEAL.JS
                     }
                     yield return new Node(token, NodeType.BlockStructure | NodeType.Line);
                     yield break;
+
+                case "variable":
+                case "constant":
+                    keywords = ExtractKeywordToken(token, walker, false);
+                    if (keywords.Count > 0)
+                    {
+                        foreach (var item in keywords)
+                            yield return item;
+                        yield break;
+                    }
+                    if(lv == "constant") token.Value = "const";
+                    else token.Value = "var";
+                    break;
             }
 
             foreach (var node in base.ParseStatementToken(token, walker))

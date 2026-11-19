@@ -1,13 +1,13 @@
-command #Make.encoder:identifier = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
-command #Make.decoder:identifier = typeof TextDecoder !== "undefined" ? new TextDecoder() : null;
-command #Make.base64Alphabet:identifier = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+command Make.encoder = typeof TextEncoder !== "undefined" ? new TextEncoder() : null;
+command Make.decoder = typeof TextDecoder !== "undefined" ? new TextDecoder() : null;
+command Make.base64Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-command #Make.binary:function = function (object = null) {
+command Make.binary (object = null) {
     if (object == null) return null;
     return Array.from(String(object), char => char.charCodeAt(0).toString(2)).join(" ");
 };
 
-command #Make.uint8Array:function = function (value = null) {
+command Make.uint8Array (value = null) {
     if (value == null) return new Uint8Array(0);
     if (value instanceof Uint8Array) return value.slice();
     if (typeof ArrayBuffer !== "undefined" && value instanceof ArrayBuffer)
@@ -25,7 +25,7 @@ command #Make.uint8Array:function = function (value = null) {
     throw new TypeError("Unsupported body type. Expected a string, byte array, or ArrayBuffer.");
 };
 
-command #Make.textFromBytes:function = function (bytes) {
+command Make.textFromBytes (bytes) {
     bytes = Make.uint8Array(bytes);
     if (Make.decoder) return Make.decoder.decode(bytes);
 
@@ -37,7 +37,7 @@ command #Make.textFromBytes:function = function (bytes) {
     catch { return binary; }
 };
 
-command #Make.base64FromBytes:function = function (value) {
+command Make.base64FromBytes (value) {
     const bytes = Make.uint8Array(value);
     let output = "";
     for (let i = 0; i < bytes.length; i += 3) {
@@ -54,7 +54,7 @@ command #Make.base64FromBytes:function = function (value) {
     return output;
 };
 
-command #Make.bytesFromBase64:function = function (value) {
+command Make.bytesFromBase64 (value) {
     const input = String(value || "").replace(/\\s+/g, "");
     if (input.length % 4 !== 0 || /[^A-Za-z0-9+\/=]/.test(input))
         throw new TypeError("Invalid Base64 input.");

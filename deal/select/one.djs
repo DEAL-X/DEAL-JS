@@ -1,6 +1,6 @@
 // Select the first matching element or value.
 // Return null when no match exists.
-command #one:start|function:string() {
+command #One:start:string() {
     let [query, source] = detect_Selector_Arguments(...arguments);
 
     if (query == null) return source;

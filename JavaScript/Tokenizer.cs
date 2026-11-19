@@ -15,7 +15,7 @@ namespace MiMFa.Engine.JavaScript
             var current = walker.Current;
             if (current == null) return new Token();
             var next = walker.Peek(1);
-            var word = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w0-9_$]", RegexOptions.CultureInvariant)).ToArray());
+            var word = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), @"[^\w0-9_$]", RegexOptions.CultureInvariant)).ToArray());
 
             switch (word)
             {
@@ -122,13 +122,13 @@ namespace MiMFa.Engine.JavaScript
             if (Regex.IsMatch(current.ToString(), @"[0-9]") || (Regex.IsMatch(current.ToString(), @"[\-\+]") && Regex.IsMatch(next.ToString(), @"[0-9\.]")))
                 return TokenizeNumber(walker, location);
 
-            if (Regex.IsMatch(current.ToString(), "([^\\W\\d\\s]|[$#])", RegexOptions.CultureInvariant))
+            if (Regex.IsMatch(current.ToString(), @"([^\W\d\s]|[$#])", RegexOptions.CultureInvariant))
                 return TokenizeKeyword(walker, location);
 
             if (current == "\"" || current == "'" || current == "`")
                 return TokenizeString(walker, location);
 
-            if (Regex.IsMatch(current.ToString(), "[^\\w\\d\\s_$]", RegexOptions.CultureInvariant))
+            if (Regex.IsMatch(current.ToString(), @"[^\w\d\s_$]", RegexOptions.CultureInvariant))
                 return TokenizeOperator(walker, location);
 
             return new Token(TokenType.Unknown, walker.Walk().ToString(), location);
@@ -138,7 +138,7 @@ namespace MiMFa.Engine.JavaScript
         {
             var value = "";
             do {
-                value += string.Concat((new string[] { walker.Walk() }).Concat(walker.WalkWhile(ch => Regex.IsMatch(ch.ToString(), "[\\w_$\\.]", RegexOptions.ExplicitCapture))));
+                value += string.Concat((new string[] { walker.Walk() }).Concat(walker.WalkWhile(ch => Regex.IsMatch(ch, @"[\w_$\.]", RegexOptions.ExplicitCapture))));
                 walker.MoveToProcedure();
             } while (value.EndsWith("."));
             return new Token(TokenType.Keyword, value, location);
@@ -146,8 +146,8 @@ namespace MiMFa.Engine.JavaScript
 
         protected virtual Token TokenizeNumber(CodeWalker walker, Position location)
         {
-            var value = string.Concat(walker.WalkWhile(ch => Regex.IsMatch(ch.ToString(), @"[\-\+_0-9.ebxo]", RegexOptions.IgnoreCase)).ToArray());
-            value += string.Concat(walker.WalkWhile(ch => Regex.IsMatch(ch.ToString(), "[0-9.a-f]", RegexOptions.IgnoreCase)).ToArray());
+            var value = string.Concat(walker.WalkWhile(ch => Regex.IsMatch(ch, @"[\-\+_0-9.ebxo]", RegexOptions.IgnoreCase)).ToArray());
+            value += string.Concat(walker.WalkWhile(ch => Regex.IsMatch(ch, "[0-9.a-f]", RegexOptions.IgnoreCase)).ToArray());
             return new Token(TokenType.NumberData, value, location);
         }
 
@@ -169,7 +169,7 @@ namespace MiMFa.Engine.JavaScript
                 return ch == "/" && !indent && walker.Peek(-1) != escapedch; 
             }).ToArray());
             walker.Walk(); // consume closing '/'
-            value = "/" + value + "/" + string.Concat(walker.WalkWhile(ch => Regex.IsMatch(ch.ToString(), "[gimsuy]", RegexOptions.IgnoreCase)).ToArray());
+            value = "/" + value + "/" + string.Concat(walker.WalkWhile(c => Regex.IsMatch(c, "[gimsuy]", RegexOptions.IgnoreCase)).ToArray());
             return new Token(TokenType.PatternData, value, location);
         }
 
@@ -202,13 +202,13 @@ namespace MiMFa.Engine.JavaScript
 
         protected virtual Token TokenizeOperator(CodeWalker walker, Position location)
         {
-            var sign = string.Concat(walker.WalkUntil(ch => Regex.IsMatch(ch.ToString(), "[\\w\\d\\s_$]", RegexOptions.CultureInvariant)).ToArray());
+            var sign = string.Concat(walker.WalkUntil(ch => Regex.IsMatch(ch, @"[\w\d\s_$]", RegexOptions.CultureInvariant)).ToArray());
             while (true)
             {
                 switch (sign)
                 {
                     case "*": case "/": case "**": case "%": case "+": case "-": case "~": case "^": case "=": case "<": case ">": case "<<": case ">>": case ">>>":
-                    case "==": case "!=": case "===": case "!==": case "<=": case ">=": case "&&": case "||": case "&": case "|": case "??":
+                    case "==": case "!=": case "===": case "!==": case "<=": case ">=": case "&&": case "||": case "&": case "|": case "?": case "??":
                     case "+=": case "-=": case "*=": case "/=": case "**=": case "^=": case "%=":
                     case "&&=": case "&=": case "||=": case "|=": case "??=":
                     case "=>":

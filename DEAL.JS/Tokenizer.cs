@@ -58,15 +58,19 @@ namespace MiMFa.Engine.DEAL.JS
                     this.SwitchToken = null;
                     var next = walker.Peek(1);
                     var strict = (walker.Current == "@" && (next == "\"" || next == "'" || next == "`"));
-                    if (
-                        (type & TokenType.StringData) != 0 &&
-                        (strict || walker.Current == "\"" || walker.Current == "'" || walker.Current == "`")
-                    )
-                    {
-                        var token = TokenizeString(walker, walker.Position, strict);
-                        return GetAcceptedToken(type, token.Value, token.Position);
-                    }
-                    else return GetAcceptedToken(type, string.Join("", walker.WalkWhile(c => !Regex.IsMatch(walker.Current, @"[,;\s]", RegexOptions.CultureInvariant))), walker.Position);
+                    if ((type & TokenType.StringData) != 0)
+                        if (strict || walker.Current == "\"" || walker.Current == "'" || walker.Current == "`")
+                        {
+                            var token = TokenizeString(walker, walker.Position, strict);
+                            return GetAcceptedToken(type, token.Value, token.Position);
+                        }
+                        else if(walker.Current == "/" && next != "/" && next != "*")
+                        {
+                            var p = walker.Walk() + string.Join("", walker.WalkUntil(c => Regex.IsMatch(c, "/", RegexOptions.CultureInvariant) && (walker.Peek(-1) != "\\" || walker.Peek(-2) == "\\")));
+                            p += walker.Walk() + string.Join("", walker.WalkWhile(c => Regex.IsMatch(c, "[gimsuy]", RegexOptions.IgnoreCase)));
+                            return GetAcceptedToken(TokenType.PatternData, p, walker.Position);
+                        }
+                    return GetAcceptedToken(type, string.Join("", walker.WalkWhile(c => !Regex.IsMatch(c, @"[,;\s]", RegexOptions.CultureInvariant))), walker.Position);
                 }
             var switchNameSpace = this.SwitchNamespace;
             if (this.SwitchNamespace) this.SwitchNamespace = false;
@@ -88,13 +92,13 @@ namespace MiMFa.Engine.DEAL.JS
                         TokenType? dataAcceptor = ws.Length > 3 ? TokenTypeFromName(ws[3].Trim()) : null;
                         SetAcceptedType(cmd, acceptor ?? TokenType.Unknown, dataAcceptor);
                         walker.Remove(location.Index, w.Length);
-                        return new Token(TokenType.Keyword, cmd, walker.Position);
+                        return new Token(acceptor??TokenType.Keyword, cmd, walker.Position);
                     }
                 }
 
                 location = walker.Position;
                 position = walker.Index;
-                var word = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w\\.$\\*]", RegexOptions.CultureInvariant)).ToArray());
+                var word = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), @"[^\w\.$\*]", RegexOptions.CultureInvariant)).ToArray());
                 var lword = word.ToLower();
 
                 switch (lword)
@@ -190,7 +194,13 @@ namespace MiMFa.Engine.DEAL.JS
                             ReservesScrubber(word);
                             walker.Move(word.Length);
                             return GetAcceptedToken(TokenType.Statement, word, location);
-                        
+
+                        case "variable":
+                        case "constant":
+                            walker.Move(word.Length);
+                            walker.MoveToProcedure();
+                            return new Token(TokenType.Statement, word, location);
+
                         case "as":
                             //ReservesScrubber(word);
                             //SwitchToken = TokenType.StringData;
@@ -259,6 +269,8 @@ namespace MiMFa.Engine.DEAL.JS
                     var next = walker.Peek(1);
                     if (current == "@" && (next == "\"" || next == "'" || next == "`"))
                         return TokenizeString(walker, location, true);
+                    if (current == "-" && next == ">")
+                        walker.Replace("=");
                 }
             }
 
@@ -298,7 +310,7 @@ namespace MiMFa.Engine.DEAL.JS
                 return UseUrl(resolved, force);
             else if (address != null && address.IsFile) path = address.LocalPath;
             var val = compiler?.Resource?.Normalize(path);
-            if (!string.IsNullOrEmpty(val) && val.EndsWith("\\")) return UseFolder(val, force);
+            if (!string.IsNullOrEmpty(val) && val.EndsWith(@"\")) return UseFolder(val, force);
             int num;
             return (num = UseFile(val, force)) > 0 ? num : UseFolder(val, force);
         }
@@ -324,7 +336,7 @@ namespace MiMFa.Engine.DEAL.JS
         protected virtual int UseFolder(string folder, bool force = false)
         {
             if (string.IsNullOrWhiteSpace(folder) || folder.Split(Path.DirectorySeparatorChar).Last().StartsWith("~")) return 0;
-            folder = Regex.Replace(folder, "[\\/\\\\]$", "");
+            folder = Regex.Replace(folder, @"[/\\]$", "");
             int results = 0;
             try
             {
@@ -350,7 +362,7 @@ namespace MiMFa.Engine.DEAL.JS
         {
             if (string.IsNullOrWhiteSpace(file) || file.Split(System.IO.Path.DirectorySeparatorChar).Last().StartsWith("~")) return 0;
             int num = 0;
-            if (!Regex.IsMatch(file, "\\.(deal|djs|js)$", RegexOptions.IgnoreCase))
+            if (!Regex.IsMatch(file, @"\.(deal|djs|js)$", RegexOptions.IgnoreCase))
                 return UseFile(file + ".js", force) + UseFile(file + ".djs", force) + UseFile(file + ".deal", force);
             file = Engine.Resource.Normalize(file);
             try
@@ -360,7 +372,7 @@ namespace MiMFa.Engine.DEAL.JS
                 if (!force && (compiler as Engine).HasDependency(file)) return 1;
                 if (rp != null && rp.Exists(file))
                 {
-                    if(!Regex.IsMatch(file, @"[\\/]\.(deal|djs|js)$", RegexOptions.IgnoreCase))
+                    if(!Regex.IsMatch(file, @"[/\\]\.(deal|djs|js)$", RegexOptions.IgnoreCase))
                         num += UseFile(rp.ParentDirectory(file).TrimEnd('/','\\')+Path.DirectorySeparatorChar);
                     int c = (compiler as Engine).Dependencies.Count;
                     (compiler as Engine).UseDependency(

@@ -24,6 +24,8 @@ namespace MiMFa.Engine.JavaScript
         public virtual string Namespace(int index = 0, string separator = ".") => index < Count? string.Join(separator, Name, Values.ElementAt(index)?.Namespace(index, separator)): Name;
 
         public virtual bool Has(params string[] keysHierarchy) => Get(keysHierarchy) != null;
+        public virtual bool Has(string name, TokenType type) => Get(name, type) != null;
+     
         public virtual Keywords Get(params string[] keysHierarchy)
         {
             if (keysHierarchy.Length == 0) return new Keywords(Name, Type, Locality);
@@ -47,6 +49,12 @@ namespace MiMFa.Engine.JavaScript
             var type = typeHierarchy[0];
             var f = this.FirstOrDefault((k) => (k.Value.Type & type) == type).Value?.Get(typeHierarchy.Skip(1).ToArray());  
             if(f != null) return new Keywords(Name, Type, Locality) { { f.Name.ToLower(), f } };
+            return null;
+        }
+        public virtual Keywords Get(string name, TokenType type)
+        {
+            if (ContainsKey(name) && ((this[name].Type & type) == type))
+                return this[name];
             return null;
         }
 

@@ -1,4 +1,4 @@
-command #Make.array:function = function (value, mapper = null) {
+command Make.array (value, mapper = null) {
     let result;
     if (value == null) result = [];
     else if (Array.isArray(value)) result = value.slice();
@@ -9,14 +9,14 @@ command #Make.array:function = function (value, mapper = null) {
     return typeof mapper === "function" ? result.map(mapper) : result;
 };
 
-command #Make.iterator:function = function * (value) {
+command * Make.iterator (value) {
     if (Array.isArray(value)) yield* value;
     else if (value != null && typeof value !== "string" && typeof value[Symbol.iterator] === "function")
         yield* value;
     else yield value;
 };
 
-command #Make.matrix:function = function (object) {
+command Make.matrix (object) {
     if (object == null) return [];
     if (!Array.isArray(object)) {
         if (typeof object !== "object") return [[object]];

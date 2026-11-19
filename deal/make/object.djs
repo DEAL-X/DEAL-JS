@@ -13,7 +13,7 @@
 use deal/make/collection;
 use deal/make/logical;
 
-command #Make.hostObject:function = function () {
+command Make.hostObject () {
     if (typeof host === "undefined" || host == null ||
         typeof host.type !== "function" || typeof host.newObj !== "function" ||
         typeof host.newArr !== "function")
@@ -21,19 +21,19 @@ command #Make.hostObject:function = function () {
     return host;
 };
 
-command #Make.typeObject:function = function (type = "System.Object") {
+command Make.typeObject (type = "System.Object") {
     if (type == null) return Make.hostObject().type("System.Object");
     if (typeof type !== "string") return type;
     return Make.hostObject().type(type);
 };
 
-command #Make.isPlainObject:function = function (value) {
+command Make.isPlainObject (value) {
     if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
     const prototype = Object.getPrototypeOf(value);
     return prototype === Object.prototype || prototype === null;
 };
 
-command #Make.objectObject:function = function (value = null, type = null, memberTypes = null) {
+command Make.objectObject (value = null, type = null, memberTypes = null) {
     if (value === null || value === undefined) return null;
 
     // Automatic conversion: recursively convert JavaScript containers while
@@ -86,11 +86,11 @@ command #Make.objectObject:function = function (value = null, type = null, membe
     return value;
 };
 
-command #Make.valueObject:function = function (value = null, type = null, memberTypes = null) {
+command Make.valueObject (value = null, type = null, memberTypes = null) {
     return Make.objectObject(value, type, memberTypes);
 };
 
-command #Make.arrayObject:function = function (values = null, elementType = "System.Object") {
+command Make.arrayObject (values = null, elementType = "System.Object") {
     const clr = Make.hostObject();
     const items = Make.array(values);
     const automatic = elementType == null || elementType === "System.Object";
@@ -107,7 +107,7 @@ command #Make.arrayObject:function = function (values = null, elementType = "Sys
     return result;
 };
 
-command #Make.listObject:function = function (values = null, elementType = "System.Object") {
+command Make.listObject (values = null, elementType = "System.Object") {
     const clr = Make.hostObject();
     const items = Make.array(values);
     const automatic = elementType == null || elementType === "System.Object";
@@ -123,19 +123,19 @@ command #Make.listObject:function = function (values = null, elementType = "Syst
 
 // A List<T> is returned because it implements IEnumerable<T> and can be
 // passed directly to .NET methods that accept IEnumerable<T>.
-command #Make.iteratorObject:function = function (values = null, elementType = "System.Object") {
+command Make.iteratorObject (values = null, elementType = "System.Object") {
     return Make.listObject(values, elementType);
 };
 
-command #Make.enumerableObject:function = function (values = null, elementType = "System.Object") {
+command Make.enumerableObject (values = null, elementType = "System.Object") {
     return Make.iteratorObject(values, elementType);
 };
 
-command #Make.collectionObject:function = function (values = null, elementType = "System.Object") {
+command Make.collectionObject (values = null, elementType = "System.Object") {
     return Make.listObject(values, elementType);
 };
 
-command #Make.dictionaryObject:function = function (value = null, keyType = "System.String", valueType = "System.Object") {
+command Make.dictionaryObject (value = null, keyType = "System.String", valueType = "System.Object") {
     const clr = Make.hostObject();
     const clrKeyType = Make.typeObject(keyType);
     const clrValueType = Make.typeObject(valueType);
@@ -166,7 +166,7 @@ command #Make.dictionaryObject:function = function (value = null, keyType = "Sys
     return result;
 };
 
-command #Make.hashSetObject:function = function (values = null, elementType = "System.Object") {
+command Make.hashSetObject (values = null, elementType = "System.Object") {
     const clr = Make.hostObject();
     const clrElementType = Make.typeObject(elementType);
     const collectionType = clr.type("System.Collections.Generic.HashSet", clrElementType);
@@ -179,7 +179,7 @@ command #Make.hashSetObject:function = function (values = null, elementType = "S
     return result;
 };
 
-command #Make.queueObject:function = function (values = null, elementType = "System.Object") {
+command Make.queueObject (values = null, elementType = "System.Object") {
     const clr = Make.hostObject();
     const clrElementType = Make.typeObject(elementType);
     const collectionType = clr.type("System.Collections.Generic.Queue", clrElementType);
@@ -192,7 +192,7 @@ command #Make.queueObject:function = function (values = null, elementType = "Sys
     return result;
 };
 
-command #Make.stackObject:function = function (values = null, elementType = "System.Object") {
+command Make.stackObject (values = null, elementType = "System.Object") {
     const clr = Make.hostObject();
     const clrElementType = Make.typeObject(elementType);
     const collectionType = clr.type("System.Collections.Generic.Stack", clrElementType);
@@ -205,11 +205,11 @@ command #Make.stackObject:function = function (values = null, elementType = "Sys
     return result;
 };
 
-command #Make.stringArrayObject:function = function (values = null) {
+command Make.stringArrayObject (values = null) {
     return Make.arrayObject(values, "System.String");
 };
 
-command #Make.bytesObject:function = function (value = null, encoding = null) {
+command Make.bytesObject (value = null, encoding = null) {
     const clr = Make.hostObject();
     const utf8 = encoding || clr.type("System.Text.Encoding").UTF8;
 
@@ -228,11 +228,11 @@ command #Make.bytesObject:function = function (value = null, encoding = null) {
     return utf8.GetBytes(Make.string(value));
 };
 
-command #Make.byteArrayObject:function = function (value = null, encoding = null) {
+command Make.byteArrayObject (value = null, encoding = null) {
     return Make.bytesObject(value, encoding);
 };
 
-command #Make.binaryObject:function = function (value = null, encoding = null) {
+command Make.binaryObject (value = null, encoding = null) {
     return Make.bytesObject(value, encoding);
 }
 
@@ -275,19 +275,19 @@ function _clrCreateCollection(definition, values, elementType, method, mapper = 
 }
 
 // Resolve a ClearScript host-type reference from a CLR type name or existing reference.
-command #Make.typeObject:function = function (type = "System.Object") {
+command Make.typeObject (type = "System.Object") {
     return _clrType(type);
 };
 
 
 // Convert values into a CLR string[] with predictable string coercion.
-command #Make.stringArrayObject:function = function (values = []) {
+command Make.stringArrayObject (values = []) {
     return Make.arrayObject(values, "System.String", value => String(value));
 };
 
 // Convert text, byte arrays, ArrayBuffers, or byte iterables into a CLR byte[].
 // An existing CLR byte[] is returned unchanged.
-command #Make.byteArrayObject:function = function (value = null) {
+command Make.byteArrayObject (value = null) {
     if (value != null && typeof value.GetType === "function" &&
         value.GetType().FullName === "System.Byte[]")
         return value;
@@ -302,7 +302,7 @@ command #Make.byteArrayObject:function = function (value = null) {
 
 // Convert a JavaScript array or iterable into a real CLR array (T[]).
 // Values must be assignable to the selected element type.
-command #Make.arrayObject:function = function (values = [], elementType = "System.Object", mapper = null) {
+command Make.arrayObject (values = [], elementType = "System.Object", mapper = null) {
     const items = _clrValues(values, mapper);
     const result = _clrHost().newArr(_clrType(elementType), items.length);
     for (let index = 0; index < items.length; index++)
@@ -311,18 +311,18 @@ command #Make.arrayObject:function = function (values = [], elementType = "Syste
 };
 
 // Convert values into System.Collections.Generic.List<T>.
-command #Make.listObject:function = function (values = [], elementType = "System.Object", mapper = null) {
+command Make.listObject (values = [], elementType = "System.Object", mapper = null) {
     return _clrCreateCollection("System.Collections.Generic.List", values, elementType, "Add", mapper);
 };
 
 // Return a concrete List<T>, which implements IEnumerable<T>.
 // .NET interfaces cannot be instantiated directly.
-command #Make.iteratorObject:function = function (values = [], elementType = "System.Object", mapper = null) {
+command Make.iteratorObject (values = [], elementType = "System.Object", mapper = null) {
     return Make.listObject(values, elementType, mapper);
 };
 
 // Convert a JavaScript object, Map, or iterable of [key, value] pairs into Dictionary<TKey, TValue>.
-command #Make.dictionaryObject:function = function (value = {}, keyType = "System.String", valueType = "System.Object", mapper = null) {
+command Make.dictionaryObject (value = {}, keyType = "System.String", valueType = "System.Object", mapper = null) {
     const clr = _clrHost();
     const type = _clrGenericType("System.Collections.Generic.Dictionary", keyType, valueType);
     const result = clr.newObj(type);
@@ -355,29 +355,29 @@ command #Make.dictionaryObject:function = function (value = {}, keyType = "Syste
 };
 
 // Convert values into System.Collections.Generic.HashSet<T>.
-command #Make.hashSetObject:function = function (values = [], elementType = "System.Object", mapper = null) {
+command Make.hashSetObject (values = [], elementType = "System.Object", mapper = null) {
     return _clrCreateCollection("System.Collections.Generic.HashSet", values, elementType, "Add", mapper);
 };
 
 // Convert values into System.Collections.Generic.Queue<T>.
-command #Make.queueObject:function = function (values = [], elementType = "System.Object", mapper = null) {
+command Make.queueObject (values = [], elementType = "System.Object", mapper = null) {
     return _clrCreateCollection("System.Collections.Generic.Queue", values, elementType, "Enqueue", mapper);
 };
 
 // Convert values into System.Collections.Generic.Stack<T>.
-command #Make.stackObject:function = function (values = [], elementType = "System.Object", mapper = null) {
+command Make.stackObject (values = [], elementType = "System.Object", mapper = null) {
     return _clrCreateCollection("System.Collections.Generic.Stack", values, elementType, "Push", mapper);
 };
 
 // Convert values into the non-generic System.Collections.ArrayList.
-command #Make.arrayListObject:function = function (values = [], mapper = null) {
+command Make.arrayListObject (values = [], mapper = null) {
     const result = _clrHost().newObj(_clrType("System.Collections.ArrayList"));
     for (const value of _clrValues(values, mapper)) result.Add(value);
     return result;
 };
 
 // Convert a JavaScript object or Map into the non-generic System.Collections.Hashtable.
-command #Make.hashTableObject:function = function (value = {}) {
+command Make.hashTableObject (value = {}) {
     const clr = _clrHost();
     const result = clr.newObj(_clrType("System.Collections.Hashtable"));
     const entries = value instanceof Map
@@ -388,17 +388,17 @@ command #Make.hashTableObject:function = function (value = {}) {
 };
 
 // Convert values into System.Collections.Generic.LinkedList<T>.
-command #Make.linkedListObject:function = function (values = [], elementType = "System.Object", mapper = null) {
+command Make.linkedListObject (values = [], elementType = "System.Object", mapper = null) {
     return _clrCreateCollection("System.Collections.Generic.LinkedList", values, elementType, "AddLast", mapper);
 };
 
 // Convert values into System.Collections.Generic.SortedSet<T>.
-command #Make.sortedSetObject:function = function (values = [], elementType = "System.Object", mapper = null) {
+command Make.sortedSetObject (values = [], elementType = "System.Object", mapper = null) {
     return _clrCreateCollection("System.Collections.Generic.SortedSet", values, elementType, "Add", mapper);
 };
 
 // Convert a JavaScript object into System.Dynamic.ExpandoObject.
-command #Make.expandoObject:function = function (value = {}) {
+command Make.expandoObject (value = {}) {
     const clr = _clrHost();
     const result = clr.newObj(_clrType("System.Dynamic.ExpandoObject"));
     const dictionaryType = _clrGenericType(
@@ -415,18 +415,18 @@ command #Make.expandoObject:function = function (value = {}) {
 };
 
 // Generic object conversion defaults to a dynamic .NET object.
-command #Make.objectObject:function = function (value = {}) {
+command Make.objectObject (value = {}) {
     return Make.expandoObject(value);
 };
 
 // Convert a JavaScript object into Dictionary<string, object>.
-command #Make.objectDictionary:function = function (value = {}) {
+command Make.objectDictionary (value = {}) {
     return Make.dictionaryObject(value, "System.String", "System.Object");
 };
 
 // Convert a value using System.Convert.ChangeType. This is intended for
 // IConvertible types; complex objects should use the collection converters above.
-command #Make.convertObject:function = function (value, targetType) {
+command Make.convertObject (value, targetType) {
     const clr = _clrHost();
     return clr.type("System.Convert").ChangeType(value, _clrType(targetType));
 };

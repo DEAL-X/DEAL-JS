@@ -7,7 +7,7 @@
 //
 // Arrays are recursively expanded. Later values replace earlier values
 // when the same key is supplied more than once.
-command #Collect:start|function() {
+command #Collect:start() {
     if (arguments.length < 1) return null;
 
     const result = {};

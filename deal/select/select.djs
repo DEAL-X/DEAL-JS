@@ -15,7 +15,7 @@ use ./one;
 // DEAL's "FROM" separator is compiled as an argument separator. The source
 // is therefore always the final argument; a trailing empty separator value
 // is tolerated for compatibility with generated calls.
-command #Select:start = function() {
+command #Select:start () {
     if (arguments.length < 1) return null;
     if (arguments.length === 1) return arguments[0];
 
