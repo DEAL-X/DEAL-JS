@@ -848,7 +848,7 @@ For example, no manual conversion to `string[]` is needed:
 
 ```deal
 Use deal/core;
-Use deal/make/object;
+Use deal/make;
 
 Consider lines be Make.stringArrayObject(["first", "second"]);
 application.Engine.Resource.SetFileLines(path, lines, null);
