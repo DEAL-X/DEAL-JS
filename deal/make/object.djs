@@ -2,6 +2,7 @@
 // Initialize the namespace here as well: importing a leaf module must not depend
 // on the host having separately imported the package entry point.
 globalThis.Make = globalThis.Make || {};
+command #Make:identifier = globalThis.Make;
 //
 // Requires Microsoft.ClearScript.ExtendedHostFunctions to be exposed by the host
 // as the global JavaScript object "host".
