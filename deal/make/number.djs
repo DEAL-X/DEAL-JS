@@ -1,3 +1,4 @@
+use deal/make/.djs;
 command Make.float (val = null, def = 0) {
 	return parseFloat(val ?? def) ?? def;
 };
