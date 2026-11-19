@@ -15,6 +15,7 @@
 //   Make.dictionaryObject({ name: "DEAL" })       -> Dictionary<String, Object>
 //   Make.objectObject({ X: 1, Y: 2 })             -> ExpandoObject
 
+use deal/make;
 use deal/make/collection;
 use deal/make/logical;
 
