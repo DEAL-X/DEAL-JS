@@ -1,4 +1,5 @@
 // JavaScript-to-.NET object and collection converters.
+
 // Initialize the namespace here as well: importing a leaf module must not depend
 // on the host having separately imported the package entry point.
 globalThis.Make = globalThis.Make || {};
