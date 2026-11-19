@@ -31,7 +31,8 @@ function _clrType (type = "System.Object") {
 
 function _clrGenericType (definition, ...types) {
     const clr = _clrHost();
-    return clr.type(definition, ...types.map(_clrType));
+    const genericDefinition = definition.includes("`") ? definition : definition + "`" + types.length;
+    return clr.type(genericDefinition, ...types.map(_clrType));
 }
 
 const _clrTypeNames = new WeakMap();
