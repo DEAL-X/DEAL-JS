@@ -841,6 +841,8 @@ The converters create actual CLR objects; they do not merely wrap JavaScript val
 
 A type argument may be a CLR type name or a ClearScript host-type reference returned by `Make.typeObject`. Collection converters accept JavaScript arrays and iterables; an optional mapper can transform each element before insertion. Values still need to be convertible to the requested CLR element type.
 
+**ClearScript host setting:** do not enable `V8ScriptEngineFlags.EnableArrayConversion` when using these typed-array converters. That flag converts CLR arrays to JavaScript arrays at the script boundary, removing the CLR array methods and type information required by `Make.arrayObject`. Keep the flag disabled for this host, while continuing to use `EnableDateTimeConversion`, task/promise conversion, and the other independent flags as needed.
+
 For example, this passes a real `.NET string[]` to the existing `SetFileLines(string, string[], Encoding)` overload:
 
 ```deal
