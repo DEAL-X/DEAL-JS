@@ -9,6 +9,8 @@
 use deal/make/collection;
 use deal/make/logical;
 
+command #Make:identifier = {};
+
 command Make.hostObject () {
     if (typeof host === "undefined" || host == null ||
         typeof host.type !== "function" || typeof host.newObj !== "function" ||
