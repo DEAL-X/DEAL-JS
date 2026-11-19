@@ -1,5 +1,6 @@
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace MiMFa.Net.Browsers.Services
         public JObject Grant(string origin, IEnumerable<string> permissions) => GrantAsync(origin, permissions).GetAwaiter().GetResult();
 
         /// <summary>Accepts JavaScript arrays marshalled as object[] by ClearScript.</summary>
-        public JObject Grant(string origin, object[] permissions) =>
+        public JObject Grant(string origin, object permissions) =>
             GrantAsync(origin, ConvertPermissions(permissions)).GetAwaiter().GetResult();
         /// <summary>Accepts JavaScript arrays marshalled as object[] by ClearScript.</summary>
         public Task<JObject> GrantAsync(string origin, object[] permissions) =>
