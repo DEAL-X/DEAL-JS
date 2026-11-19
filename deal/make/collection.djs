@@ -1,3 +1,4 @@
+use deal/make/.djs;
 command Make.array (value, mapper = null) {
     let result;
     if (value == null) result = [];
