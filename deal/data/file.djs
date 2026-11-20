@@ -107,7 +107,7 @@ command File (path = null, encoding = null, sequential = true) {
 			if(!application.Engine.Resource.Exists(this.path)) application.Engine.Resource.SetFileText(this.path, Make.string(object));
 			return application.Engine.Resource.Exists(this.path);
 		},
-		clear: function (object = null) {
+		"clear": function (object = null) {
 			return application.Engine.Resource.SetFileText(this.path, "", this.encoding);
 		},
 		read: function () {
