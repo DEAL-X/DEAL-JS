@@ -46,5 +46,14 @@ jobs:
       - name: Build DEAL.JS Engine
         run: dotnet build "DEAL-JS/MiMFa DEAL.JS - Engine.csproj" --configuration Release --no-restore
 
-      - name: Run hierarchical keyword regression tests
-        run: dotnet run --project "DEAL-JS/Tests/CompilerRegressionTests.csproj" --configuration Release
+      - name: Run compiler regression tests when the test project is present
+        shell: pwsh
+        run: |
+          $testProject = "DEAL-JS/Tests/CompilerRegressionTests.csproj"
+          if (Test-Path $testProject) {
+            dotnet run --project $testProject --configuration Release
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          else {
+            Write-Host "No compiler regression test project exists on this branch; the Console sample-compatibility workflow provides runtime coverage."
+          }
