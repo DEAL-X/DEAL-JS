@@ -25,6 +25,8 @@ namespace MiMFa.Engine.DEAL.JS
 
         public Token LastToken = null;
 
+        private readonly HashSet<string> _foldersBeingLoaded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         public override bool Initialize(MiMFa.Engine.Engine engine)
         {
             if (engine != null) base.Initialize(Engine = engine as Engine);
@@ -337,30 +339,37 @@ namespace MiMFa.Engine.DEAL.JS
         {
             if (string.IsNullOrWhiteSpace(folder) || folder.Split(Path.DirectorySeparatorChar).Last().StartsWith("~")) return 0;
             folder = Regex.Replace(folder, @"[/\\]$", "");
+            var rp = Engine.Resource;
+            if (rp == null) return 0;
+
+            string folderKey = rp.Normalize(folder);
+            if (!_foldersBeingLoaded.Add(folderKey)) return 0;
+
             int results = 0;
             try
             {
-                var rp = Engine.Resource;
-                if (rp != null && rp.Exists(folder))
+                if (rp.Exists(folder))
                 {
-                    var res = UseFile(folder + Path.DirectorySeparatorChar + Engine.Resource.DefaultName, force);
+                    var res = UseFile(folder + Path.DirectorySeparatorChar + rp.DefaultName, force);
                     if (res > 0) return res;
-                    else
+
+                    foreach (var adrs in rp.GetFolderContents(folder))
                     {
-                        foreach (var adrs in rp.GetFolderContents(folder))
-                        {
-                            if (adrs.IsFile) results += UseFile(adrs.Path, force);
-                            else if (adrs.IsFolder) results += UseFolder(adrs.Path, force);
-                        }
+                        if (adrs.IsFile) results += UseFile(adrs.Path, force);
+                        else if (adrs.IsFolder) results += UseFolder(adrs.Path, force);
                     }
                 }
             }
             catch { }
+            finally
+            {
+                _foldersBeingLoaded.Remove(folderKey);
+            }
             return results;
         }
         protected virtual int UseFile(string file, bool force = false)
         {
-            if (string.IsNullOrWhiteSpace(file) || file.Split(System.IO.Path.DirectorySeparatorChar).Last().StartsWith("~")) return 0;
+            if (string.IsNullOrWhiteSpace(file) || file.Split(Path.DirectorySeparatorChar).Last().StartsWith("~")) return 0;
             int num = 0;
             if (!Regex.IsMatch(file, @"\.(deal|djs|js)$", RegexOptions.IgnoreCase))
                 return UseFile(file + ".js", force) + UseFile(file + ".djs", force) + UseFile(file + ".deal", force);
@@ -369,18 +378,20 @@ namespace MiMFa.Engine.DEAL.JS
             {
                 var compiler = this.Engine as MiMFa.Engine.Engine;
                 var rp = compiler?.Resource;
-                if (!force && (compiler as Engine).HasDependency(file)) return 1;
-                if (rp != null && rp.Exists(file))
+                if (rp == null || !rp.Exists(file)) return 0;
+                if (!force && compiler.HasDependency(file)) return 1;
+
+                if (!Regex.IsMatch(file, @"[/\\]\.(deal|djs|js)$", RegexOptions.IgnoreCase))
                 {
-                    if(!Regex.IsMatch(file, @"[/\\]\.(deal|djs|js)$", RegexOptions.IgnoreCase))
-                        num += UseFile(rp.ParentDirectory(file).TrimEnd('/','\\')+Path.DirectorySeparatorChar);
-                    int c = (compiler as Engine).Dependencies.Count;
-                    (compiler as Engine).UseDependency(
-                        new Input(rp.GetFileText(file, System.Text.Encoding.UTF8), file), 
-                        force
-                    );
-                    return num + (compiler as Engine).Dependencies.Count - c;
+                    string parentFolder = rp.ParentDirectory(file).TrimEnd('/', '\\');
+                    string parentKey = rp.Normalize(parentFolder);
+                    if (!_foldersBeingLoaded.Contains(parentKey))
+                        num += UseFile(parentFolder + Path.DirectorySeparatorChar, force);
                 }
+
+                int count = compiler.Dependencies.Count;
+                compiler.UseDependency(new Input(rp.GetFileText(file, System.Text.Encoding.UTF8), file), force);
+                return num + compiler.Dependencies.Count - count;
             }
             catch { }
             return num;

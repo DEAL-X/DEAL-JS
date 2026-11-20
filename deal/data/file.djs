@@ -1,14 +1,15 @@
 use deal/make;
-use deal/make/string;
-use deal/make/collection;
-use deal/make/object;
-use deal/data/temporary;
 use deal/select/accept;
 
 
 // All resource related commands
 command File (path = null, encoding = null, sequential = true) {
-	
+
+	function _resource(method, args, encodingValue) {
+		const resource = application.Engine.Resource;
+		return resource[method](...args, encodingValue);
+	}
+
 	function _parseLine(line) {
 		try {
 			const value = JSON.parse(line);
@@ -52,12 +53,12 @@ command File (path = null, encoding = null, sequential = true) {
 			this.fullname = this.name + newExt;
 		},
 		get count () {
-			return Make.array(application.Engine.Resource.GetFileLines(this.path, this.encoding)).length;
+			return Make.array(_resource("GetFileLines", [this.path], this.encoding)).length;
 		},
 		set count (length) {
 			let cnt = this.count;
-			if(length > cnt) while(length-- > cnt) application.Engine.Resource.AppendFileLine(this.path, "", this.encoding);
-			else return application.Engine.Resource.SetFileLines(this.path, Make.stringArrayObject(Make.array(application.Engine.Resource.GetFileLines(this.path, this.encoding)).slice(0, length)), this.encoding);
+			if(length > cnt) while(length-- > cnt) _resource("AppendFileLine", [this.path, ""], this.encoding);
+			else return _resource("SetFileLines", [this.path, Make.array(_resource("GetFileLines", [this.path], this.encoding)).slice(0, length)], this.encoding);
 		},
 		get exists () {
 			return application.Engine.Resource.Exists(this.path);
@@ -70,36 +71,38 @@ command File (path = null, encoding = null, sequential = true) {
 			else application.Engine.Resource.Delete(this.path);
 		},
 		get text () {
-			return application.Engine.Resource.GetFileText(this.path, this.encoding);
+			return _resource("GetFileText", [this.path], this.encoding);
 		},
 		set text (text) {
-			return application.Engine.Resource.SetFileText(this.path, text, this.encoding);
+			return _resource("SetFileText", [this.path, text], this.encoding);
 		},
 		get contents () {
-			return (function * () { for(const b of application.Engine.Resource.GetFileContents(this.path)) yield b; })();
+			return application.Engine.Resource.GetFileContents(this.path);
 		},
 		set contents (contents) {
-			return application.Engine.Resource.SetFileContents(this.path, Make.byteArrayObject(contents));
+			return application.Engine.Resource.SetFileContents(this.path, contents);
 		},
 		get lines() {
+			const file = this;
 			return (function * () {
-				for(const line of application.Engine.Resource.GetFileLines(this.path, this.encoding)) yield line;
+				for(const line of _resource("GetFileLines", [file.path], file.encoding)) yield line;
 			})();
 		},
 		set lines (values) {
-			return application.Engine.Resource.SetFileLines(this.path, Make.stringArrayObject(values.map(o => Make.string(o))), this.encoding);
+			return _resource("SetFileLines", [this.path, values.map(o => Make.string(o))], this.encoding);
 		},
 		get fields () {
+			const file = this;
 			return (function * () {
-				for(const line of application.Engine.Resource.GetFileLines(this.path, this.encoding)) yield _parseLine(line);
+				for(const line of _resource("GetFileLines", [file.path], file.encoding)) yield _parseLine(line);
 			})();
 		},
 		set fields (values) {
-			return application.Engine.Resource.SetFileLines(this.path, Make.stringArrayObject(values.map(Make.string)), this.encoding);
+			return _resource("SetFileLines", [this.path, values.map(Make.string)], this.encoding);
 		},
 		line: function(index, object = null) {
-			if(object === null) return application.Engine.Resource.GetFileLine(this.path, index, this.encoding);
-			else return application.Engine.Resource.SetFileLine(this.path, index, Make.string(object), this.encoding);
+			if(object === null) return _resource("GetFileLine", [this.path, index], this.encoding);
+			else return _resource("SetFileLine", [this.path, index, Make.string(object)], this.encoding);
 		},
 		field: function(index, object = null) {
 			if(object === null) return _parseLine(this.line(index));
@@ -110,21 +113,21 @@ command File (path = null, encoding = null, sequential = true) {
 			return application.Engine.Resource.Exists(this.path);
 		},
 		clear: function (object = null) {
-			return application.Engine.Resource.SetFileText(this.path, "", this.encoding);
+			return _resource("SetFileText", [this.path, ""], this.encoding);
 		},
 		read: function () {
-			return application.Engine.Resource.GetFileText(this.path, this.encoding);
+			return _resource("GetFileText", [this.path], this.encoding);
 		},
 		write: function (object = null) {
-			return application.Engine.Resource.SetFileText(this.path, Make.string(object), this.encoding);
+			return _resource("SetFileText", [this.path, Make.string(object)], this.encoding);
 		},
 		prepend: function (object = null) {
-			if(this.sequential) return application.Engine.Resource.PrependFileLine(this.path, Make.string(object), this.encoding);
-			else return application.Engine.Resource.PrependFileText(this.path, Make.string(object), this.encoding);
+			if(this.sequential) return _resource("PrependFileLine", [this.path, Make.string(object)], this.encoding);
+			else return _resource("PrependFileText", [this.path, Make.string(object)], this.encoding);
 		},
 		append: function (object = null) {
-			if(this.sequential) return application.Engine.Resource.AppendFileLine(this.path, Make.string(object), this.encoding);
-			else return application.Engine.Resource.AppendFileText(this.path, Make.string(object), this.encoding);
+			if(this.sequential) return _resource("AppendFileLine", [this.path, Make.string(object)], this.encoding);
+			else return _resource("AppendFileText", [this.path, Make.string(object)], this.encoding);
 		},
 		// String and RegExp queries search raw lines. XPath and object graphs search parsed JSON objects.
 		find: function (query) {
@@ -143,8 +146,8 @@ command File (path = null, encoding = null, sequential = true) {
 		search: function * (query = null, foreward = true) {
 			const textQuery = ((typeof query === "string" && !Accept.isXPath(query)) || query instanceof RegExp);
 			const lines = foreward ? 
-				application.Engine.Resource.GetFileLines(this.path, this.encoding) :
-				Make.array(application.Engine.Resource.GetFileLines(this.path, this.encoding)).reverse();
+				_resource("GetFileLines", [this.path], this.encoding) :
+				Make.array(_resource("GetFileLines", [this.path], this.encoding)).reverse();
 			for(const line of lines) {
 				if(query === null || query === undefined) {
 					yield line;

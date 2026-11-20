@@ -811,48 +811,29 @@ Reuse https://example.com/lib.djs;
 Both instructions resolve resources through the compiler's shared path and resource resolution. `USE` skips a dependency already registered by the current compiler; `REUSE` forces that dependency to be processed again. `REUSE` does not imply a separate download or cache-refresh policy for remote modules.
 
 
-## CLR object interoperability
+DEAL.JS runs on ClearScript V8 with `V8ScriptEngineFlags.EnableArrayConversion` enabled. ClearScript marshals a JavaScript array as a CLR `object[]`; it does not construct a strongly typed `string[]` from a JavaScript array. Consequently, pass arrays directly only when the target API accepts the converted array type, or provide a narrow array adapter for APIs whose main implementation accepts a generic collection interface.
 
-DEAL.JS can call .NET APIs through its ClearScript host. JavaScript arrays and objects are not automatically interchangeable with every CLR collection parameter, so use the explicit converters in `deal/make/object.djs`. The module is included by `Use deal/make;` and expects the host to expose ClearScript's `ExtendedHostFunctions` instance as the global `host`:
+For a resource API whose main implementation accepts `IEnumerable<string>`, the array adapter can infer the array element type and forward converted values to that implementation:
 
 ```csharp
-using Microsoft.ClearScript;
+public virtual void SetFileLines<T>(string path, T[] lines, Encoding encoding = null)
+    => SetFileLines(path, lines?.Select(line => line?.ToString()), encoding);
+
+public virtual void SetFileLines(string path, IEnumerable<string> lines, Encoding encoding = null)
+{
+    // Main implementation
+}
+```
+
+The array adapter is added only to the APIs that need it. The `IEnumerable<string>` method remains the main implementation; no general `object` overloads or JavaScript-side CLR collection converters are required. The shared `File` and `Local` modules pass ordinary JavaScript arrays and strings to the resource API.
+
+Explicit CLR object conversion remains available only when an API genuinely requires a CLR dictionary or a specific .NET class. Those operations are provided by `Make.dictionaryObject` and `Make.objectObject` in `deal/make/object.djs`; they require ClearScript's `ExtendedHostFunctions` to be exposed as the global `host` object:
+
+```csharp
 engine.AddHostObject("host", new ExtendedHostFunctions());
 ```
 
-The converters create actual CLR objects; they do not merely wrap JavaScript values:
-
-| Converter | CLR result |
-|---|---|
-| `Make.arrayObject(values, "System.String")` / `Make.stringArrayObject(values)` | `System.String[]` |
-| `Make.listObject(values, "System.String")` | `List<string>` |
-| `Make.iteratorObject(values, "System.String")` | `List<string>`, assignable to `IEnumerable<string>` |
-| `Make.dictionaryObject(object, "System.String", "System.Int32")` | `Dictionary<string, int>` |
-| `Make.objectObject(object)` / `Make.expandoObject(object)` | `System.Dynamic.ExpandoObject` with populated properties |
-| `Make.hashSetObject(values, "System.String")` | `HashSet<string>` |
-| `Make.queueObject(values, "System.String")` | `Queue<string>` |
-| `Make.stackObject(values, "System.String")` | `Stack<string>` |
-| `Make.linkedListObject(values, "System.String")` | `LinkedList<string>` |
-| `Make.sortedSetObject(values, "System.String")` | `SortedSet<string>` |
-| `Make.arrayListObject(values)` | `ArrayList` |
-| `Make.byteArrayObject(value)` | `System.Byte[]` from text, byte arrays, or byte iterables |
-| `Make.hashTableObject(object)` | `Hashtable` |
-| `Make.convertObject(value, "System.Int32")` | `Convert.ChangeType` result |
-
-A type argument may be a CLR type name or a ClearScript host-type reference returned by `Make.typeObject`. Collection converters accept JavaScript arrays and iterables; an optional mapper can transform each element before insertion. Values still need to be convertible to the requested CLR element type.
-
-For example, this passes a real `.NET string[]` to the existing `SetFileLines(string, string[], Encoding)` overload:
-
-```deal
-Use deal/core;
-Use deal/make;
-
-Consider lines be Make.arrayObject(["first", "second"], "System.String");
-application.Engine.Resource.SetFileLines(path, lines, null);
-```
-
-`Make.iteratorObject` returns a concrete `List<T>`, because an interface such as `IEnumerable<T>` cannot be instantiated. That list is assignable to `IEnumerable<T>` and can be passed to APIs expecting the interface. The `File` and `Local` modules also use these converters internally when calling `SetFileLines` and `SetFileContents`, so their JavaScript-facing APIs do not leak CLR array requirements. See [the CLR interop tutorial](Samples/tutorials/04-CLR-Object-Interop.djs) and [the runtime smoke test](Samples/tests/runtime/CLR-Object-Interop-Smoke-Test.js).
-
+Use `Use deal/make;` to load the Make directory. Its directory entry file and sibling modules are processed by normal directory resolution, so there is no need to import `deal/make/object` or `deal/make/.djs` separately.
 ## DEAL.JS samples
 
 The sample collection is divided by intent rather than keeping unrelated files together:
@@ -866,37 +847,3 @@ The [Research Catalog Processing](Samples/practicals/Research-Catalog-Processing
 For the recommended learning path, begin with [01 - Getting Started](Samples/tutorials/01-Getting-Started.djs), continue with [02 - Browser and Fetch](Samples/tutorials/02-Browser-and-Fetch.djs), and then study [Web Scraping 1](Samples/practicals/Web-Scraping-1.djs).
 
 
-## JavaScript-to-.NET collection interop
-
-JavaScript arrays and plain objects are not automatically interchangeable with strongly typed .NET arrays and generic collections in ClearScript. Use the converters in deal/make/object.djs when calling .NET APIs that require string[], List<T>, IEnumerable<T>, dictionaries, or byte arrays.
-
-The host must expose ClearScript's ExtendedHostFunctions once, under the global name host:
-
-```csharp
-using Microsoft.ClearScript;
-
-engine.AddHostObject("host", new ExtendedHostFunctions());
-```
-
-Only expose ExtendedHostFunctions to scripts you trust: it enables script-side access to imported .NET types.
-
-Load the conversion module:
-
-```deal
-Use deal/make/object;
-```
-
-Common conversions:
-
-```deal
-Consider names be ["Ada", "Grace"];
-Consider clrArray be Make.arrayObject(names, "System.String");          // string[]
-Consider clrList to be Make.listObject([1, 2, 3], "System.Int32");         // List<int>
-Consider clrEnumerable be Make.iteratorObject(names, "System.String"); // IEnumerable<string>
-Consider clrMap as Make.dictionaryObject({ name: "DEAL.JS" });          // Dictionary<string, object>
-Consider clrBytes be Make.bytesObject("Hello");                         // byte[]
-```
-
-Make.iteratorObject returns a typed List<T>, which implements IEnumerable<T>; it is a materialized collection, not a lazy iterator. Make.objectObject(value, "Namespace.Type", memberTypes) can populate a .NET type with a parameterless constructor and writable properties; memberTypes optionally maps property names to CLR type names for nested typed members. Without a target type, nested JavaScript arrays and plain objects are recursively converted to CLR arrays and dictionaries.
-
-The File.lines(...), File.fields(...), File.contents, and Local.write(...) helpers use these conversions internally.

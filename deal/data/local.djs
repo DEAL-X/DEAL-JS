@@ -1,6 +1,4 @@
 use deal/make;
-use deal/make/string;
-use deal/make/object;
 
 // All resource related commands
 command #Local:identifier = {};
@@ -41,7 +39,7 @@ command Local.read (path = null, recursive = false, encoding = null) {
 };
 command Local.write (path = null, object = null) {
 	if(!path) return false;
-	return application.Engine.Resource.SetFileContents(path, Make.byteArrayObject(Make.string(object)));
+	return application.Engine.Resource.SetFileText(path, Make.string(object));
 };
 command Local.prepend (path = null, object = null) {
 	if(!path) return false;
