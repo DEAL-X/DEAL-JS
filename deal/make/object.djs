@@ -1,56 +1,17 @@
-// Explicit conversions for CLR object types that ClearScript cannot bind directly.
-// JavaScript arrays and scalar values should otherwise be passed to .NET APIs directly.
-
-function _clrHost() {
+// Explicit conversion for APIs that require a CLR Dictionary<TKey, TValue>.
+// JavaScript arrays, scalar values, and ordinary objects should otherwise be passed directly.
+command Make.dictionaryObject (value = null, keyType = "System.String", valueType = "System.Object") {
     if (typeof host === "undefined" || host == null ||
         typeof host.type !== "function" || typeof host.newObj !== "function")
-        throw new Error("CLR object conversion requires ClearScript ExtendedHostFunctions exposed as 'host'.");
-    return host;
-}
+        throw new Error("CLR dictionary conversion requires ClearScript ExtendedHostFunctions exposed as 'host'.");
 
-function _clrType(type = "System.Object") {
-    if (type == null) return _clrHost().type("System.Object");
-    if (typeof type !== "string") return type;
-    return _clrHost().type(type);
-}
-
-function _isPlainObject(value) {
-    if (value === null || typeof value !== "object" || Array.isArray(value)) return false;
-    const prototype = Object.getPrototypeOf(value);
-    return prototype === Object.prototype || prototype === null;
-}
-
-// Convert a plain JavaScript object to a CLR dictionary, or populate a specified CLR class.
-// Arrays and primitive values remain ordinary JavaScript values and rely on ClearScript conversion.
-command Make.objectObject (value = null, type = null, memberTypes = null) {
-    if (value == null) return null;
-    if (type == null || type === "System.Object") {
-        if (_isPlainObject(value)) return Make.dictionaryObject(value);
-        return value;
-    }
-
-    if (!_isPlainObject(value)) return value;
-
-    const instance = _clrHost().newObj(_clrType(type));
-    for (const key of Object.keys(value)) {
-        const memberType = memberTypes != null ? memberTypes[key] : null;
-        instance[key] = memberType != null
-            ? Make.objectObject(value[key], memberType)
-            : value[key];
-    }
-    return instance;
-};
-
-// Create a CLR Dictionary<TKey, TValue> when an API explicitly requires one.
-// Its keys and values are passed through ClearScript's normal value conversion.
-command Make.dictionaryObject (value = null, keyType = "System.String", valueType = "System.Object") {
-    const clr = _clrHost();
-    const dictionaryType = clr.type(
+    const clrType = type => typeof type === "string" ? host.type(type) : type;
+    const dictionaryType = host.type(
         "System.Collections.Generic.Dictionary",
-        _clrType(keyType),
-        _clrType(valueType)
+        clrType(keyType),
+        clrType(valueType)
     );
-    const result = clr.newObj(dictionaryType);
+    const result = host.newObj(dictionaryType);
     let entries = [];
 
     if (value instanceof Map) entries = Array.from(value.entries());
@@ -63,8 +24,7 @@ command Make.dictionaryObject (value = null, keyType = "System.String", valueTyp
     for (const entry of entries) {
         if (!Array.isArray(entry) || entry.length < 2)
             throw new TypeError("Dictionary input arrays must contain [key, value] pairs.");
-        const item = _isPlainObject(entry[1]) ? Make.objectObject(entry[1]) : entry[1];
-        result.Add(entry[0], item);
+        result.Add(entry[0], entry[1]);
     }
     return result;
 };
