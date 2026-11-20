@@ -47,7 +47,7 @@ command Local.read (path = null, recursive = false, encoding = null) {
 };
 command Local.write (path = null, object = null) {
 	if(!path) return false;
-	return application.Engine.Resource.SetFileText(path, Make.string(object));
+	return application.Engine.Resource.SetFileContents(path, Make.string(object));
 };
 command Local.prepend (path = null, object = null) {
 	if(!path) return false;
