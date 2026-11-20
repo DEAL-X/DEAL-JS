@@ -20,7 +20,6 @@
     <None Remove="DEAL\data\log.djs" />
     <None Remove="DEAL\data\object.djs" />
     <None Remove="DEAL\data\temporary.djs" />
-    <None Remove="DEAL\make\object.djs" />
     <None Remove="DEAL\select\accept.djs" />
     <None Remove="DEAL\struct\struct.djs" />
     <None Remove="DEAL\web\.js" />
@@ -64,9 +63,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DEAL\data\object.djs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DEAL\make\object.djs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="DEAL\select\accept.djs">
