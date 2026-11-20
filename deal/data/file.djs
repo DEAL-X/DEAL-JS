@@ -88,16 +88,18 @@ command File (path = null, encoding = null, sequential = true) {
 			return application.Engine.Resource.SetFileContents(this.path, contents);
 		},
 		get lines() {
+			const file = this;
 			return (function * () {
-				for(const line of _resource("GetFileLines", [this.path], this.encoding)) yield line;
+				for(const line of _resource("GetFileLines", [file.path], file.encoding)) yield line;
 			})();
 		},
 		set lines (values) {
 			return _resource("SetFileLines", [this.path, values.map(o => Make.string(o))], this.encoding);
 		},
 		get fields () {
+			const file = this;
 			return (function * () {
-				for(const line of _resource("GetFileLines", [this.path], this.encoding)) yield _parseLine(line);
+				for(const line of _resource("GetFileLines", [file.path], file.encoding)) yield _parseLine(line);
 			})();
 		},
 		set fields (values) {
