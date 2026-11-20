@@ -13,3 +13,4 @@ reserve isnan as "isNaN";
 reserve isfinite as "isFinite";
 reserve maximum as "Math.max";
 reserve minimum as "Math.min";
+reserve regex as "RegExp";

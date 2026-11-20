@@ -25,8 +25,6 @@ namespace MiMFa.Engine.DEAL.JS
 
         public Token LastToken = null;
 
-        private readonly HashSet<string> _foldersBeingLoaded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
         public override bool Initialize(MiMFa.Engine.Engine engine)
         {
             if (engine != null) base.Initialize(Engine = engine as Engine);
@@ -66,7 +64,7 @@ namespace MiMFa.Engine.DEAL.JS
                             var token = TokenizeString(walker, walker.Position, strict);
                             return GetAcceptedToken(type, token.Value, token.Position);
                         }
-                        else if(walker.Current == "/" && next != "/" && next != "*")
+                        else if (walker.Current == "/" && next != "/" && next != "*")
                         {
                             var p = walker.Walk() + string.Join("", walker.WalkUntil(c => Regex.IsMatch(c, "/", RegexOptions.CultureInvariant) && (walker.Peek(-1) != "\\" || walker.Peek(-2) == "\\")));
                             p += walker.Walk() + string.Join("", walker.WalkWhile(c => Regex.IsMatch(c, "[gimsuy]", RegexOptions.IgnoreCase)));
@@ -82,7 +80,7 @@ namespace MiMFa.Engine.DEAL.JS
                 var location = walker.Position;
                 var position = walker.Index;
 
-                if(walker.Current == "#")
+                if (walker.Current == "#")
                 {
                     var w = string.Concat(walker.PeekUntil(ch => Regex.IsMatch(ch.ToString(), "[^\\w\\.$#\\s:|]", RegexOptions.CultureInvariant)).ToArray());
                     w = Regex.Match(w, @"^#[\w\.$]+(:\s*[\w|]*)*", RegexOptions.CultureInvariant).Value;
@@ -94,7 +92,7 @@ namespace MiMFa.Engine.DEAL.JS
                         TokenType? dataAcceptor = ws.Length > 3 ? TokenTypeFromName(ws[3].Trim()) : null;
                         SetAcceptedType(cmd, acceptor ?? TokenType.Unknown, dataAcceptor);
                         walker.Remove(location.Index, w.Length);
-                        return new Token(acceptor??TokenType.Keyword, cmd, walker.Position);
+                        return new Token(acceptor ?? TokenType.Keyword, cmd, walker.Position);
                     }
                 }
 
@@ -116,16 +114,16 @@ namespace MiMFa.Engine.DEAL.JS
                         {
                             src = src.TrimEnd(';', ',');
                             int libs = UsePath(src, force);
-                            if (walker.PeekProcedure() == ";" ) walker.WalkProcedure();
+                            if (walker.PeekProcedure() == ";") walker.WalkProcedure();
                             //walker.Replace(location.Index, p == ";"? walker.MoveToProcedure().Location.Index - location.Index : walker.Location.Index - location.Index, res.ToCharArray().Select(c => c.ToString()).ToArray());
-                            return GetAcceptedToken(TokenType.Comment, libs<=0? $"// Could not find the {Newtonsoft.Json.JsonConvert.ToString(src)} resource" : (libs > 1 ? $"// Used {libs} resources from {Newtonsoft.Json.JsonConvert.ToString(src)}" : $"// Used {Newtonsoft.Json.JsonConvert.ToString(src)} resource"), location);
+                            return GetAcceptedToken(TokenType.Comment, libs <= 0 ? $"// Could not find the {Newtonsoft.Json.JsonConvert.ToString(src)} resource" : (libs > 1 ? $"// Used {libs} resources from {Newtonsoft.Json.JsonConvert.ToString(src)}" : $"// Used {Newtonsoft.Json.JsonConvert.ToString(src)} resource"), location);
                         }
                         else walker.Reset(position);
                         break;
                     case "reserve":
                         walker.Move(word.Length);
                         walker.MoveToProcedure();
-                        var key = walker.Current == "#"? TokenizeCode(walker)?.Value : string.Join("", walker.WalkUntil(c=> Regex.IsMatch(c,"[\\s=;,]", RegexOptions.CultureInvariant)));
+                        var key = walker.Current == "#" ? TokenizeCode(walker)?.Value : string.Join("", walker.WalkUntil(c => Regex.IsMatch(c, "[\\s=;,]", RegexOptions.CultureInvariant)));
                         if (!string.IsNullOrEmpty(key))
                         {
                             walker.MoveToProcedure();
@@ -210,7 +208,7 @@ namespace MiMFa.Engine.DEAL.JS
                             ReservesScrubber(word);
                             walker.Move(word.Length);
                             return GetAcceptedToken(TokenType.Middle, word, location);
-                        
+
                         case "where":
                         case "order":
                         case "distinct":
@@ -261,7 +259,7 @@ namespace MiMFa.Engine.DEAL.JS
                     if (current == "#")
                     {
                         word = string.Join("", walker.WalkWhile(w => w == "#"));
-                        if(word.Length <= 6) return GetAcceptedToken(TokenType.Statement, word, location);
+                        if (word.Length <= 6) return GetAcceptedToken(TokenType.Statement, word, location);
                     }
 
                     var p = string.Concat(walker.PeekUntil(ch => string.IsNullOrWhiteSpace(ch) || ",;[]".Contains(ch)).ToArray());
@@ -280,7 +278,8 @@ namespace MiMFa.Engine.DEAL.JS
             var tk = GetAcceptedToken(TokenType.Unknown, wrd, walker.Position);
             if (!switchNameSpace && tk.Value != wrd)
                 walker.Replace(walker.Position, wrd.Length, tk.Value.ToCharArray().Select(v => v.ToString()).ToArray());
-            if (!switchNameSpace && tk.Type != TokenType.Unknown) {
+            if (!switchNameSpace && tk.Type != TokenType.Unknown)
+            {
                 var ntk = base.TokenizeCode(walker);
                 return ntk.Update(ntk.Type | tk.Type);
             }
@@ -297,7 +296,7 @@ namespace MiMFa.Engine.DEAL.JS
         protected virtual Token TokenizePath(CodeWalker walker, Position location)
         {
             var value = string.Concat(walker.WalkUntil(ch => string.IsNullOrWhiteSpace(ch) || ",;[]".Contains(ch)).ToArray());
-            return GetAcceptedToken(Regex.IsMatch(value, @"\$\{[\w\W]+\}")? TokenType.TemplateStringData: TokenType.StringData, value, location);
+            return GetAcceptedToken(Regex.IsMatch(value, @"\$\{[\w\W]+\}") ? TokenType.TemplateStringData : TokenType.StringData, value, location);
         }
 
         protected virtual int UsePath(string path, bool force = false)
@@ -339,37 +338,30 @@ namespace MiMFa.Engine.DEAL.JS
         {
             if (string.IsNullOrWhiteSpace(folder) || folder.Split(Path.DirectorySeparatorChar).Last().StartsWith("~")) return 0;
             folder = Regex.Replace(folder, @"[/\\]$", "");
-            var rp = Engine.Resource;
-            if (rp == null) return 0;
-
-            string folderKey = rp.Normalize(folder);
-            if (!_foldersBeingLoaded.Add(folderKey)) return 0;
-
             int results = 0;
             try
             {
-                if (rp.Exists(folder))
+                var rp = Engine.Resource;
+                if (rp != null && rp.Exists(folder))
                 {
-                    var res = UseFile(folder + Path.DirectorySeparatorChar + rp.DefaultName, force);
+                    var res = UseFile(folder + Path.DirectorySeparatorChar + Engine.Resource.DefaultName, force);
                     if (res > 0) return res;
-
-                    foreach (var adrs in rp.GetFolderContents(folder))
+                    else
                     {
-                        if (adrs.IsFile) results += UseFile(adrs.Path, force);
-                        else if (adrs.IsFolder) results += UseFolder(adrs.Path, force);
+                        foreach (var adrs in rp.GetFolderContents(folder))
+                        {
+                            if (adrs.IsFile) results += UseFile(adrs.Path, force);
+                            else if (adrs.IsFolder) results += UseFolder(adrs.Path, force);
+                        }
                     }
                 }
             }
             catch { }
-            finally
-            {
-                _foldersBeingLoaded.Remove(folderKey);
-            }
             return results;
         }
         protected virtual int UseFile(string file, bool force = false)
         {
-            if (string.IsNullOrWhiteSpace(file) || file.Split(Path.DirectorySeparatorChar).Last().StartsWith("~")) return 0;
+            if (string.IsNullOrWhiteSpace(file) || file.Split(System.IO.Path.DirectorySeparatorChar).Last().StartsWith("~")) return 0;
             int num = 0;
             if (!Regex.IsMatch(file, @"\.(deal|djs|js)$", RegexOptions.IgnoreCase))
                 return UseFile(file + ".js", force) + UseFile(file + ".djs", force) + UseFile(file + ".deal", force);
@@ -378,20 +370,18 @@ namespace MiMFa.Engine.DEAL.JS
             {
                 var compiler = this.Engine as MiMFa.Engine.Engine;
                 var rp = compiler?.Resource;
-                if (rp == null || !rp.Exists(file)) return 0;
-                if (!force && compiler.HasDependency(file)) return 1;
-
-                if (!Regex.IsMatch(file, @"[/\\]\.(deal|djs|js)$", RegexOptions.IgnoreCase))
+                if (!force && (compiler as Engine).HasDependency(file)) return 1;
+                if (rp != null && rp.Exists(file))
                 {
-                    string parentFolder = rp.ParentDirectory(file).TrimEnd('/', '\\');
-                    string parentKey = rp.Normalize(parentFolder);
-                    if (!_foldersBeingLoaded.Contains(parentKey))
-                        num += UseFile(parentFolder + Path.DirectorySeparatorChar, force);
+                    if (!Regex.IsMatch(file, @"[/\\]\.(deal|djs|js)$", RegexOptions.IgnoreCase))
+                        num += UseFile(rp.ParentDirectory(file).TrimEnd('/', '\\') + Path.DirectorySeparatorChar);
+                    int c = (compiler as Engine).Dependencies.Count;
+                    (compiler as Engine).UseDependency(
+                        new Input(rp.GetFileText(file, System.Text.Encoding.UTF8), file),
+                        force
+                    );
+                    return num + (compiler as Engine).Dependencies.Count - c;
                 }
-
-                int count = compiler.Dependencies.Count;
-                compiler.UseDependency(new Input(rp.GetFileText(file, System.Text.Encoding.UTF8), file), force);
-                return num + compiler.Dependencies.Count - count;
             }
             catch { }
             return num;
@@ -512,7 +502,7 @@ namespace MiMFa.Engine.DEAL.JS
                     {
                         if (setAcc) SetAcceptedType(reserve.Value, t.Type);
                         if (word == reserve.Value) SwitchNamespace = true;
-                        else walker.Replace(location.Index, word.Length, reserve.Value.ToCharArray().Select(v=>v.ToString()).ToArray());
+                        else walker.Replace(location.Index, word.Length, reserve.Value.ToCharArray().Select(v => v.ToString()).ToArray());
                         return true;
                     }
                 }

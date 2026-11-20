@@ -78,24 +78,27 @@ command File (path = null, encoding = null, sequential = true) {
 			return _resource("SetFileText", [this.path, text], this.encoding);
 		},
 		get contents () {
-			return application.Engine.Resource.GetFileContents(this.path);
+			const f = this;
+			return (function * () {
+				for(const c of application.Engine.Resource.GetFileContents(f.path)) yield c;
+			})();
 		},
 		set contents (contents) {
 			return application.Engine.Resource.SetFileContents(this.path, contents);
 		},
 		get lines() {
-			const file = this;
+			const f = this;
 			return (function * () {
-				for(const line of _resource("GetFileLines", [file.path], file.encoding)) yield line;
+				for(const line of _resource("GetFileLines", [f.path], f.encoding)) yield line;
 			})();
 		},
 		set lines (values) {
 			return _resource("SetFileLines", [this.path, values.map(o => Make.string(o))], this.encoding);
 		},
 		get fields () {
-			const file = this;
+			const f = this;
 			return (function * () {
-				for(const line of _resource("GetFileLines", [file.path], file.encoding)) yield _parseLine(line);
+				for(const line of _resource("GetFileLines", [f.path], f.encoding)) yield _parseLine(line);
 			})();
 		},
 		set fields (values) {

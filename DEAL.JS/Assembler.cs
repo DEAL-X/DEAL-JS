@@ -280,10 +280,11 @@ namespace MiMFa.Engine.DEAL.JS
                         else if (next?.Is("async") == true) node.Token.Value = walker.WalkProcedure().Value + " " + node.Token.Value;
                         next = walker.PeekProcedure();
                     }
-                    cname.Update(cname.Token.Type | TokenType.FunctionKeyword);
-                    if (lname == "function") Engine?.Keywords.Set(cname);
-                    else Engine?.SetFunctionCommand(cname);
                     if (next?.Is("(") == true && !cname.Value.Contains("."))
+                    {
+                        cname.Update(cname.Token.Type | TokenType.FunctionKeyword);
+                        if (lname == "function") Engine?.Keywords.Set(cname);
+                        else Engine?.SetFunctionCommand(cname);
                         return node.Update(NodeType.DefineStructure | NodeType.Region | NodeType.Line | NodeType.Prepend).AddRange(
                             cname.Add(AssembleNode(walker)),
                             cname.Last.Count > 1 && walker.PeekProcedure()?.Is(AssignSigns) != true ? null :
@@ -295,8 +296,14 @@ namespace MiMFa.Engine.DEAL.JS
                                         ) :
                                         AssembleNode(walker)
                         );
-                    else if (next?.Is(TokenType.Middle | TokenType.Symbol) == true)
-                        walker.Walk();
+                    }
+                    else
+                    {
+                        if (lname == "function") Engine?.Keywords.Set(cname.Update(cname.Token.Type | TokenType.FunctionKeyword));
+                        else Engine?.SetDefinitionCommand(cname);
+                        if (next?.Is(TokenType.Middle | TokenType.Symbol) == true) 
+                            walker.Walk();
+                    }
                     var m = NormalSectionAssembleNode(walker);
                     if (m.Count > 1 && !m.Is("function"))
                         if (m.Child(0).Is("(") && m.Child(1).Is("{"))
@@ -595,7 +602,7 @@ namespace MiMFa.Engine.DEAL.JS
             isPureIdentifier = isPureIdentifier && node.Token.Is(TokenType.Keyword);
             isActionCommand = isActionCommand && node.Token.Is(TokenType.Keyword);
             isDefinitionCommand = isDefinitionCommand && node.Token.Is(TokenType.Keyword);
-            isFunctionCommand = (isFunctionCommand || isDefinitionCommand) && node.Token.Is(TokenType.FunctionKeyword);
+            isFunctionCommand = isFunctionCommand && node.Token.Is(TokenType.FunctionKeyword);
 
             bool isIdentifier = isPureIdentifier || isDefinitionCommand;
             bool isFunction = isPureFunction || isFunctionCommand;
