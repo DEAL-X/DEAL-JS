@@ -1,6 +1,8 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MiMFa.Net.Browsers.Services
@@ -9,8 +11,10 @@ namespace MiMFa.Net.Browsers.Services
     {
         internal BrowserPermissions(Browser browser) : base(browser) { }
         public JObject Grant(string origin, string[] permissions) => Grant(origin, (IEnumerable<string>)permissions);
+        public JObject Grant(string origin, object[] permissions) => Grant(origin, ToPermissions(permissions));
         public JObject Grant(string origin, IEnumerable<string> permissions) => GrantAsync(origin, permissions).GetAwaiter().GetResult();
         public Task<JObject> GrantAsync(string origin, string[] permissions) => GrantAsync(origin, (IEnumerable<string>)permissions);
+        public Task<JObject> GrantAsync(string origin, object[] permissions) => GrantAsync(origin, ToPermissions(permissions));
         public Task<JObject> GrantAsync(string origin, IEnumerable<string> permissions)
         {
             if (string.IsNullOrWhiteSpace(origin)) throw new ArgumentException("An origin is required.", nameof(origin));
@@ -21,6 +25,11 @@ namespace MiMFa.Net.Browsers.Services
                 ["permissions"] = new JArray(permissions)
             });
         }
+        private static IEnumerable<string> ToPermissions(object[] permissions) =>
+            permissions?.Select(permission => permission == null
+                ? null
+                : Convert.ToString(permission, CultureInfo.InvariantCulture));
+
         public JObject Reset(string origin = null) => ResetAsync(origin).GetAwaiter().GetResult();
         public Task<JObject> ResetAsync(string origin = null)
         {
