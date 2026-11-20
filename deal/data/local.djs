@@ -1,9 +1,15 @@
 use deal/make;
 use deal/make/string;
-use deal/make/object;
 
 // All resource related commands
 command #Local:identifier = {};
+
+function _localResource(method, args, encoding) {
+	const resource = application.Engine.Resource;
+	return encoding == null
+		? resource[method](...args)
+		: resource[method](...args, encoding);
+}
 
 command Local.folder (path = null, recursive = false) {
 	if(!path) return null;
@@ -15,7 +21,7 @@ command Local.file (path = null) {
 };
 command Local.content (path = null, recursive = false, encoding = null) {
 	if(!path) return null;
-	return application.Engine.Resource.GetContents(path, recursive, encoding);
+	return _localResource("GetContents", [path, recursive], encoding);
 };
 command Local.create (path = null, object = "") {
 	if(!path) return false;
@@ -36,12 +42,12 @@ command Local.name (path = null) {
 command Local.read (path = null, recursive = false, encoding = null) {
 	if(!path) return null;
 	let ent = application.Engine.Resource.Entity(path)
-	if(ent.IsFile) return application.Engine.Resource.GetFileText(path, encoding);
+	if(ent.IsFile) return _localResource("GetFileText", [path], encoding);
 	else if(ent.IsFolder) return application.Engine.Resource.GetFolderContents(path, recursive);
 };
 command Local.write (path = null, object = null) {
 	if(!path) return false;
-	return application.Engine.Resource.SetFileContents(path, Make.byteArrayObject(Make.string(object)));
+	return application.Engine.Resource.SetFileText(path, Make.string(object));
 };
 command Local.prepend (path = null, object = null) {
 	if(!path) return false;
