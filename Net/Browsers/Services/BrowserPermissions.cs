@@ -24,7 +24,7 @@ namespace MiMFa.Net.Browsers.Services
             });
         }
         private static IEnumerable<string> ToPermissions<T>(T[] permissions) =>
-            permissions?.Select(permission => permission is null
+            permissions?.Select(permission => ReferenceEquals(permission, null)
                 ? null
                 : Convert.ToString(permission, CultureInfo.InvariantCulture));
 
