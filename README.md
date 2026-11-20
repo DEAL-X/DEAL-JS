@@ -827,7 +827,7 @@ public virtual void SetFileLines(string path, IEnumerable<string> lines, Encodin
 
 The array adapter is added only to the APIs that need it. The `IEnumerable<string>` method remains the main implementation; no general `object` overloads or JavaScript-side CLR collection converters are required. The shared `File` and `Local` modules pass ordinary JavaScript arrays and strings to the resource API.
 
-Explicit CLR object conversion remains available only when an API genuinely requires a CLR dictionary or a specific .NET class. Those operations are provided by `Make.dictionaryObject` and `Make.objectObject` in `deal/make/object.djs`; they require ClearScript's `ExtendedHostFunctions` to be exposed as the global `host` object:
+An explicit CLR dictionary conversion remains available for APIs that specifically require `Dictionary<TKey, TValue>`. It is provided by `Make.dictionaryObject` in `deal/make/object.djs`; ordinary JavaScript objects, arrays, and scalar values should be passed directly whenever the target API accepts them. The converter requires ClearScript's `ExtendedHostFunctions` to be exposed as the global `host` object:
 
 ```csharp
 engine.AddHostObject("host", new ExtendedHostFunctions());
