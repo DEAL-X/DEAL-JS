@@ -223,30 +223,28 @@ The samples are grouped by purpose:
 
 Lets start with [01 - Getting Started](Samples/tutorials/01-Getting-Started.djs).
 
-## 10. Convert JavaScript values to .NET collections
+## JavaScript and .NET interoperability
 
-When a JavaScript array is passed to a .NET method that expects `string[]` or `IEnumerable<string>`, convert it explicitly. ClearScript does not treat every JavaScript array as an already-constructed CLR collection during overload resolution.
+DEAL.JS runs on ClearScript V8 with `V8ScriptEngineFlags.EnableArrayConversion` enabled. Pass JavaScript arrays and scalar values directly to .NET methods whenever ClearScript can convert them to the declared parameter type.
 
-Expose ClearScript's `ExtendedHostFunctions` instance as `host` before executing DEAL modules:
+When a public C# API uses a generic collection interface such as `IEnumerable<string>`, provide a narrow array overload only where ClearScript cannot bind a JavaScript array directly. The array overload delegates to the existing interface-based implementation; the interface method remains the main implementation.
 
 ```csharp
-using Microsoft.ClearScript;
+public virtual void SetFileLines(string path, string[] lines, Encoding encoding = null)
+    => SetFileLines(path, lines.AsEnumerable(), encoding);
+
+public virtual void SetFileLines(string path, IEnumerable<string> lines, Encoding encoding = null)
+{
+    // Main implementation
+}
+```
+
+The shared `File` and `Local` modules pass ordinary JavaScript arrays and strings to the resource API. They do not construct CLR arrays, lists, or byte arrays just to satisfy an overload.
+
+Explicit CLR object conversion remains available for APIs that genuinely require a CLR dictionary or a specific .NET class. Those operations are provided by `Make.dictionaryObject` and `Make.objectObject` in `deal/make/object.djs`; they require ClearScript's `ExtendedHostFunctions` to be exposed as the global `host` object:
+
+```csharp
 engine.AddHostObject("host", new ExtendedHostFunctions());
 ```
 
-Then load `deal/make` and use its converters:
-
-```deal
-Use deal/core;
-Use deal/make;
-
-Consider lines be Make.arrayObject(["first", "second"], "System.String");
-application.Engine.Resource.SetFileLines(path, lines, null);
-
-// A List<string> also implements IEnumerable<string>.
-Consider list be Make.listObject(["third", "fourth"], "System.String");
-application.Engine.Resource.SetFileLines(path, list, null);
-```
-
-The object-conversion module also provides `stringArrayObject`, `byteArrayObject`, `objectObject` / `expandoObject`, `dictionaryObject`, `hashSetObject`, `queueObject`, `stackObject`, `linkedListObject`, `sortedSetObject`, `arrayListObject`, `hashTableObject`, `typeObject`, and `convertObject`. The `File` and `Local` modules use these conversions internally when writing file lines and byte contents. See [Tutorial 04](Samples/tutorials/04-CLR-Object-Interop.djs) for a complete example and [the runtime smoke test](Samples/tests/runtime/CLR-Object-Interop-Smoke-Test.js) for the actual .NET type and file-provider checks.
-
+Use `Use deal/make/object;` only when those explicit CLR object conversions are needed. The Make directory's own `.djs` initialization file is loaded through the normal directory import; do not import `deal/make/.djs` explicitly.
