@@ -8,7 +8,9 @@ namespace MiMFa.Net.Browsers.Services
     public sealed class BrowserPermissions : BrowserService
     {
         internal BrowserPermissions(Browser browser) : base(browser) { }
+        public JObject Grant(string origin, string[] permissions) => Grant(origin, (IEnumerable<string>)permissions);
         public JObject Grant(string origin, IEnumerable<string> permissions) => GrantAsync(origin, permissions).GetAwaiter().GetResult();
+        public Task<JObject> GrantAsync(string origin, string[] permissions) => GrantAsync(origin, (IEnumerable<string>)permissions);
         public Task<JObject> GrantAsync(string origin, IEnumerable<string> permissions)
         {
             if (string.IsNullOrWhiteSpace(origin)) throw new ArgumentException("An origin is required.", nameof(origin));
