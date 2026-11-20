@@ -1,5 +1,4 @@
 use deal/make;
-use deal/data/temporary;
 use deal/select/accept;
 
 
