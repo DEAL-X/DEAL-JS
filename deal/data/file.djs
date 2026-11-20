@@ -95,50 +95,50 @@ command File (path = null, encoding = null, sequential = true) {
 		set fields (values) {
 			return application.Engine.Resource.SetFileLines(this.path, values.map(Make.string), this.encoding);
 		},
-		line: function(index, object = null) {
+		"line": function(index, object = null) {
 			if(object === null) return application.Engine.Resource.GetFileLine(this.path, index, this.encoding);
 			else return application.Engine.Resource.SetFileLine(this.path, index, Make.string(object), this.encoding);
 		},
-		field: function(index, object = null) {
+		"field": function(index, object = null) {
 			if(object === null) return _parseLine(this.line(index));
 			else return this.line(index, object);
 		},
-		create: function (object = "") {
+		"create": function (object = "") {
 			if(!application.Engine.Resource.Exists(this.path)) application.Engine.Resource.SetFileText(this.path, Make.string(object));
 			return application.Engine.Resource.Exists(this.path);
 		},
 		"clear": function (object = null) {
 			return application.Engine.Resource.SetFileText(this.path, "", this.encoding);
 		},
-		read: function () {
+		"read": function () {
 			return application.Engine.Resource.GetFileText(this.path, this.encoding);
 		},
-		write: function (object = null) {
+		"write": function (object = null) {
 			return application.Engine.Resource.SetFileText(this.path, Make.string(object), this.encoding);
 		},
-		prepend: function (object = null) {
+		"prepend": function (object = null) {
 			if(this.sequential) return application.Engine.Resource.PrependFileLine(this.path, Make.string(object), this.encoding);
 			else return application.Engine.Resource.PrependFileText(this.path, Make.string(object), this.encoding);
 		},
-		append: function (object = null) {
+		"append": function (object = null) {
 			if(this.sequential) return application.Engine.Resource.AppendFileLine(this.path, Make.string(object), this.encoding);
 			else return application.Engine.Resource.AppendFileText(this.path, Make.string(object), this.encoding);
 		},
 		// String and RegExp queries search raw lines. XPath and object graphs search parsed JSON objects.
-		find: function (query) {
+		"find": function (query) {
 			for(const result of this.search(query)) return result;
 			return null;
 		},
-		first: function (query = null) {
+		"first": function (query = null) {
 			for(const result of this.search(query)) return result;
 			return null;
 		},
-		last: function (query = null) {
+		"last": function (query = null) {
 			let result = null;
 			for(const item of this.search(query)) result = item;
 			return result;
 		},
-		search: function * (query = null, foreward = true) {
+		"search": function * (query = null, foreward = true) {
 			const textQuery = ((typeof query === "string" && !Accept.isXPath(query)) || query instanceof RegExp);
 			const lines = foreward ? 
 				application.Engine.Resource.GetFileLines(this.path, this.encoding) :
@@ -152,24 +152,24 @@ command File (path = null, encoding = null, sequential = true) {
 				if(Accept(value, query)) yield value;
 			}
 		},
-		move: function (destination = null, overwrite = false) {
+		"move": function (destination = null, overwrite = false) {
 			if(!destination) return false;
 			return application.Engine.Resource.Move(this.path, destination, overwrite);
 		},
-		copy: function (source = null, destination = null, overwrite = false) {
+		"copy": function (source = null, destination = null, overwrite = false) {
 			if(!destination) return false;
 			return application.Engine.Resource.Copy(this.path, destination, overwrite);
 		},
-		rename: function (newName = null, overwrite = false) {
+		"rename": function (newName = null, overwrite = false) {
 			if(!newName) return false;
 			return application.Engine.Resource.Rename(this.path, newName, overwrite);
 		},
-		delete: function () {
+		"delete": function () {
 			return application.Engine.Resource.Delete(this.path);
 		},
-		entity: function () {
+		"entity": function () {
 			return application.Engine.Resource.Entity(this.path);
 		},
-		toString: ()=>this.text
+		"toString": ()=>this.text
 	};
 }
