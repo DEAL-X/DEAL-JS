@@ -8,9 +8,7 @@ command File (path = null, encoding = null, sequential = true) {
 
 	function _resource(method, args, encodingValue) {
 		const resource = application.Engine.Resource;
-		return encodingValue == null
-			? resource[method](...args)
-			: resource[method](...args, encodingValue);
+		return resource[method](...args, encodingValue);
 	}
 
 	function _parseLine(line) {
