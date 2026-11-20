@@ -811,15 +811,13 @@ Reuse https://example.com/lib.djs;
 Both instructions resolve resources through the compiler's shared path and resource resolution. `USE` skips a dependency already registered by the current compiler; `REUSE` forces that dependency to be processed again. `REUSE` does not imply a separate download or cache-refresh policy for remote modules.
 
 
-## JavaScript and .NET interoperability
+DEAL.JS runs on ClearScript V8 with `V8ScriptEngineFlags.EnableArrayConversion` enabled. ClearScript marshals a JavaScript array as a CLR `object[]`; it does not construct a strongly typed `string[]` from a JavaScript array. Consequently, pass arrays directly only when the target API accepts the converted array type, or provide a narrow array adapter for APIs whose main implementation accepts a generic collection interface.
 
-DEAL.JS runs on ClearScript V8 with `V8ScriptEngineFlags.EnableArrayConversion` enabled. Pass JavaScript arrays and scalar values directly to .NET methods whenever ClearScript can convert them to the declared parameter type.
-
-When a public C# API uses a generic collection interface such as `IEnumerable<string>`, provide a narrow array overload only where ClearScript cannot bind a JavaScript array directly. The array overload should delegate to the existing interface-based implementation; the interface method remains the main implementation.
+For a resource API whose main implementation accepts `IEnumerable<string>`, the array adapter can infer the array element type and forward converted values to that implementation:
 
 ```csharp
-public virtual void SetFileLines(string path, string[] lines, Encoding encoding = null)
-    => SetFileLines(path, lines.AsEnumerable(), encoding);
+public virtual void SetFileLines<T>(string path, T[] lines, Encoding encoding = null)
+    => SetFileLines(path, lines?.Select(line => line?.ToString()), encoding);
 
 public virtual void SetFileLines(string path, IEnumerable<string> lines, Encoding encoding = null)
 {
@@ -827,16 +825,15 @@ public virtual void SetFileLines(string path, IEnumerable<string> lines, Encodin
 }
 ```
 
-The shared `File` and `Local` modules pass ordinary JavaScript arrays and strings to the resource API. They do not construct CLR arrays, lists, or byte arrays just to satisfy an overload.
+The array adapter is added only to the APIs that need it. The `IEnumerable<string>` method remains the main implementation; no general `object` overloads or JavaScript-side CLR collection converters are required. The shared `File` and `Local` modules pass ordinary JavaScript arrays and strings to the resource API.
 
-Explicit CLR object conversion remains available for APIs that genuinely require a CLR dictionary or a specific .NET class. Those operations are provided by `Make.dictionaryObject` and `Make.objectObject` in `deal/make/object.djs`; they require ClearScript's `ExtendedHostFunctions` to be exposed as the global `host` object:
+Explicit CLR object conversion remains available only when an API genuinely requires a CLR dictionary or a specific .NET class. Those operations are provided by `Make.dictionaryObject` and `Make.objectObject` in `deal/make/object.djs`; they require ClearScript's `ExtendedHostFunctions` to be exposed as the global `host` object:
 
 ```csharp
 engine.AddHostObject("host", new ExtendedHostFunctions());
 ```
 
 Use `Use deal/make;` to load the Make directory. Its directory entry file and sibling modules are processed by normal directory resolution, so there is no need to import `deal/make/object` or `deal/make/.djs` separately.
-
 ## DEAL.JS samples
 
 The sample collection is divided by intent rather than keeping unrelated files together:
