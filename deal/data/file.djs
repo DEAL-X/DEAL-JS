@@ -118,13 +118,13 @@ command File (path = null, encoding = null, sequential = true) {
 			return application.Engine.Resource.Exists(this.path);
 		},
 		clear: function (object = null) {
-			return application.Engine.Resource.SetFileText(this.path, "", this.encoding);
+			return _resource("SetFileText", [this.path, ""], this.encoding);
 		},
 		read: function () {
-			return application.Engine.Resource.GetFileText(this.path, this.encoding);
+			return _resource("GetFileText", [this.path], this.encoding);
 		},
 		write: function (object = null) {
-			return application.Engine.Resource.SetFileText(this.path, Make.string(object), this.encoding);
+			return _resource("SetFileText", [this.path, Make.string(object)], this.encoding);
 		},
 		prepend: function (object = null) {
 			if(this.sequential) return _resource("PrependFileLine", [this.path, Make.string(object)], this.encoding);
