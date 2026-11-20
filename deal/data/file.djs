@@ -62,7 +62,7 @@ command File (path = null, encoding = null, sequential = true) {
 		},
 		set count (length) {
 			let cnt = this.count;
-			if(length > cnt) while(length-- > cnt) application.Engine.Resource.AppendFileLine(this.path, "", this.encoding);
+			if(length > cnt) while(length-- > cnt) _resource("AppendFileLine", [this.path, ""], this.encoding);
 			else return _resource("SetFileLines", [this.path, Make.array(_resource("GetFileLines", [this.path], this.encoding)).slice(0, length)], this.encoding);
 		},
 		get exists () {
@@ -150,7 +150,7 @@ command File (path = null, encoding = null, sequential = true) {
 			const textQuery = ((typeof query === "string" && !Accept.isXPath(query)) || query instanceof RegExp);
 			const lines = foreward ? 
 				_resource("GetFileLines", [this.path], this.encoding) :
-				Make.array(application.Engine.Resource.GetFileLines(this.path, this.encoding)).reverse();
+				Make.array(_resource("GetFileLines", [this.path], this.encoding)).reverse();
 			for(const line of lines) {
 				if(query === null || query === undefined) {
 					yield line;
