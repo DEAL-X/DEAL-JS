@@ -835,7 +835,7 @@ Explicit CLR object conversion remains available for APIs that genuinely require
 engine.AddHostObject("host", new ExtendedHostFunctions());
 ```
 
-Use `Use deal/make/object;` only when those explicit CLR object conversions are needed. The Make directory's own `.djs` initialization file is loaded through the normal directory import; do not import `deal/make/.djs` explicitly.
+Use `Use deal/make;` to load the Make directory. Its directory entry file and sibling modules are processed by normal directory resolution, so there is no need to import `deal/make/object` or `deal/make/.djs` separately.
 
 ## DEAL.JS samples
 

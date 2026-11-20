@@ -1,8 +1,6 @@
 // Explicit conversions for CLR object types that ClearScript cannot bind directly.
 // JavaScript arrays and scalar values should otherwise be passed to .NET APIs directly.
 
-use deal/make;
-
 function _clrHost() {
     if (typeof host === "undefined" || host == null ||
         typeof host.type !== "function" || typeof host.newObj !== "function")

@@ -1,5 +1,4 @@
 use deal/make;
-use deal/make/string;
 
 // All resource related commands
 command #Local:identifier = {};
