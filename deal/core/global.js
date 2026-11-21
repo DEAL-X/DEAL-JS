@@ -1,4 +1,4 @@
-let isNull = function (obj) {
+var isNull = function (obj) {
 	return obj === null;
 };
 
@@ -6,55 +6,55 @@ let isNull = function (obj) {
 // 	return typeof obj != "string" && obj + "" === "NaN";
 // }
 
-let isEmpty = function (obj) {
+var isEmpty = function (obj) {
 	return obj === null || obj === "" || obj == {} || obj == [];
 };
 
-let isDefined = function (obj) {
+var isDefined = function (obj) {
 	return !isUndefined(obj);
 };
 
-let isUndefined = function (obj) {
+var isUndefined = function (obj) {
 	return obj === undefined;
 };
 
-let isHollow = function (obj) {
+var isHollow = function (obj) {
 	return obj === undefined || isNaN(obj) || isEmpty(obj) || (obj + "").trim() === "";
 };
 
-let isSet = function (obj) {
+var isSet = function (obj) {
 	return !isUnset(obj);
 };
 
-let isUnset = function (obj) {
+var isUnset = function (obj) {
 	return obj === undefined || obj === null || isNaN(obj);
 };
 
-let isString = function (obj) {
+var isString = function (obj) {
 	return typeof obj === 'string';
 };
 
-let isText = function (obj) {
+var isText = function (obj) {
 	return isString(obj) && !obj.trimStart().startsWith("<");
 };
 
-let isObject = function (obj) {
+var isObject = function (obj) {
 	return typeof obj === 'object';
 };
 
-let isNumber = function (obj) {
+var isNumber = function (obj) {
 	return parseFloat(obj) + "" === obj + "";
 };
 
-let isInt = function (n) {
+var isInt = function (n) {
 	return Number(n) === n && n % 1 === 0;
 };
 
-let isFloat = function (n) {
+var isFloat = function (n) {
 	return Number(n) === n && n % 1 !== 0;
 };
 
-let isArray = function (obj, dim = 1) {
+var isArray = function (obj, dim = 1) {
 	if (isHollow(obj)) return false;
 	let objt = typeof obj;
 	if (objt === 'string') return false;
@@ -64,30 +64,30 @@ let isArray = function (obj, dim = 1) {
 	return false;
 };
 
-let isIterable = function (obj) {
+var isIterable = function (obj) {
 	// checks for null and undefined
 	if (obj == null) return false;
 	return typeof obj[Symbol.iterator] === 'function';
 }
 
-let apply = function (func, args, maxArgsNum = 1) {
+var apply = function (func, args, maxArgsNum = 1) {
 	if (isArray(args))
 		if (count(args) > maxArgsNum)
 			return each(args, item => apply(func, item, maxArgsNum));
-		else return func.apply(null, args);
+		else return func(...args);
 	else return func(args);
 };
 
-let between = function () {
+var between = function () {
 	for (const val of arguments)
 		if (isSet(val)) return val;
 	return arguments[arguments.length - 1];
 };
 
-let expand = function* () {
+var expand = function* () {
 	for (const val of arguments)
 		if (Array.isArray(val))
-			for (const v of expand.apply(null, val))
+			for (const v of expand(...val))
 				yield v;
 		else if (isArray(val))
 			for (const v of expand(each(val)))
@@ -95,7 +95,7 @@ let expand = function* () {
 		else yield val;
 };
 
-let each = function (arr, func = (o, i) => o) {
+var each = function (arr, func = (o, i) => o) {
 	if (isArray(arr))
 		return Array.from(
 			(function* () {
@@ -107,7 +107,7 @@ let each = function (arr, func = (o, i) => o) {
 	else return [func(arr, 0)];
 };
 
-let eachIn = function (arr, func = (o, i) => o) {
+var eachIn = function (arr, func = (o, i) => o) {
 	return Array.from(
 		(function* () {
 			let i = 0;
@@ -117,7 +117,7 @@ let eachIn = function (arr, func = (o, i) => o) {
 	);
 };
 
-let where = function (arr, condition = (o, i) => true, func = null) {
+var where = function (arr, condition = (o, i) => true, func = null) {
 	if (func === null) {
 		if (isArray(arr))
 			return Array.from(
@@ -143,7 +143,7 @@ let where = function (arr, condition = (o, i) => true, func = null) {
 	return [];
 };
 
-let loop = function (i, len = null, func = i => i) {
+var loop = function (i, len = null, func = i => i) {
 	if (len == null) {
 		len = i;
 		i = 0;
@@ -156,11 +156,11 @@ let loop = function (i, len = null, func = i => i) {
 	);
 };
 
-let count = function () {
-	return each.apply(null, arguments).length;
+var count = function () {
+	return each(arguments).length;
 };
 
-let first = function () {
+var first = function () {
 	if (arguments.length == 0) return null;
 	if (arguments.length == 1)
 		if (isArray(arguments[0])) return arguments[0][0];
@@ -168,7 +168,7 @@ let first = function () {
 	if (arguments.length > 1) return arguments[0];
 }
 
-let last = function () {
+var last = function () {
 	if (arguments.length == 0) return null;
 	if (arguments.length == 1)
 		if (isArray(arguments[0])) return arguments[0][arguments[0].length - 1];
@@ -176,20 +176,20 @@ let last = function () {
 	if (arguments.length > 1) return arguments[0];
 }
 
-let sort = function () {
+var sort = function () {
 	if (arguments.length > 2) {
 		let func = arguments[2];
-		return each.apply(null, arguments).sort((a, b) => func(a) < func(b) ? -1 : func(a) > func(b));
+		return each(arguments).sort((a, b) => func(a) < func(b) ? -1 : func(a) > func(b));
 	}
-	return each.apply(null, arguments).sort((a, b) => a < b ? -1 : a > b);
+	return each(arguments).sort((a, b) => a < b ? -1 : a > b);
 };
 
-let distinct = function () {
-	if (arguments.length > 2) return each.apply(null, arguments).filter((v, i, a) => arguments[2](v, i, a));
-	return each.apply(null, arguments).filter((v, i, a) => a.indexOf(v) === i);
+var distinct = function () {
+	if (arguments.length > 2) return each(arguments).filter((v, i, a) => arguments[2](v, i, a));
+	return each(arguments).filter((v, i, a) => a.indexOf(v) === i);
 };
 
-let wait = function (milliseconds) {
+var wait = function (milliseconds) {
 	const date = Date.now();
 	let currentDate = null;
 	do {
@@ -197,15 +197,15 @@ let wait = function (milliseconds) {
 	} while (currentDate - date < milliseconds);
 };
 
-let copy = function (val) {
+var copy = function (val) {
 	navigator.clipboard.writeText(val);
 };
-let paste = function () {
+var paste = function () {
 	var val = null;
 	navigator.clipboard.readText().then(v => val = v);
 	return val;
 };
-let copyFrom = function (id) {
+var copyFrom = function (id) {
 	var input = document.getElementById(id);
 	const color = input.style.color;
 	const bcolor = input.style.backgroundColor;
@@ -217,7 +217,7 @@ let copyFrom = function (id) {
 	input.style.color = color;
 	input.style.backgroundColor = bcolor;
 };
-let pasteInto = function (id) {
+var pasteInto = function (id) {
 	var input = document.getElementById(id);
 	const color = input.style.color;
 	const bcolor = input.style.backgroundColor;
@@ -229,7 +229,7 @@ let pasteInto = function (id) {
 	input.style.color = color;
 	input.style.backgroundColor = bcolor;
 };
-let clearText = function (id, focus = false) {
+var clearText = function (id, focus = false) {
 	var input = document.getElementById(id);
 	const color = input.style.color;
 	const bcolor = input.style.backgroundColor;
@@ -242,7 +242,7 @@ let clearText = function (id, focus = false) {
 	input.style.color = color;
 	input.style.backgroundColor = bcolor;
 };
-let isVisible = (element, partiallyVisible = true) => {
+var isVisible = (element, partiallyVisible = true) => {
 	const { top, left, bottom, right } = element.getBoundingClientRect();
 	const { innerHeight, innerWidth } = window;
 	return partiallyVisible
@@ -251,10 +251,10 @@ let isVisible = (element, partiallyVisible = true) => {
 		((left > 0 && left < innerWidth) || (right > 0 && right < innerWidth))
 		: top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
 };
-let isFocused = (element) => document.activeElement === element;
+var isFocused = (element) => document.activeElement === element;
 
 // Function to generate a unique XPath selector for an element
-let getXPath = (element) => {
+var getXPath = (element) => {
 	let tagName = element.tagName;
 	if (!tagName) return null;
 	tagName = tagName.toLowerCase();
@@ -263,7 +263,7 @@ let getXPath = (element) => {
 	return tagName;
 }
 // Function to generate a unique Path selector for an element
-let getFullQuery = (element) => {
+var getFullQuery = (element) => {
 	let tagName = element.tagName;
 	if (!tagName) return null;
 	tagName = tagName.toLowerCase();
@@ -272,7 +272,7 @@ let getFullQuery = (element) => {
 	return tagName;
 }
 // Function to generate a unique CSS selector for an element
-let getQuery = (element) => {
+var getQuery = (element) => {
 	if (element.id) return "#" + element.id;
 	let tagName = element.tagName;
 	if (!tagName) return null;

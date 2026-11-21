@@ -159,7 +159,7 @@ namespace MiMFa.Engine.DEAL.JS
             var latest = AssembleNode(walker);
             LastIndex = walker.Index;
             if (walker.PeekProcedure()?.Is("as") == true)
-                yield return Engine.CreatePairBlockNode(AssembleNode(walker.MoveToProcedure()), latest);
+                yield return Engine.CreatePairBlockNode(AssembleNode(walker.MoveProcedure()), latest);
             else yield return latest;
             if (BreakSequenceSwitch > 0)
                 yield break;
@@ -255,6 +255,7 @@ namespace MiMFa.Engine.DEAL.JS
 
                 case "function":
                 case "command":
+                case "def":
                     node.Token.Value = "function";
                     while (next?.Is("*", "async") == true)
                     {
@@ -282,9 +283,9 @@ namespace MiMFa.Engine.DEAL.JS
                     }
                     if (next?.Is("(") == true && !cname.Value.Contains("."))
                     {
-                        cname.Update(cname.Token.Type | TokenType.FunctionKeyword);
-                        if (lname == "function") Engine?.Keywords.Set(cname);
-                        else Engine?.SetFunctionCommand(cname);
+                        if (lname == "function") Engine?.Keywords.Set(cname.Update(cname.Token.Type | TokenType.FunctionKeyword));
+                        else if (lname == "def") Engine?.Keywords.Set(cname.Update(cname.Token.Type | TokenType.IdentifierKeyword));
+                        else Engine?.SetFunctionCommand(cname.Update(cname.Token.Type | TokenType.FunctionKeyword));
                         return node.Update(NodeType.DefineStructure | NodeType.Region | NodeType.Line | NodeType.Prepend).AddRange(
                             cname.Add(AssembleNode(walker)),
                             cname.Last.Count > 1 && walker.PeekProcedure()?.Is(AssignSigns) != true ? null :
@@ -300,6 +301,7 @@ namespace MiMFa.Engine.DEAL.JS
                     else
                     {
                         if (lname == "function") Engine?.Keywords.Set(cname.Update(cname.Token.Type | TokenType.FunctionKeyword));
+                        else if (lname == "def") Engine?.Keywords.Set(cname.Update(cname.Token.Type | TokenType.IdentifierKeyword));
                         else Engine?.SetDefinitionCommand(cname);
                         if (next?.Is(TokenType.Middle | TokenType.Symbol) == true) 
                             walker.Walk();
@@ -308,7 +310,7 @@ namespace MiMFa.Engine.DEAL.JS
                     if (m.Count > 1 && !m.Is("function"))
                         if (m.Child(0).Is("(") && m.Child(1).Is("{"))
                             m = Engine.CreateNode(node.Token.Value, TokenType.Statement, NodeType.Region | NodeType.Line, m);
-                        else if (m.Child(0).Is("(") && m.Child(1).Is("=>"))
+                        else if (m.Child(0).Is("(") && m.Child(1).Is(EqualSigns))
                         {
                             m.Children[1].Update(
                                 "{",
@@ -364,7 +366,7 @@ namespace MiMFa.Engine.DEAL.JS
                     Node onFalse = null;
                     if (TrimSeparators(walker).PeekProcedure()?.Is("else") == true)
                     {
-                        walker.MoveToProcedure();
+                        walker.MoveProcedure();
                         MoveToStartProcedure(ref walker);
                         onFalse = NormalSectionAssembleNode(walker);
                     }
@@ -432,7 +434,7 @@ namespace MiMFa.Engine.DEAL.JS
                      );
 
                 case "consider":
-                    string ntype = "let";
+                    string ntype = "";
                     if (next?.Is("const", "constant") == true)
                     {
                         node = walker.Walk();
@@ -526,7 +528,7 @@ namespace MiMFa.Engine.DEAL.JS
 
             if (node.Is("is"))
                 if (node.Count <= 0 && before?.Is(TokenType.Keyword) == true && next?.Is(TokenType.Keyword) == true)
-                    return AssembleSuffixNode(node.Update(TokenType.Suffix, "." + node.Token.Value + next.Value, NodeType.Append), walker.MoveToProcedure());
+                    return AssembleSuffixNode(node.Update(TokenType.Suffix, "." + node.Token.Value + next.Value, NodeType.Append), walker.MoveProcedure());
                 else return AssembleSymbolNode(node.Update("=="), walker);
             else if (Engine.IsSeparators(node))
             {
@@ -551,7 +553,7 @@ namespace MiMFa.Engine.DEAL.JS
             )
                 return node.Update(TokenType.StringData, Newtonsoft.Json.JsonConvert.ToString(node.Token.Value), NodeType.Chunk);
             else if (Engine.IsMediators(node) && (Engine.IsSeparators(next) || next?.Is(BreakSigns) == true))
-                return AssembleSymbolNode(node, walker.MoveToProcedure());
+                return AssembleSymbolNode(node, walker.MoveProcedure());
             else if (node.Is(":") && !Inwrap() && !(TernariesStack.Count > 0 && TernariesStack.First() == Location))
             {
                 //BreakSequenceSwitch++;
@@ -697,7 +699,7 @@ namespace MiMFa.Engine.DEAL.JS
                     }
                     if (m == null || (next?.Is(":") == true && Inwrap()))
                     {
-                        walker.MoveToProcedure(-1);
+                        walker.MoveProcedure(-1);
                         break;
                     }
                     else current = m;
@@ -927,13 +929,13 @@ namespace MiMFa.Engine.DEAL.JS
 
         private NodeWalker MoveToStartProcedure(ref NodeWalker walker)
         {
-            walker.MoveTo(n => !n.Is(BreakSigns) && !n.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol));
+            walker.Move(n => !n.Is(BreakSigns) && !n.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol));
             walker.Move(-1);
             return walker;
         }
         public virtual NodeWalker TrimSeparators(NodeWalker walker)
         {
-            return walker?.Current?.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol) == true ? walker.MoveToProcedure() : walker;
+            return walker?.Current?.Is(TokenType.DelimiterSymbol, TokenType.TerminatorSymbol) == true ? walker.MoveProcedure() : walker;
         }
         public virtual bool Inwrap() => NodesStack.Skip(1).FirstOrDefault(n => n.Token.Type == TokenType.Statement || n.Is(TokenType.Scope, TokenType.ObjectData, TokenType.Symbol))?.Is(TokenType.Scope, TokenType.DelimiterSymbol, TokenType.ObjectData) == true;
     }

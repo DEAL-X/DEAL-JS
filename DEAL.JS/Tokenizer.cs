@@ -187,6 +187,7 @@ namespace MiMFa.Engine.DEAL.JS
                     switch (lword)
                     {
                         case "command":
+                        case "def":
                         case "begin":
                         case "doing":
                         case "end":
@@ -269,6 +270,27 @@ namespace MiMFa.Engine.DEAL.JS
                     var next = walker.Peek(1);
                     if (current == "@" && (next == "\"" || next == "'" || next == "`"))
                         return TokenizeString(walker, location, true);
+                    if (current == "`" && next == "`" && walker.Peek(2) == "`")
+                    {
+                        int sind = walker.Index;
+                        walker.Move(3);
+                        string tech = "";
+                        if (!string.IsNullOrWhiteSpace(walker.Current))
+                            tech = string.Concat(walker.WalkWhile(ch => Regex.IsMatch(ch, @"\w")));
+                        var value = string.Concat(walker.WalkUntil(ch => ch == "`" && walker.Peek(1) == "`" && walker.Peek(2) == "`"));
+                        walker.Move(3);
+                        switch (tech)
+                        {
+                            case "deal":
+                            case "djs":
+                                walker.Replace(sind, walker.Index-sind, value.ToArray().Select(v=>v+"").ToArray());
+                                walker.Index = sind;
+                                return TokenizeCode(walker);
+                            case "_":
+                                return GetAcceptedToken(TokenType.UndefinedData, $"{{{value}}}", location);
+                        }
+                        return GetAcceptedToken(TokenType.UndefinedData, value, location);
+                    }
                     if (current == "-" && next == ">")
                         walker.Replace("=");
                 }

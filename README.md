@@ -30,21 +30,25 @@ DEAL follows **five** main principles:
     * DEAL codes are readable as a simple Markdown document.
     ```md
     Use deal;
+
     # FillList
     Begin,
+    Consider successful variable is null;
 
     ## ReadFile
         Begin,
-            * MyFile = resource file open();
+            * MyFile = file open;
             * Log subject "Process started!";
             * If **MyFile** not be null, Begin:
-                - The #Text be myFile content;
+                - The #text be myFile text;
                 - The successful be true;
                 - End;
-            * Else, Begin:
-                - The text be empty;
-                - The successful be false;
-                - End;
+            * Else, do:
+                ```js
+                    text = "";
+                    successful = false;
+                ```
+                End;
         End;
 
     ## UseFile
@@ -65,12 +69,14 @@ DEAL follows **five** main principles:
     * It will compile to the pure JavaScript code below:
     ```js
     // Used multiple libraries from "deal"
+
     (FillList = (() => {
+        var successful = false;
         (ReadFile = (() => {
-            MyFile = resource.file.open();
+            MyFile = File(open());
             Log.subject("Process started!");
             if (MyFile != null) {
-                text = MyFile.content;
+                text = MyFile.text;
                 successful = true;
             }  else {
                 text = "";
@@ -193,13 +199,31 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     Consider var variable be equal procedure;
     Consider let letVariable to be procedure;
     Consider directVariable be equals to procedure;
+    Def definedVariable be procedure;
+    Def functionVariable () be procedure;
+    Def * generatorVariable (inp1) be procedure;
+    Def * namespaced.Variable (inp1, inp2) be procedure;
+    Def async asynchronus.Variable (inp1, inp2) be procedure;
     ```
     They will compile to:
     ```js
     const constant = js-procedure;
     var variable = js-procedure;
     let letVariable = js-procedure;
-    let directVariable = js-procedure;
+    directVariable = js-procedure;
+    var definedVariable = procedure;
+    function functionVariable () {
+        return procedure; 
+    }
+    function * generatorVariable (inp1) {
+        return procedure;
+    }
+    namespaced.Variable = function * (inp1, inp2) {
+        return procedure;
+    }
+    asynchronus.Variable = async function (inp1, inp2) {
+        yield procedure;
+    }
     ```
 * Pure JS definition structures are available as the same.
 
@@ -301,6 +325,18 @@ Instead of supporting all JS structures, DEAL engine contains some special struc
     } finally {
         js-procedures
     }
+    ```
+
+#### Pure JavaScript blocks
+* Use the code block below for traditional JS.
+    ```ts
+        ```
+            // Free JavaScript block
+            let command = "a simple text to a DEAL.JS statement";
+            for(const def of all){
+                // To use JavaScript freely
+            }
+        ```
     ```
 
 #### Asynchronous blocks

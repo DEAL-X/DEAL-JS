@@ -1,9 +1,9 @@
-command Make.float (val = null, def = 0) {
-	return parseFloat(val ?? def) ?? def;
+command Make.float (val = null, defaultVal = 0) {
+	return parseFloat(val ?? defaultVal) ?? defaultVal;
 };
 
-command Make.int (val = null, def = 0) {
-	return parseInt(val ?? def) ?? def;
+command Make.int (val = null, defaultVal = 0) {
+	return parseInt(val ?? defaultVal) ?? defaultVal;
 };
 
 
