@@ -55,31 +55,46 @@ command Make.base64FromBytes (value) {
 };
 
 command Make.bytesFromBase64 (value) {
-    // Remove Base64 formatting whitespace. Also accept URL-safe Base64.
-    const input = String(value || "")
-        .replace(/\s+/g, "")
-        .replace(/-/g, "+")
-        .replace(/_/g, "/");
+    // Normalize Base64 without regular expressions. This also avoids regex
+    // character-class parsing differences in embedded DEAL/ClearScript hosts.
+    const source = String(value || "");
+    let input = "";
+    for (let i = 0; i < source.length; i++) {
+        let code = source.charCodeAt(i);
+        // Ignore the ASCII whitespace permitted in formatted Base64.
+        if (code === 9 || code === 10 || code === 13 || code === 32) continue;
+        let character = source[i];
+        if (character === "-") character = "+";
+        else if (character === "_") character = "/";
+        else if (character !== "=" && Make.base64Alphabet.indexOf(character) < 0)
+            throw new TypeError(
+                "Invalid Base64 character at index " + i +
+                " (code " + code + ")."
+            );
+        input += character;
+    }
+
     if (input.length % 4 !== 0)
         throw new TypeError("Invalid Base64 input length: " + input.length + ".");
-    const invalidIndex = input.search(/[^A-Za-z0-9+\/=]/);
-    if (invalidIndex >= 0)
-        throw new TypeError(
-            "Invalid Base64 character at index " + invalidIndex +
-            " (code " + input.charCodeAt(invalidIndex) + ")."
-        );
 
     const output = [];
     for (let i = 0; i < input.length; i += 4) {
+        const isLastBlock = i + 4 === input.length;
         const a = Make.base64Alphabet.indexOf(input[i]);
         const b = Make.base64Alphabet.indexOf(input[i + 1]);
-        const c = input[i + 2] === "=" ? 0 : Make.base64Alphabet.indexOf(input[i + 2]);
-        const d = input[i + 3] === "=" ? 0 : Make.base64Alphabet.indexOf(input[i + 3]);
-        if (a < 0 || b < 0 || c < 0 || d < 0)
-            throw new TypeError("Invalid Base64 input.");
+        const cPadding = input[i + 2] === "=";
+        const dPadding = input[i + 3] === "=";
+        const c = cPadding ? 0 : Make.base64Alphabet.indexOf(input[i + 2]);
+        const d = dPadding ? 0 : Make.base64Alphabet.indexOf(input[i + 3]);
+
+        if (a < 0 || b < 0 || c < 0 || d < 0 ||
+            (cPadding && !dPadding) ||
+            ((cPadding || dPadding) && !isLastBlock))
+            throw new TypeError("Invalid Base64 padding or quartet at index " + i + ".");
+
         output.push((a << 2) | (b >> 4));
-        if (input[i + 2] !== "=") output.push(((b & 15) << 4) | (c >> 2));
-        if (input[i + 3] !== "=") output.push(((c & 3) << 6) | d);
+        if (!cPadding) output.push(((b & 15) << 4) | (c >> 2));
+        if (!dPadding) output.push(((c & 3) << 6) | d);
     }
     return new Uint8Array(output);
 };
