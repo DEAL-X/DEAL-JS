@@ -78,7 +78,7 @@ command #Fetch:start(input, init = {}) {
                     " (type=" + typeof result.data +
                     ", length=" + encodedBody.length +
                     ", prefix=" + JSON.stringify(encodedBody.slice(0, 96)) +
-                    ", status=" + result.status + ")."
+                    ", status=" + result.status + ", reason=" + String(error && error.message || error) + ")."
                 );
             }
         } else {
