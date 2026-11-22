@@ -55,9 +55,19 @@ command Make.base64FromBytes (value) {
 };
 
 command Make.bytesFromBase64 (value) {
-    const input = String(value || "").replace(/\\s+/g, "");
-    if (input.length % 4 !== 0 || /[^A-Za-z0-9+\/=]/.test(input))
-        throw new TypeError("Invalid Base64 input.");
+    // Remove Base64 formatting whitespace. Also accept URL-safe Base64.
+    const input = String(value || "")
+        .replace(/\s+/g, "")
+        .replace(/-/g, "+")
+        .replace(/_/g, "/");
+    if (input.length % 4 !== 0)
+        throw new TypeError("Invalid Base64 input length: " + input.length + ".");
+    const invalidIndex = input.search(/[^A-Za-z0-9+\/=]/);
+    if (invalidIndex >= 0)
+        throw new TypeError(
+            "Invalid Base64 character at index " + invalidIndex +
+            " (code " + input.charCodeAt(invalidIndex) + ")."
+        );
 
     const output = [];
     for (let i = 0; i < input.length; i += 4) {
