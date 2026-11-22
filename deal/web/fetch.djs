@@ -60,11 +60,34 @@ command #Fetch:start(input, init = {}) {
     return Promise.resolve(operation).then(nativeResult => {
         if (request.signal && request.signal.aborted) throw abortError();
         const result = JSON.parse(nativeResult.ToString());
-        // The host bridge normally returns Base64 text. Accept a byte array as
+        // The host bridge normally returns Base64 text. Accept byte arrays as
         // well so older/custom Transfer implementations remain interoperable.
-        const responseBytes = Array.isArray(result.data)
-            ? Make.uint8Array(result.data)
-            : Make.bytesFromBase64(result.data || "");
+        let responseBytes;
+        if (Array.isArray(result.data)) {
+            responseBytes = Make.uint8Array(result.data);
+        } else if (result.data == null || typeof result.data === "string") {
+            const encodedBody = result.data || "";
+            try {
+                responseBytes = Make.bytesFromBase64(encodedBody);
+            } catch (error) {
+                // Include a bounded sample of the actual bridge value. This
+                // distinguishes malformed Base64 from an unexpected host
+                // serialization without dumping an entire response body.
+                throw new TypeError(
+                    "Invalid Fetch response body encoding: expected Base64 text" +
+                    " (type=" + typeof result.data +
+                    ", length=" + encodedBody.length +
+                    ", prefix=" + JSON.stringify(encodedBody.slice(0, 96)) +
+                    ", status=" + result.status + ")."
+                );
+            }
+        } else {
+            throw new TypeError(
+                "Unexpected Fetch response body type from Transfer: " +
+                Object.prototype.toString.call(result.data) +
+                " (typeof=" + typeof result.data + ")."
+            );
+        }
         const response = new Response(responseBytes, {
             status: result.status,
             statusText: result.statusText,
