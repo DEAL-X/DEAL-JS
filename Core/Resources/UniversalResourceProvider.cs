@@ -14,6 +14,7 @@ namespace MiMFa.Core.Resources
         {
             if (string.IsNullOrEmpty(path)) return path;
 
+            // Preserve absolute URLs: repeated normalization must be idempotent.
             if (IsExplicitPath(path) && Uri.TryCreate(path, UriKind.Absolute, out var absolute))
                 return NormalizeUri(absolute);
 
@@ -28,7 +29,7 @@ namespace MiMFa.Core.Resources
                         return NormalizeUri(webUri);
                 }
 
-                var effectiveBaseAddress = string.IsNullOrWhiteSpace(basePath) ? RootAddress : path;
+                var effectiveBaseAddress = string.IsNullOrWhiteSpace(basePath) ? RootAddress : basePath;
                 if (Uri.TryCreate(path, UriKind.Relative, out var relative) &&
                     !string.IsNullOrWhiteSpace(effectiveBaseAddress) &&
                     Uri.TryCreate(effectiveBaseAddress, UriKind.Absolute, out var baseUri) &&
@@ -43,7 +44,7 @@ namespace MiMFa.Core.Resources
             return uri.GetComponents(UriComponents.AbsoluteUri, UriFormat.UriEscaped);
         }
 
-        private static bool IsExplicitPath(string value) => Regex.IsMatch(value, @"^(file|data|about|mailto):", RegexOptions.IgnoreCase);
+        private static bool IsExplicitPath(string value) => Regex.IsMatch(value, @"^(https?|file|data|about|mailto):", RegexOptions.IgnoreCase);
         private static bool IsLocalPath(string value) => value.Length >= 3 && Regex.IsMatch(value, @"(^[A-Z]\:)|(^file:)|(^([\w\-\+\s()]+[\/\\]?)+(\.\w+)?$)|(^[\.\~\/\\])", RegexOptions.IgnoreCase);
         private static bool IsWebPath(string value) => value.Length >= 3 && !Regex.IsMatch(value, @"[\r\n\t\f]") && Regex.IsMatch(value, @"(^[a-z][a-z0-9+.-]+\://)|(^\w+\.\w+\.\w+)|[$#@!~^`\?\&\|%\*]", RegexOptions.IgnoreCase);
     }
