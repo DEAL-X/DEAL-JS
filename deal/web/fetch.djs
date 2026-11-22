@@ -60,7 +60,12 @@ command #Fetch:start(input, init = {}) {
     return Promise.resolve(operation).then(nativeResult => {
         if (request.signal && request.signal.aborted) throw abortError();
         const result = JSON.parse(nativeResult.ToString());
-        const response = new Response(Make.bytesFromBase64(result.data || ""), {
+        // The host bridge normally returns Base64 text. Accept a byte array as
+        // well so older/custom Transfer implementations remain interoperable.
+        const responseBytes = Array.isArray(result.data)
+            ? Make.uint8Array(result.data)
+            : Make.bytesFromBase64(result.data || "");
+        const response = new Response(responseBytes, {
             status: result.status,
             statusText: result.statusText,
             headers: result.headers,

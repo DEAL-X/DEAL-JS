@@ -279,7 +279,7 @@ namespace MiMFa.Net.Transfers
                             redirected = !UriEquals(finalUrl, requestUri),
 
                             // Newtonsoft serializes byte[] as Base64.
-                            data = responseBody,
+                            data = Convert.ToBase64String(responseBody),
 
                             headers = responseHeaders
                         });
@@ -334,7 +334,7 @@ namespace MiMFa.Net.Transfers
                 statusText = "OK",
                 ok = true,
                 redirected = false,
-                data = bytes,
+                data = Convert.ToBase64String(bytes),
                 headers = headers
             });
         }
