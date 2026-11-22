@@ -44,7 +44,7 @@ namespace MiMFa.Core.Resources
         }
 
         private static bool IsExplicitPath(string value) => Regex.IsMatch(value, @"^(file|data|about|mailto):", RegexOptions.IgnoreCase);
-        private static bool IsLocalPath(string value) => (value.Length >= 3 && Regex.IsMatch(value, @"(^[A-Z]\:)|(^file:)|(^[\w\-\+\s()]+[/\\]|((\.\w+)?$))", RegexOptions.IgnoreCase)) || Regex.IsMatch(value, @"^[\.\~\/\\]", RegexOptions.IgnoreCase);
+        private static bool IsLocalPath(string value) => value.Length >= 3 && Regex.IsMatch(value, @"(^[A-Z]\:)|(^file:)|(^([\w\-\+\s()]+[\/\\]?)+(\.\w+)?$)|(^[\.\~\/\\])", RegexOptions.IgnoreCase);
         private static bool IsWebPath(string value) => value.Length >= 3 && !Regex.IsMatch(value, @"[\r\n\t\f]") && Regex.IsMatch(value, @"(^[a-z][a-z0-9+.-]+\://)|(^\w+\.\w+\.\w+)|[$#@!~^`\?\&\|%\*]", RegexOptions.IgnoreCase);
     }
 }
