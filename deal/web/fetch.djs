@@ -77,8 +77,10 @@ command #Fetch:start(input, init = {}) {
                     "Invalid Fetch response body encoding: expected Base64 text" +
                     " (type=" + typeof result.data +
                     ", length=" + encodedBody.length +
+                    ", status=" + result.status +
+                    ", reason=" + error.message +
                     ", prefix=" + JSON.stringify(encodedBody.slice(0, 96)) +
-                    ", status=" + result.status + ")."
+                    ")."
                 );
             }
         } else {
