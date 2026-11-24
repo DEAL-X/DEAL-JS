@@ -365,7 +365,7 @@ namespace MiMFa.Net.Transfers
             {
                 try
                 {
-                    charset = charset.Trim().Trim('"', '\\'');
+                    charset = charset.Trim().Trim('"');
                     return System.Text.Encoding.GetEncoding(charset).GetString(bytes);
                 }
                 catch (ArgumentException)
