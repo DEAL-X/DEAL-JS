@@ -239,8 +239,7 @@ namespace MiMFa.Net.Transfers
 
                         var responseBody = response.Content == null
                             ? Array.Empty<byte>()
-                            : await response.Content.ReadAsByteArrayAsync()
-                                .ConfigureAwait(false);
+                            : await response.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
                         var responseIsText = IsTextContentType(response.Content?.Headers?.ContentType?.MediaType);
 
                         var responseHeaders =

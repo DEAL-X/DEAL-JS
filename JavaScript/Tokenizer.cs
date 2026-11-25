@@ -153,6 +153,7 @@ namespace MiMFa.Engine.JavaScript
 
         protected virtual Token TokenizeRegExPath(CodeWalker walker, Position location)
         {
+            var ind = walker.Index;
             walker.Walk(); // consume '/'
             bool indent = false;
             var escapedch = (this.Engine?.Options?.Escape ?? "\\")[0].ToString();
@@ -160,15 +161,21 @@ namespace MiMFa.Engine.JavaScript
                 switch (ch)
                 {
                     case "[":
+                    case "(":
                         indent = true;
                         break;
                     case "]":
+                    case ")":
                         indent = false;
                         break;
                 }
                 return ch == "/" && !indent && walker.Peek(-1) != escapedch; 
             }).ToArray());
-            walker.Walk(); // consume closing '/'
+            if(walker.Walk() != "/") // consume closing '/'
+            {
+                walker.Index = ind;
+                return new Token(TokenType.Symbol | TokenType.Middle, walker.Walk(), location);
+            }
             value = "/" + value + "/" + string.Concat(walker.WalkWhile(c => Regex.IsMatch(c, "[gimsuy]", RegexOptions.IgnoreCase)).ToArray());
             return new Token(TokenType.PatternData, value, location);
         }
