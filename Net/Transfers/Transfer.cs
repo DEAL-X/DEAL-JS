@@ -241,6 +241,7 @@ namespace MiMFa.Net.Transfers
                             ? Array.Empty<byte>()
                             : await response.Content.ReadAsByteArrayAsync()
                                 .ConfigureAwait(false);
+                        var responseIsText = IsTextContentType(response.Content?.Headers?.ContentType?.MediaType);
 
                         var responseHeaders =
                             new Dictionary<string, string>(
@@ -278,8 +279,11 @@ namespace MiMFa.Net.Transfers
 
                             redirected = !UriEquals(finalUrl, requestUri),
 
-                            // Newtonsoft serializes byte[] as Base64.
-                            data = Convert.ToBase64String(responseBody),
+                            // Text is transferred as text; binary content remains Base64.
+                            data = responseIsText
+                                ? DecodeText(responseBody, response.Content?.Headers?.ContentType?.CharSet)
+                                : Convert.ToBase64String(responseBody),
+                            dataEncoding = responseIsText ? "text" : "base64",
 
                             headers = responseHeaders
                         });
@@ -334,9 +338,42 @@ namespace MiMFa.Net.Transfers
                 statusText = "OK",
                 ok = true,
                 redirected = false,
-                data = Convert.ToBase64String(bytes),
+                data = IsTextContentType(contentType.Split(';')[0])
+                    ? DecodeText(bytes, contentType.Contains(";") ? contentType.Substring(contentType.IndexOf(';') + 1).Replace("charset=", "").Trim() : null)
+                    : Convert.ToBase64String(bytes),
+                dataEncoding = IsTextContentType(contentType.Split(';')[0]) ? "text" : "base64",
                 headers = headers
             });
+        }
+
+        private static bool IsTextContentType(string mediaType)
+        {
+            if (string.IsNullOrWhiteSpace(mediaType)) return false;
+            mediaType = mediaType.Trim();
+            return mediaType.StartsWith("text/", StringComparison.OrdinalIgnoreCase) ||
+                mediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase) ||
+                mediaType.EndsWith("+json", StringComparison.OrdinalIgnoreCase) ||
+                mediaType.Equals("application/javascript", StringComparison.OrdinalIgnoreCase) ||
+                mediaType.Equals("application/xml", StringComparison.OrdinalIgnoreCase) ||
+                mediaType.EndsWith("+xml", StringComparison.OrdinalIgnoreCase) ||
+                mediaType.Equals("image/svg+xml", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string DecodeText(byte[] bytes, string charset)
+        {
+            if (!string.IsNullOrWhiteSpace(charset))
+            {
+                try
+                {
+                    charset = charset.Trim().Trim('"');
+                    return System.Text.Encoding.GetEncoding(charset).GetString(bytes);
+                }
+                catch (ArgumentException)
+                {
+                    // Fall back to UTF-8 when the server declares an unknown charset.
+                }
+            }
+            return System.Text.Encoding.UTF8.GetString(bytes);
         }
 
         private static string GetContentType(string path)
